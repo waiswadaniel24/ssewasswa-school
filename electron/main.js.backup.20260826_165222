@@ -1,0 +1,585 @@
+const { app, BrowserWindow, ipcMain, dialog, powerMonitor, safeStorage } = require('electron');
+const path = require('path');
+const fs = require('fs');
+const os = require('os');
+const crypto = require('crypto');
+const UgandaPayments = require('./payments'); // Only ONE declaration
+const UploadHandler = require('./uploads');
+
+let SQL, bcrypt, mainWindow, db, dbPath;
+let paymentHandler, uploadHandler;
+
+try { SQL = require('sql.js'); } catch (e) { console.error('sql.js missing'); }
+try { bcrypt = require('bcryptjs'); } catch (e) { console.error('bcryptjs missing'); }
+
+function saveDb() {
+  if (!db || !dbPath) return;
+  try {
+    const plainData = Buffer.from(db.export());
+    let dataToSave = plainData;
+
+    if (safeStorage.isEncryptionAvailable()) {
+      const encryptedString = safeStorage.encryptString(plainData.toString('base64'));
+      dataToSave = Buffer.isBuffer(encryptedString) ? encryptedString : Buffer.from(encryptedString);
+    }
+
+    fs.writeFileSync(dbPath, dataToSave);
+  } catch (e) { console.error('Save failed:', e); }
+}
+
+async function initDatabase() {
+  if (!SQL) return false;
+  try {
+    const sqlModule = await SQL();
+    dbPath = path.join(app.getPath('userData'), 'school_v10_isolated.db');
+    if (fs.existsSync(dbPath)) {
+      try {
+        const fileData = fs.readFileSync(dbPath);
+        let dbData = fileData;
+
+        if (safeStorage.isEncryptionAvailable() && fileData.length > 0) {
+          try {
+            const decryptedString = safeStorage.decryptString(fileData);
+            dbData = Buffer.from(decryptedString, 'base64');
+          } catch (decryptErr) {
+            console.log('Decrypting legacy unencrypted database...');
+          }
+        }
+
+        if (dbData.length > 0) {
+          db = new sqlModule.Database(dbData); // ACTUALLY ASSIGN TO DB
+        } else {
+          db = new sqlModule.Database(); // CREATE NEW DB IF EMPTY
+        }
+      } catch (e) {
+        db = new sqlModule.Database(); // FALLBACK TO NEW DB ON ERROR
+      }
+    } else {
+      db = new sqlModule.Database(); // CREATE DB IF FILE DOESN'T EXIST
+    }
+
+    const tables = [
+      "CREATE TABLE IF NOT EXISTS system_settings (key TEXT PRIMARY KEY, value TEXT)",
+      "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT, role TEXT, permissions TEXT, last_login DATETIME, security_question TEXT, security_answer TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS students (id INTEGER PRIMARY KEY AUTOINCREMENT, first_name TEXT, last_name TEXT, other_name TEXT, gender TEXT DEFAULT 'M', date_of_birth TEXT, class_id INTEGER, student_type TEXT DEFAULT 'Day', residence TEXT, house_id INTEGER, admission_number TEXT, paycode TEXT, guardian_name TEXT, guardian_phone TEXT, status TEXT DEFAULT 'Active', photo_path TEXT, boarding_reqs TEXT, emis_student_id TEXT, nin TEXT, dropout_reason TEXT, transfer_date TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS staff (id INTEGER PRIMARY KEY AUTOINCREMENT, first_name TEXT, last_name TEXT, other_name TEXT, gender TEXT DEFAULT 'M', date_of_birth TEXT, role TEXT, phone TEXT, staff_id_number TEXT, employer_type TEXT DEFAULT 'BOG', highest_qualification TEXT, status TEXT DEFAULT 'Active', photo_path TEXT, salary REAL DEFAULT 0, bank_account TEXT, momo_number TEXT, tsc_number TEXT DEFAULT '', subjects_teaching TEXT DEFAULT '', appointment_date TEXT DEFAULT '', payroll_number TEXT DEFAULT '', subjects_trained TEXT DEFAULT '', designation TEXT DEFAULT '', professional_qualification TEXT DEFAULT '', nin TEXT DEFAULT '', email TEXT DEFAULT '', special_needs_trained INTEGER DEFAULT 0, years_experience INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME)",
+      "CREATE TABLE IF NOT EXISTS classes (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, level TEXT DEFAULT 'O_Level', stream TEXT DEFAULT 'A', capacity INTEGER DEFAULT 50)",
+      "CREATE TABLE IF NOT EXISTS subjects (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, code TEXT, uneb_code TEXT, category TEXT, level TEXT DEFAULT 'O_Level', is_compulsory INTEGER DEFAULT 1)",
+      "CREATE TABLE IF NOT EXISTS payments (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, amount_paid REAL, payment_for TEXT, date TEXT, term TEXT, academic_year TEXT, method TEXT DEFAULT 'Cash', reference TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, event_type TEXT, table_name TEXT, record_id INTEGER, old_values TEXT, new_values TEXT, user_id INTEGER, username TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS fees_structure (id INTEGER PRIMARY KEY AUTOINCREMENT, class_id INTEGER, term TEXT, amount REAL, day_fee REAL DEFAULT 0, boarding_fee REAL DEFAULT 0)",
+      "CREATE TABLE IF NOT EXISTS expenses (id INTEGER PRIMARY KEY AUTOINCREMENT, description TEXT, amount REAL, category TEXT, date TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS payroll_payments (id INTEGER PRIMARY KEY AUTOINCREMENT, staff_id INTEGER, amount_paid REAL, month TEXT, year TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS houses (id INTEGER PRIMARY KEY AUTOINCREMENT, house_name TEXT, capacity INTEGER DEFAULT 0)",
+      "CREATE TABLE IF NOT EXISTS house_points (id INTEGER PRIMARY KEY AUTOINCREMENT, house_id INTEGER, points INTEGER DEFAULT 0, reason TEXT, date TEXT)",
+      "CREATE TABLE IF NOT EXISTS attendance (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, class_id INTEGER, date TEXT, status TEXT, term TEXT, academic_year TEXT)",
+      "CREATE TABLE IF NOT EXISTS marks (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, subject_id INTEGER, term TEXT, exam_type TEXT, score REAL, academic_year TEXT, class_id INTEGER)",
+      "CREATE TABLE IF NOT EXISTS discipline (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, type TEXT, offence TEXT, action TEXT, date TEXT, teacher TEXT)",
+      "CREATE TABLE IF NOT EXISTS timetable (id INTEGER PRIMARY KEY AUTOINCREMENT, class_id INTEGER, day TEXT, period TEXT, subject_id TEXT, teacher_id TEXT)",
+      "CREATE TABLE IF NOT EXISTS visitors (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, phone TEXT, purpose TEXT, person_to_see TEXT, time_in TEXT, time_out TEXT, date TEXT)",
+      "CREATE TABLE IF NOT EXISTS library_books (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, author TEXT, isbn TEXT, category TEXT, copies INTEGER DEFAULT 0, available INTEGER DEFAULT 0, shelf TEXT)",
+      "CREATE TABLE IF NOT EXISTS canteen_items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price REAL DEFAULT 0, quantity INTEGER DEFAULT 0)",
+      "CREATE TABLE IF NOT EXISTS canteen_sales (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id TEXT, total_amount REAL DEFAULT 0, is_credit INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS transport_routes (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, driver TEXT, phone TEXT, vehicle TEXT, capacity INTEGER DEFAULT 0, fee REAL DEFAULT 0)",
+      "CREATE TABLE IF NOT EXISTS student_requirements (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, requirement_name TEXT, submitted INTEGER DEFAULT 0, UNIQUE(student_id, requirement_name))",
+      "CREATE TABLE IF NOT EXISTS school_registration (id INTEGER PRIMARY KEY, school_name TEXT, emis_number TEXT, uneb_center_number TEXT, school_type TEXT DEFAULT 'Private', school_level TEXT DEFAULT 'Secondary', co_education_type TEXT DEFAULT 'Mixed', boarding_status TEXT DEFAULT 'Day', district_name TEXT, county_name TEXT, sub_county_name TEXT, parish_name TEXT, village TEXT, gps_latitude REAL, gps_longitude REAL, founding_year INTEGER, phone TEXT, email TEXT, postal_address TEXT, head_teacher_name TEXT, head_teacher_phone TEXT, chairperson_name TEXT, chairperson_phone TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS academic_years (id INTEGER PRIMARY KEY AUTOINCREMENT, year_name TEXT NOT NULL, term_1_start TEXT, term_1_end TEXT, term_2_start TEXT, term_2_end TEXT, term_3_start TEXT, term_3_end TEXT, is_current INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS infrastructure (id INTEGER PRIMARY KEY AUTOINCREMENT, academic_year_id INTEGER, classrooms_permanent INTEGER DEFAULT 0, classrooms_semi_permanent INTEGER DEFAULT 0, classrooms_temporary INTEGER DEFAULT 0, water_source TEXT, has_electricity INTEGER DEFAULT 0, has_internet INTEGER DEFAULT 0, has_computer_lab INTEGER DEFAULT 0, number_of_computers INTEGER DEFAULT 0, has_library INTEGER DEFAULT 0, staff_houses INTEGER DEFAULT 0, desks_benches INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS textbooks (id INTEGER PRIMARY KEY AUTOINCREMENT, subject_id INTEGER, class_id INTEGER, academic_year_id INTEGER, textbook_title TEXT, books_received INTEGER DEFAULT 0, books_available INTEGER DEFAULT 0, source TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS student_enrollment (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, class_id INTEGER, academic_year_id INTEGER, term INTEGER DEFAULT 1, enrollment_status TEXT DEFAULT 'Enrolled', enrollment_date TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS special_needs_learners (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, disability_type TEXT, severity TEXT DEFAULT 'Mild', assistive_device TEXT, receiving_support INTEGER DEFAULT 0, support_type TEXT, remarks TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS ovc_data (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, ovc_category TEXT, is_receiving_support INTEGER DEFAULT 0, support_type TEXT, support_source TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS school_finances_emis (id INTEGER PRIMARY KEY AUTOINCREMENT, academic_year_id INTEGER, term INTEGER, upe_grant REAL DEFAULT 0, use_grant REAL DEFAULT 0, school_fees_collected REAL DEFAULT 0, other_income REAL DEFAULT 0, other_income_source TEXT, expenditure_instructional REAL DEFAULT 0, expenditure_administration REAL DEFAULT 0, expenditure_development REAL DEFAULT 0, expenditure_co_curricular REAL DEFAULT 0, expenditure_other REAL DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS uneb_candidates (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, exam_type TEXT, academic_year_id INTEGER, center_number TEXT, candidate_number TEXT, registration_status TEXT DEFAULT 'Pending', submitted_to_uneb INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS nursery_assessments (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, area TEXT, term TEXT DEFAULT 'Term 1', rating TEXT DEFAULT 'Satisfactory', comments TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS wash_data (id INTEGER PRIMARY KEY AUTOINCREMENT, academic_year_id INTEGER, water_source_type TEXT, water_treatment TEXT, drinking_water_available INTEGER DEFAULT 0, handwashing_stations INTEGER DEFAULT 0, handwashing_with_soap INTEGER DEFAULT 0, menstrual_hygiene INTEGER DEFAULT 0, waste_disposal TEXT, school_cleanliness TEXT DEFAULT 'Good', deworming_done INTEGER DEFAULT 0, last_deworming TEXT, remarks TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS military_grade_config (id INTEGER PRIMARY KEY AUTOINCREMENT, school_name TEXT NOT NULL, is_military INTEGER DEFAULT 0, military_school TEXT, combination TEXT, is_current INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS bank_payments (id INTEGER PRIMARY KEY AUTOINCREMENT, reference TEXT UNIQUE, bank_name TEXT, account_number TEXT, account_name TEXT, amount REAL, student_name TEXT, narration TEXT, status TEXT DEFAULT 'Pending', confirmed_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS dropout_records (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, dropout_date TEXT, dropout_reason TEXT, remarks TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS payment_transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, reference TEXT UNIQUE, student_id INTEGER, method TEXT, phone TEXT, amount REAL, status TEXT DEFAULT 'Pending', narration TEXT, api_response TEXT, confirmed_at DATETIME, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS student_documents (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, document_type TEXT, filename TEXT, original_name TEXT, file_size INTEGER, uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
+    ,
+      "CREATE TABLE IF NOT EXISTS meeting_minutes (id INTEGER PRIMARY KEY AUTOINCREMENT, meeting_type TEXT, date TEXT, time TEXT, venue TEXT, chairperson TEXT, secretary TEXT, agenda TEXT, minutes TEXT, action_items TEXT, attendees TEXT, status TEXT DEFAULT 'Draft', created_at DATETIME DEFAULT CURRENT_TIMESTAMP, created_by INTEGER)",
+      "CREATE TABLE IF NOT EXISTS meeting_attendees (id INTEGER PRIMARY KEY AUTOINCREMENT, meeting_id INTEGER, person_name TEXT, person_role TEXT, person_type TEXT DEFAULT 'Staff', signature_image TEXT)",
+      "CREATE TABLE IF NOT EXISTS meeting_agenda_items (id INTEGER PRIMARY KEY AUTOINCREMENT, meeting_id INTEGER, item_text TEXT, item_order INTEGER DEFAULT 0)",
+      "CREATE TABLE IF NOT EXISTS meeting_minute_items (id INTEGER PRIMARY KEY AUTOINCREMENT, meeting_id INTEGER, topic TEXT, discussion TEXT, resolution TEXT, item_order INTEGER DEFAULT 0)",
+      "CREATE TABLE IF NOT EXISTS meeting_actions (id INTEGER PRIMARY KEY AUTOINCREMENT, meeting_id INTEGER, action TEXT, responsible TEXT, deadline TEXT, status TEXT DEFAULT 'Pending', completed_at DATETIME)",
+      "CREATE TABLE IF NOT EXISTS stored_signatures (id INTEGER PRIMARY KEY AUTOINCREMENT, person_id INTEGER, person_type TEXT, person_name TEXT, signature_image TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS document_templates (id INTEGER PRIMARY KEY AUTOINCREMENT, template_name TEXT, doc_type TEXT, header_config TEXT, footer_config TEXT, boundary_style TEXT DEFAULT 'simple', created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS parent_profiles (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, parent_name TEXT, relationship TEXT, phone TEXT, phone2 TEXT, email TEXT, occupation TEXT, nin TEXT, photo_path TEXT, residence TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)",
+      "CREATE TABLE IF NOT EXISTS student_timeline (id INTEGER PRIMARY KEY AUTOINCREMENT, student_id INTEGER, event_type TEXT, event_date TEXT, description TEXT, recorded_by INTEGER, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)"
+    ];
+
+  
+
+  // [COLUMN FIX] Add missing columns to EXISTING databases (safe - errors ignored)
+  // Staff columns
+  try { db.run("ALTER TABLE staff ADD COLUMN tsc_number TEXT DEFAULT ''"); } catch(e) {}
+  try { db.run("ALTER TABLE staff ADD COLUMN subjects_teaching TEXT DEFAULT ''"); } catch(e) {}
+  try { db.run("ALTER TABLE staff ADD COLUMN appointment_date TEXT DEFAULT ''"); } catch(e) {}
+  try { db.run("ALTER TABLE staff ADD COLUMN payroll_number TEXT DEFAULT ''"); } catch(e) {}
+  try { db.run("ALTER TABLE staff ADD COLUMN subjects_trained TEXT DEFAULT ''"); } catch(e) {}
+  try { db.run("ALTER TABLE staff ADD COLUMN designation TEXT DEFAULT ''"); } catch(e) {}
+  try { db.run("ALTER TABLE staff ADD COLUMN professional_qualification TEXT DEFAULT ''"); } catch(e) {}
+  try { db.run("ALTER TABLE staff ADD COLUMN nin TEXT DEFAULT ''"); } catch(e) {}
+  try { db.run("ALTER TABLE staff ADD COLUMN email TEXT DEFAULT ''"); } catch(e) {}
+  try { db.run("ALTER TABLE staff ADD COLUMN special_needs_trained INTEGER DEFAULT 0"); } catch(e) {}
+  try { db.run("ALTER TABLE staff ADD COLUMN years_experience INTEGER DEFAULT 0"); } catch(e) {}
+  try { db.run("ALTER TABLE staff ADD COLUMN updated_at DATETIME"); } catch(e) {}
+
+  // User columns
+  try { db.run("ALTER TABLE users ADD COLUMN security_question TEXT"); } catch(e) {}
+  try { db.run("ALTER TABLE users ADD COLUMN security_answer TEXT"); } catch(e) {}
+
+  // Student columns
+  try { db.run("ALTER TABLE students ADD COLUMN guardian_relation TEXT"); } catch(e) {}
+  try { db.run("ALTER TABLE students ADD COLUMN guardian_phone2 TEXT"); } catch(e) {}
+  try { db.run("ALTER TABLE students ADD COLUMN guardian_email TEXT"); } catch(e) {}
+  try { db.run("ALTER TABLE students ADD COLUMN guardian_occupation TEXT"); } catch(e) {}
+  try { db.run("ALTER TABLE students ADD COLUMN guardian_nin TEXT"); } catch(e) {}
+  try { db.run("ALTER TABLE students ADD COLUMN guardian_photo TEXT"); } catch(e) {}
+  try { db.run("ALTER TABLE students ADD COLUMN second_guardian_name TEXT"); } catch(e) {}
+  try { db.run("ALTER TABLE students ADD COLUMN second_guardian_phone TEXT"); } catch(e) {}
+  try { db.run("ALTER TABLE students ADD COLUMN birth_certificate TEXT"); } catch(e) {}
+  try { db.run("ALTER TABLE students ADD COLUMN previous_school TEXT"); } catch(e) {}
+  try { db.run("ALTER TABLE students ADD COLUMN admission_date TEXT"); } catch(e) {}
+  try { db.run("ALTER TABLE students ADD COLUMN updated_at DATETIME"); } catch(e) {}
+
+  // Payment columns
+  try { db.run("ALTER TABLE payments ADD COLUMN method TEXT DEFAULT 'Cash'"); } catch(e) {}
+  try { db.run("ALTER TABLE payments ADD COLUMN reference TEXT"); } catch(e) {}
+
+  // Class columns
+  try { db.run("ALTER TABLE classes ADD COLUMN teacher_id INTEGER"); } catch(e) {}
+  try { db.run("ALTER TABLE classes ADD COLUMN student_count INTEGER DEFAULT 0"); } catch(e) {}
+  try { db.run("ALTER TABLE classes ADD COLUMN academic_year_id INTEGER"); } catch(e) {}
+
+    for (const sql of tables) { try { db.run(sql); } catch (e) { } }
+    saveDb();
+    return true;
+  } catch (e) { console.error('DB init failed:', e.message); return false; }
+}
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1400, height: 900, minWidth: 1024, minHeight: 700,
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false },
+    show: false
+  });
+
+  // [AUTO-SAVE PATCH] Save database when window closes
+  mainWindow.on('close', () => {
+    saveDb();
+  });
+  mainWindow.once('ready-to-show', () => mainWindow.show());
+  const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
+  if (isDev) {
+    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.webContents.openDevTools();
+  } else {
+    mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+  }
+  mainWindow.on('closed', () => { mainWindow = null; if (db) { try { db.close(); } catch (e) { } db = null; } });
+}
+
+function generateHWID() {
+  try {
+    const nis = os.networkInterfaces(); let mac = '00-00-00-00-00-00';
+    for (const name in nis) { for (const iface of nis[name]) { if (!iface.internal && iface.mac !== '00:00:00:00:00:00') { mac = iface.mac; break; } } if (mac !== '00-00-00-00-00-00') break; }
+    return crypto.createHash('sha256').update(mac + os.hostname() + (os.cpus()[0]?.model || '')).digest('hex');
+  } catch (e) { return 'UNKNOWN_' + Date.now(); }
+}
+
+function q2o(result) {
+  if (!result || result.length === 0) return [];
+  return result[0].values.map(row => { const obj = {}; result[0].columns.forEach((col, i) => obj[col] = row[i]); return obj; });
+}
+
+// ==================== COMBINED APP READY ====================
+app.whenReady().then(async () => {
+  console.log('App starting...');
+  await initDatabase();
+
+  try {
+    const migPath = path.join(__dirname, 'migrations.js');
+    if (fs.existsSync(migPath)) { const runMigrations = require(migPath); if (typeof runMigrations === 'function') runMigrations(db, saveDb); }
+  } catch (e) { console.log('Migration skip:', e.message); }
+
+  // Initialize payment and upload handlers after db is ready
+  if (db) {
+    paymentHandler = new UgandaPayments(db, saveDb);
+    uploadHandler = new UploadHandler(db, saveDb);
+  }
+
+  createWindow();
+  
+// SPRINT-FIX: Save database before application quits
+app.on('before-quit', () => {
+    if (db) { try { saveDb(); console.log('[SprintFix] Database saved on quit'); } catch(e) { console.error('Quit save failed:', e); } }
+});
+app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+});
+
+
+// SPRINT-FIX: Save database before application quits
+app.on('before-quit', () => {
+    if (db) { try { saveDb(); console.log('[SprintFix] Database saved on quit'); } catch(e) { console.error('Quit save failed:', e); } }
+});
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+
+// ==================== ALL IPC HANDLERS ====================
+
+// Generic query
+ipcMain.handle('queryDatabase', async (e, query, params = []) => {
+  if (!db) return { success: false, error: 'Database not ready', data: [] };
+  try {
+    const stmt = db.prepare(query); stmt.bind(params || []); const rows = [];
+    while (stmt.step()) rows.push(stmt.getAsObject()); stmt.free();
+    let lastId = null;
+    if (query.trim().toUpperCase().startsWith('INSERT')) { try { const r = db.exec('SELECT last_insert_rowid()'); if (r.length > 0) lastId = r[0].values[0][0]; } catch (e) { } }
+    
+
+    // [AUTO-SAVE PATCH] Persist to disk after every write (INSERT/UPDATE/DELETE/CREATE)
+    if (/^(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER|REPLACE)\s/i.test(query)) {
+      saveDb();
+    }return { success: true, data: rows, lastInsertRowid: lastId };
+  } catch (err) { return { success: false, error: err.message, data: [] }; }
+});
+
+ipcMain.handle('checkInitialized', async () => {
+  try { if (!db) return { success: true, data: false }; const r = db.exec("SELECT COUNT(*) FROM users"); return { success: true, data: r.length > 0 && r[0].values[0][0] > 0 }; } catch (e) { return { success: true, data: false }; }
+});
+
+
+
+// License & Trial System
+ipcMain.handle('getHwid', async () => {
+  return { success: true, hwid: generateHWID() };
+});
+
+ipcMain.handle('checkLicense', async () => {
+  try {
+    // 1. Check if a valid license key exists in database
+    const lic = db.exec("SELECT value FROM system_settings WHERE key = 'license_key'");
+    if (lic.length > 0 && lic[0].values.length > 0 && lic[0].values[0][0]) {
+      return { success: true }; // Licensed
+    }
+
+    // 2. No license, check 5-day trial period
+    const trialRes = db.exec("SELECT value FROM system_settings WHERE key = 'trial_start_date'");
+    if (trialRes.length > 0 && trialRes[0].values.length > 0 && trialRes[0].values[0][0]) {
+      const startDate = new Date(trialRes[0].values[0][0]);
+      const daysPassed = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+
+      if (daysPassed < 5) {
+        return { success: false, isTrial: true, daysLeft: 5 - daysPassed }; // Still in trial
+      } else {
+        return { success: false, isTrial: false }; // Trial expired, lock system
+      }
+    }
+
+    // 3. Fallback (Setup might not have run properly)
+    return { success: false, isTrial: true, daysLeft: 5 };
+  } catch (e) { return { success: false, isTrial: false, error: e.message }; }
+});
+
+ipcMain.handle('activateLicense', async (e, d) => {
+  try {
+    if (!d || !d.licenseKey) return { success: false, error: 'Invalid key' };
+    db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_key', ?)", [d.licenseKey]);
+    saveDb();
+    return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+// Auth
+ipcMain.handle('auth-setup', async (e, d) => {
+  if (!db) return { success: false, error: 'DATABASE FAILED TO LOAD' }; if (!bcrypt) return { success: false, error: 'BCRYPTJS MODULE MISSING' };
+  try {
+    db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('school_name', ?)", [d.schoolName]);
+    db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('school_level', ?)", [d.schoolLevel || 'Primary']);
+    db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('school_category', ?)", [d.schoolCategory || 'Day_Mixed']);
+    db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('backup_email', ?)", [d.backupEmail || '']);
+    db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('trial_start_date', ?)", [new Date().toISOString()]);
+
+    // Add security columns if they don't exist in old DBs
+    try { db.run("ALTER TABLE users ADD COLUMN security_question TEXT"); } catch (e) { }
+    try { db.run("ALTER TABLE users ADD COLUMN security_answer TEXT"); } catch (e) { }
+
+    db.run("INSERT INTO users (username, password, role, security_question, security_answer) VALUES (?, ?, 'Super Admin', ?, ?)",
+      [d.adminUser, bcrypt.hashSync(d.adminPass, 10), d.secQuestion, d.secAnswer]);
+    saveDb();
+    return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('auth-get-security-question', async (e, username) => {
+  if (!db) return { success: false, error: 'No database' };
+  try {
+    const stmt = db.prepare("SELECT id, security_question FROM users WHERE username = ?");
+    stmt.bind([username]);
+    if (stmt.step()) {
+      const u = stmt.getAsObject(); stmt.free();
+      if (u.security_question) return { success: true, question: u.security_question, userId: u.id };
+      return { success: false, error: 'No security question set for this user.' };
+    }
+    stmt.free();
+    return { success: false, error: 'User not found' };
+  } catch (err) { return { success: false, error: err.message }; }
+});
+
+ipcMain.handle('auth-reset-password-via-question', async (e, d) => {
+  if (!db) return { success: false, error: 'DATABASE FAILED TO LOAD' }; if (!bcrypt) return { success: false, error: 'BCRYPTJS MODULE MISSING' };
+  try {
+    const stmt = db.prepare("SELECT id FROM users WHERE id = ? AND security_answer = ?");
+    stmt.bind([d.userId, d.answer]);
+    if (stmt.step()) {
+      stmt.free();
+      db.run("UPDATE users SET password = ? WHERE id = ?", [bcrypt.hashSync(d.newPassword, 10), d.userId]);
+      saveDb(); return { success: true };
+    }
+    stmt.free();
+    return { success: false, error: 'Incorrect security answer' };
+  } catch (err) { return { success: false, error: err.message }; }
+});
+
+ipcMain.handle('auth-login', async (e, c) => {
+  if (!db) return { success: false, error: 'DATABASE FAILED TO LOAD' }; if (!bcrypt) return { success: false, error: 'BCRYPTJS MODULE MISSING' };
+  try {
+    const stmt = db.prepare("SELECT * FROM users WHERE username = ?"); stmt.bind([c.username]);
+    if (stmt.step()) {
+      const u = stmt.getAsObject(); stmt.free();
+      if (bcrypt.compareSync(c.password, u.password)) {
+        db.run("UPDATE users SET last_login = datetime('now') WHERE id = ?", [u.id]);
+        saveDb();
+        return { success: true, user: { id: u.id, username: u.username, role: u.role, permissions: u.permissions } };
+      }
+      return { success: false, error: 'Invalid password' };
+    }
+    stmt.free();
+    return { success: false, error: 'User not found' };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('addUser', async (e, d) => {
+  if (!db) return { success: false, error: 'DATABASE FAILED TO LOAD' }; if (!bcrypt) return { success: false, error: 'BCRYPTJS MODULE MISSING' };
+  try { db.run("INSERT INTO users (username, password, role, permissions) VALUES (?,?,?,?)", [d.username, bcrypt.hashSync(d.password, 10), d.role, d.permissions || '']); saveDb(); return { success: true }; } catch (err) { return { success: false, error: err.message }; }
+});
+
+ipcMain.handle('auth-add-user', async (e, d) => {
+  if (!db) return { success: false, error: 'DATABASE FAILED TO LOAD' }; if (!bcrypt) return { success: false, error: 'BCRYPTJS MODULE MISSING' };
+  try { db.run("INSERT INTO users (username, password, role, permissions) VALUES (?,?,?,?)", [d.username, bcrypt.hashSync(d.password, 10), d.role, d.permissions || '']); saveDb(); return { success: true }; } catch (err) { return { success: false, error: err.message }; }
+});
+// ==================== PAYMENT SETTINGS HANDLERS ====================
+ipcMain.handle('getPaymentSettings', async () => {
+  if (!db) return { success: false, error: 'Database not ready' };
+  try {
+    const keys = [
+      'mtn_api_key', 'mtn_user_id', 'mtn_callback_url',
+      'airtel_client_id', 'airtel_client_secret', 'airtel_pin',
+      'bank_name', 'bank_account_number', 'bank_account_name',
+      'bank_api_url', 'bank_api_key', 'bank_client_id', 'bank_api_secret'
+    ];
+    const settings = {};
+    for (const key of keys) {
+      const r = db.exec(`SELECT value FROM system_settings WHERE key = '${key}'`);
+      settings[key] = (r.length > 0 && r[0].values.length > 0) ? r[0].values[0][0] : '';
+    }
+    return { success: true, data: settings };
+  } catch (err) { return { success: false, error: err.message }; }
+});
+
+ipcMain.handle('savePaymentSettings', async (e, settingsData) => {
+  if (!db) return { success: false, error: 'Database not ready' };
+  try {
+    for (const [key, value] of Object.entries(settingsData)) {
+      db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)", [key, value || '']);
+    }
+    saveDb();
+    return { success: true };
+  } catch (err) { return { success: false, error: err.message }; }
+});
+
+// ==================== MISSING EMIS, NETWORK & SETTINGS HANDLERS ====================
+ipcMain.handle('getNetworkMode', async () => { try { const r = db.exec("SELECT value FROM system_settings WHERE key = 'network_mode'"); return { success: true, mode: (r.length > 0 && r[0].values.length > 0) ? r[0].values[0][0] : 'standalone' }; } catch (e) { return { success: true, mode: 'standalone' }; } });
+ipcMain.handle('setNetworkMode', async (e, d) => { try { db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('network_mode', ?)", [d.mode]); saveDb(); return { success: true }; } catch (e) { return { success: false, error: e.message }; } });
+ipcMain.handle('getTailscaleIp', async () => { return { success: true, ip: '127.0.0.1' }; });
+ipcMain.handle('getPowerMode', async () => { return { success: true, mode: powerMonitor.isOnBatteryPower() ? 'Battery' : 'Plugged In' }; });
+
+
+// [AUTO-SAVE PATCH] Save on laptop sleep / shutdown
+powerMonitor.on('shutdown', () => { saveDb(); });
+powerMonitor.on('suspend', () => { saveDb(); });
+ipcMain.handle('getSetting', async (e, k) => { try { const r = db.exec(`SELECT value FROM system_settings WHERE key = '${k}'`); return { success: true, data: (r.length > 0 && r[0].values.length > 0) ? r[0].values[0][0] : null }; } catch (e) { return { success: false }; } });
+ipcMain.handle('set-setting', async (e, k, v) => { try { db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)", [k, v]); saveDb(); return { success: true }; } catch (e) { return { success: false }; } });
+
+ipcMain.handle('emisGetSchoolProfile', async () => { try { const r = db.exec("SELECT * FROM school_registration WHERE id = 1"); if (r.length > 0 && r[0].values.length > 0) { const obj = {}; r[0].columns.forEach((c, i) => obj[c] = r[0].values[0][i]); return { success: true, data: obj }; } return { success: true, data: {} }; } catch (e) { return { success: false, error: e.message }; } });
+ipcMain.handle('emisSaveSchoolProfile', async (e, d) => { try { for (const [k, v] of Object.entries(d)) { db.run(`UPDATE school_registration SET ${k} = ? WHERE id = 1`, [v]); } saveDb(); return { success: true }; } catch (e) { return { success: false, error: e.message }; } });
+ipcMain.handle('emisGetAcademicYears', async () => { try { const r = db.exec("SELECT * FROM academic_years ORDER BY id DESC"); return { success: true, data: r.length > 0 ? r[0].values.map(row => { const obj = {}; r[0].columns.forEach((c, i) => obj[c] = row[i]); return obj; }) : [] }; } catch (e) { return { success: false, error: e.message }; } });
+ipcMain.handle('emisSaveAcademicYear', async (e, d) => { try { db.run("UPDATE academic_years SET is_current = 0"); db.run("INSERT INTO academic_years (year_name, is_current) VALUES (?, 1)", [d.year_name]); saveDb(); return { success: true }; } catch (e) { return { success: false, error: e.message }; } });
+ipcMain.handle('emisGetDashboardStats', async () => { try { let stats = { totalStudents: 0, totalBoys: 0, totalGirls: 0, totalStaff: 0, totalTeachers: 0, lastSync: 'Never' }; const sr = db.exec("SELECT COUNT(*) as c, gender FROM students WHERE status='Active' GROUP BY gender"); if (sr.length > 0) sr[0].values.forEach(r => { if (r[1] === 'M') stats.totalBoys = r[0]; else stats.totalGirls = r[0]; stats.totalStudents += r[0]; }); const st = db.exec("SELECT COUNT(*) as c FROM staff WHERE status='Active'"); if (st.length > 0) stats.totalStaff = st[0].values[0][0]; const tc = db.exec("SELECT COUNT(*) as c FROM staff WHERE status='Active' AND role LIKE '%Teacher%'"); if (tc.length > 0) stats.totalTeachers = tc[0].values[0][0]; return { success: true, data: stats }; } catch (e) { return { success: false, error: e.message }; } });
+ipcMain.handle('emisGetSpecialNeeds', async () => { try { const r = db.exec("SELECT sn.*, s.first_name, s.last_name FROM special_needs_learners sn JOIN students s ON sn.student_id=s.id"); return { success: true, data: r.length > 0 ? r[0].values.map(row => { const obj = {}; r[0].columns.forEach((c, i) => obj[c] = row[i]); return obj; }) : [] }; } catch (e) { return { success: false, error: e.message }; } });
+ipcMain.handle('emisSaveSpecialNeed', async (e, d) => { try { db.run("INSERT INTO special_needs_learners (student_id, disability_type, severity) VALUES (?, ?, ?)", [d.student_id, d.disability_type, d.severity || 'Mild']); saveDb(); return { success: true }; } catch (e) { return { success: false, error: e.message }; } });
+ipcMain.handle('emisGetOVC', async () => { try { const r = db.exec("SELECT o.*, s.first_name, s.last_name FROM ovc_data o JOIN students s ON o.student_id=s.id"); return { success: true, data: r.length > 0 ? r[0].values.map(row => { const obj = {}; r[0].columns.forEach((c, i) => obj[c] = row[i]); return obj; }) : [] }; } catch (e) { return { success: false, error: e.message }; } });
+ipcMain.handle('emisSaveOVC', async (e, d) => { try { db.run("INSERT INTO ovc_data (student_id, ovc_category) VALUES (?, ?)", [d.student_id, d.ovc_category]); saveDb(); return { success: true }; } catch (e) { return { success: false, error: e.message }; } });
+
+// ==================== PAYMENT HANDLERS (Connecting to payments.js) ====================
+ipcMain.handle('initiate-mtn', async (e, d) => { if (paymentHandler) return paymentHandler.initiateMTN(d); return { success: false, error: 'Payments not initialized' }; });
+ipcMain.handle('initiate-airtel', async (e, d) => { if (paymentHandler) return paymentHandler.initiateAirtel(d); return { success: false, error: 'Payments not initialized' }; });
+ipcMain.handle('create-bank-payment', async (e, d) => { if (paymentHandler) return paymentHandler.createBankPayment(d); return { success: false, error: 'Payments not initialized' }; });
+ipcMain.handle('confirm-bank-payment', async (e, r) => { if (paymentHandler) return paymentHandler.confirmBankPayment(r); return { success: false }; });
+ipcMain.handle('check-payment-status', async (e, r) => { if (paymentHandler) return paymentHandler.checkPaymentStatus(r); return { success: false }; });
+ipcMain.handle('get-payment-methods', async () => { if (paymentHandler) return paymentHandler.getPaymentMethods(); return { success: true, data: [] }; });
+
+ipcMain.handle('unebGetConfig', async () => { try { const r = db.exec('SELECT * FROM military_grade_config WHERE is_current = 1'); return { success: true, data: r.length > 0 ? r[0].values.map(row => { const obj = {}; r[0].columns.forEach((c, i) => obj[c] = row[i]); return obj; })[0] : null }; } catch (e) { return { success: false, error: e.message }; } });
+// Generate Paycodes for students missing them
+ipcMain.handle('backfill-paycodes', async () => {
+  try {
+    const students = db.exec("SELECT id FROM students WHERE status='Active' AND (paycode IS NULL OR paycode = '' OR paycode = 'N/A')");
+    if (students.length > 0 && students[0].values.length > 0) {
+      for (const row of students[0].values) {
+        const code = 'P' + crypto.randomBytes(3).toString('hex').toUpperCase() + Date.now().toString(36).slice(-2).toUpperCase();
+        db.run("UPDATE students SET paycode = ? WHERE id = ?", [code, row[0]]);
+      }
+      saveDb();
+      return { success: true, data: { count: students[0].values.length } };
+    }
+    return { success: true, data: { count: 0 } };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+
+// ==================== ENHANCED LICENSE VALIDATION ====================
+ipcMain.handle('validateLicenseKey', async (e, licenseData) => {
+  try {
+    if (!licenseData || !licenseData.licenseKey) {
+      return { valid: false, error: 'No license key provided' };
+    }
+    
+    const hwid = generateHWID();
+    const key = licenseData.licenseKey.trim();
+    
+    // License format: SSEWASSWA-XXXX-XXXX-XXXX-HWIDHASH
+    const parts = key.split('-');
+    if (parts.length < 5 || parts[0] !== 'SSEWASSWA') {
+      return { valid: false, error: 'Invalid license format' };
+    }
+    
+    // Extract HWID hash from license (last part, first 16 chars)
+    const licenseHwidHash = parts[4].substring(0, 16);
+    const currentHwidHash = crypto.createHash('sha256').update(hwid).digest('hex').substring(0, 16);
+    
+    if (licenseHwidHash !== currentHwidHash) {
+      return { valid: false, error: 'License not bound to this computer. Contact support.' };
+    }
+    
+    // Store validated license
+    db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_key', ?)", [key]);
+    db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_hwid', ?)", [hwid]);
+    saveDb();
+    
+    return { valid: true, message: 'License activated successfully' };
+  } catch (err) {
+    return { valid: false, error: err.message };
+  }
+});
+
+// Generate license for a specific HWID (admin use only)
+ipcMain.handle('generateLicenseForHwid', async (e, hwid) => {
+  try {
+    const hwidHash = crypto.createHash('sha256').update(hwid || generateHWID()).digest('hex').substring(0, 16);
+    const seg1 = crypto.randomBytes(2).toString('hex').toUpperCase();
+    const seg2 = crypto.randomBytes(2).toString('hex').toUpperCase();
+    const seg3 = crypto.randomBytes(2).toString('hex').toUpperCase();
+    const licenseKey = 'SSEWASSWA-' + seg1 + '-' + seg2 + '-' + seg3 + '-' + hwidHash + crypto.randomBytes(4).toString('hex').toUpperCase();
+    return { success: true, licenseKey: licenseKey, hwid: hwid || generateHWID() };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+
+// ==================== MEETING MINUTES HANDLERS ====================
+ipcMain.handle('getMeetings', async () => { try { const r = db.exec("SELECT mm.*, u.username as created_by_name FROM meeting_minutes mm LEFT JOIN users u ON mm.created_by = u.id ORDER BY mm.date DESC"); return { success: true, data: r.length > 0 ? r[0].values.map(row => { const obj = {}; r[0].columns.forEach((c, i) => obj[c] = row[i]); return obj; }) : [] }; } catch (e) { return { success: false, error: e.message }; } });
+
+ipcMain.handle('saveMeeting', async (e, d) => {
+  try {
+    const r = db.exec("INSERT INTO meeting_minutes (meeting_type, date, time, venue, chairperson, secretary, agenda, minutes, action_items, attendees, status, created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+      [d.meeting_type, d.date, d.time, d.venue, d.chairperson, d.secretary, d.agenda ? JSON.stringify(d.agenda) : null, d.minutes ? JSON.stringify(d.minutes) : null, d.action_items ? JSON.stringify(d.action_items) : null, d.attendees ? JSON.stringify(d.attendees) : null, d.status || 'Draft', d.created_by || null]);
+    saveDb(); return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('deleteMeeting', async (e, id) => { try { db.run("DELETE FROM meeting_minutes WHERE id = ?", [id]); db.run("DELETE FROM meeting_attendees WHERE meeting_id = ?", [id]); db.run("DELETE FROM meeting_actions WHERE meeting_id = ?", [id]); saveDb(); return { success: true }; } catch (e) { return { success: false, error: e.message }; } });
+
+// ==================== SIGNATURE HANDLERS ====================
+ipcMain.handle('saveSignature', async (e, d) => {
+  try { db.run("INSERT OR REPLACE INTO stored_signatures (person_id, person_type, person_name, signature_image) VALUES (?,?,?,?)", [d.person_id, d.person_type, d.person_name, d.signature_image]); saveDb(); return { success: true }; } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('getSignature', async (e, personId, personType) => {
+  try { const r = db.exec("SELECT * FROM stored_signatures WHERE person_id = ? AND person_type = ?", [personId, personType]); return { success: true, data: r.length > 0 ? r[0].values.map(row => { const obj = {}; r[0].columns.forEach((c, i) => obj[c] = row[i]); return obj; })[0] : null }; } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('getAllSignatures', async (e, personType) => {
+  try { const r = db.exec("SELECT * FROM stored_signatures WHERE person_type = ? ORDER BY person_name", [personType]); return { success: true, data: r.length > 0 ? r[0].values.map(row => { const obj = {}; r[0].columns.forEach((c, i) => obj[c] = row[i]); return obj; }) : [] }; } catch (e) { return { success: false, error: e.message }; }
+});
+
+// ==================== PARENT PROFILE HANDLERS ====================
+ipcMain.handle('getParents', async (e, studentId) => {
+  try { const r = db.exec(studentId ? "SELECT * FROM parent_profiles WHERE student_id = ?" : "SELECT * FROM parent_profiles ORDER BY parent_name"); return { success: true, data: r.length > 0 ? r[0].values.map(row => { const obj = {}; r[0].columns.forEach((c, i) => obj[c] = row[i]); return obj; }) : [] }; } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('saveParent', async (e, d) => {
+  try {
+    if (d.id) { db.run("UPDATE parent_profiles SET parent_name=?, relationship=?, phone=?, phone2=?, email=?, occupation=?, nin=?, residence=? WHERE id=?", [d.parent_name, d.relationship, d.phone, d.phone2, d.email, d.occupation, d.nin, d.residence, d.id]); }
+    else { db.run("INSERT INTO parent_profiles (student_id, parent_name, relationship, phone, phone2, email, occupation, nin, residence) VALUES (?,?,?,?,?,?,?,?,?)", [d.student_id, d.parent_name, d.relationship, d.phone, d.phone2, d.email, d.occupation, d.nin, d.residence]); }
+    saveDb(); return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('deleteParent', async (e, id) => { try { db.run("DELETE FROM parent_profiles WHERE id = ?", [id]); saveDb(); return { success: true }; } catch (e) { return { success: false, error: e.message }; } });
+
+// ==================== STUDENT TIMELINE HANDLERS ====================
+ipcMain.handle('getStudentTimeline', async (e, studentId) => {
+  try { const r = db.exec("SELECT st.*, u.username as recorded_by_name FROM student_timeline st LEFT JOIN users u ON st.recorded_by = u.id WHERE st.student_id = ? ORDER BY st.event_date DESC, st.created_at DESC", [studentId]); return { success: true, data: r.length > 0 ? r[0].values.map(row => { const obj = {}; r[0].columns.forEach((c, i) => obj[c] = row[i]); return obj; }) : [] }; } catch (e) { return { success: false, error: e.message }; }
+});
+
+ipcMain.handle('addTimelineEvent', async (e, d) => {
+  try { db.run("INSERT INTO student_timeline (student_id, event_type, event_date, description, recorded_by) VALUES (?,?,?,?,?)", [d.student_id, d.event_type, d.event_date, d.description, d.recorded_by]); saveDb(); return { success: true }; } catch (e) { return { success: false, error: e.message }; }
+});
+
+// ==================== AUTO-BACKUP TO GMAIL ====================
+ipcMain.handle('backupToGmail', async (e, emailConfig) => {
+  if (!db) return { success: false, error: 'Database not ready' };
+  try {
+    const nodemailer = require('nodemailer');
+    const email = emailConfig.email || (await new Promise(res => { try { const r = db.exec("SELECT value FROM system_settings WHERE key = 'backup_email'"); res(r.length > 0 ? r[0].values[0][0] : null); } catch(e) { res(null); } }));
+    const pass = emailConfig.password;
+    if (!email || !pass) return { success: false, error: 'Email and password required. Go to Settings > Backup to configure.' };
+
+    const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: email, pass: pass } });
+    const dbData = Buffer.from(db.export());
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const schoolName = (await new Promise(res => { try { const r = db.exec("SELECT value FROM system_settings WHERE key = 'school_name'"); res(r.length > 0 ? r[0].values[0][0] : 'School'); } catch(e) { res('School'); } }));
+
+    await transporter.sendMail({
+      from: email, to: email,
+      subject: `[AUTO-BACKUP] ${schoolName} Database - ${dateStr}`,
+      text: `Automated database backup from ${schoolName} ERP System.\nDate: ${dateStr}\nFile: school_v10_isolated.db\nSize: ${(dbData.length / 1024).toFixed(1)} KB\n\nDo not reply to this email.`,
+      attachments: [{ filename: `backup_${schoolName.replace(/\s/g,'_')}_${dateStr}.db`, content: dbData }]
+    });
+    saveDb();
+    return { success: true, message: 'Backup sent to ' + email };
+  } catch (err) { return { success: false, error: err.message }; }
+});
+
+// ==================== DOCUMENT TEMPLATE HANDLERS ====================
+ipcMain.handle('getDocTemplates', async () => { try { const r = db.exec("SELECT * FROM document_templates ORDER BY template_name"); return { success: true, data: r.length > 0 ? r[0].values.map(row => { const obj = {}; r[0].columns.forEach((c, i) => obj[c] = row[i]); return obj; }) : [] }; } catch (e) { return { success: false, error: e.message }; } });
+
+ipcMain.handle('saveDocTemplate', async (e, d) => {
+  try {
+    if (d.id) { db.run("UPDATE document_templates SET template_name=?, doc_type=?, header_config=?, footer_config=?, boundary_style=? WHERE id=?", [d.template_name, d.doc_type, d.header_config, d.footer_config, d.boundary_style, d.id]); }
+    else { db.run("INSERT INTO document_templates (template_name, doc_type, header_config, footer_config, boundary_style) VALUES (?,?,?,?,?)", [d.template_name, d.doc_type, d.header_config, d.footer_config, d.boundary_style]); }
+    saveDb(); return { success: true };
+  } catch (e) { return { success: false, error: e.message }; }
+});
+});

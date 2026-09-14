@@ -1,0 +1,1 @@
+import{j as r}from"./index-BudOanDb.js";function i(){return r.jsxs("div",{className:"page-container",children:[r.jsx("h1",{className:"page-title",children:"⚽ Extracurricular Activities"}),r.jsx("div",{className:"card",children:r.jsx("div",{className:"card-body",children:r.jsx("p",{children:"Extracurricular activities management coming soon."})})})]})}export{i as default};

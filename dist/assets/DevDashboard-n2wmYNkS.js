@@ -1,0 +1,1 @@
+import{j as e}from"./index-BudOanDb.js";function a(){return e.jsxs("div",{className:"page-container",children:[e.jsx("h1",{className:"page-title",children:"🛠️ Developer Dashboard"}),e.jsx("div",{className:"card",children:e.jsx("div",{className:"card-body",children:e.jsx("p",{children:"Developer tools and diagnostics."})})})]})}export{a as default};
