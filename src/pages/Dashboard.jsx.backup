@@ -1,0 +1,100 @@
+import React, { useState, useEffect } from 'react';
+export default function Dashboard() {
+  const [stats, setStats] = useState({ schoolName: 'Loading...', totalStudents: 0, totalBoys: 0, totalGirls: 0, totalStaff: 0, totalTeachers: 0, feesCollected: 0, outstandingDebts: 0, payroll: 0, lastSync: 'Never' });
+  const [trialDaysLeft, setTrialDaysLeft] = useState(null);
+  const [powerMode, setPowerMode] = useState('Plugged In');
+  const [emailAlert, setEmailAlert] = useState(false);
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      const emailRes = await window.electronAPI.queryDatabase("SELECT value FROM system_settings WHERE key = 'backup_email'");
+      if (emailRes.success && (emailRes.data.length === 0 || emailRes.data[0].value === '')) setEmailAlert(true);
+
+      const nameRes = await window.electronAPI.queryDatabase("SELECT value FROM system_settings WHERE key = 'school_name'");
+      const feesRes = await window.electronAPI.queryDatabase("SELECT SUM(amount_paid) as total FROM payments");
+      const payRes = await window.electronAPI.queryDatabase("SELECT SUM(amount_paid) as total FROM payroll_payments");
+      const expRes = await window.electronAPI.queryDatabase("SELECT SUM(fs.amount) as total FROM fees_structure fs JOIN students s ON fs.class_id = s.class_id");
+
+      const expected = expRes.success ? (expRes.data[0].total || 0) : 0;
+      const collected = feesRes.success ? (feesRes.data[0].total || 0) : 0;
+
+      let emisStats = { totalStudents: 0, totalBoys: 0, totalGirls: 0, totalStaff: 0, totalTeachers: 0, lastSync: 'Never' };
+      try {
+        const r = await window.electronAPI.emisGetDashboardStats();
+        if (r.success) emisStats = r.data;
+      } catch (e) {
+        const sr = await window.electronAPI.queryDatabase("SELECT COUNT(*) as c FROM students");
+        const stfr = await window.electronAPI.queryDatabase("SELECT COUNT(*) as c FROM staff");
+        emisStats.totalStudents = sr.success ? sr.data[0].c : 0;
+        emisStats.totalStaff = stfr.success ? stfr.data[0].c : 0;
+      }
+
+      setStats({
+        schoolName: nameRes.success && nameRes.data.length > 0 ? nameRes.data[0].value : 'School',
+        totalStudents: emisStats.totalStudents, totalBoys: emisStats.totalBoys, totalGirls: emisStats.totalGirls,
+        totalStaff: emisStats.totalStaff, totalTeachers: emisStats.totalTeachers,
+        feesCollected: collected, outstandingDebts: calculatedDebts > 0 ? expected - collected : 0,
+        payroll: payRes.success ? (payRes.data[0].total || 0) : 0, lastSync: emisStats.lastSync
+      });
+
+      const lic = await window.electronAPI.checkLicense();
+      if (!lic.success) {
+        const tRes = await window.electronAPI.queryDatabase("SELECT value FROM system_settings WHERE key = 'trial_start_date'");
+        if (tRes.success && tRes.data.length > 0) {
+          const days = 5 - Math.floor((new Date() - new Date(tRes.data[0].value)) / (1000 * 60 * 60 * 24));
+          setTrialDaysLeft(days);
+        }
+      }
+
+      try {
+        const pRes = await window.electronAPI.getPowerMode();
+        if (pRes.success) setPowerMode(pRes.mode);
+      } catch (e) { }
+    };
+    fetchAll();
+  }, []);
+
+  return (
+    <div className="page-container">
+      <h1 className="page-title">{stats.schoolName} - Dashboard</h1>
+
+      {/* Marketing Advert Banner */}
+      <div style={{ background: 'linear-gradient(90deg, #1a73e8, #00c853)', color: 'white', padding: '20px', borderRadius: '12px', marginBottom: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+        <div>
+          <h3 style={{ margin: '0 0 5px 0', fontWeight: '700' }}>🚀 Upgrade to Ssewasswa Cloud ERP</h3>
+          <p style={{ margin: 0, fontSize: '14px', opacity: 0.9 }}>Access your school data from anywhere. Auto-sync to Uganda EMIS. Get 1 month FREE!</p>
+        </div>
+        <a href="https://t.me/SsewasswaTech" target="_blank" rel="noreferrer" style={{ background: 'white', color: '#1a73e8', padding: '10px 20px', borderRadius: '20px', textDecoration: 'none', fontWeight: '700', fontSize: '14px' }}>
+          Learn More
+        </a>
+      </div>
+
+      {emailAlert && (
+        <div style={{ background: '#ffebee', color: '#c62828', padding: '15px', borderRadius: '8px', marginBottom: '20px', fontWeight: 'bold', border: '1px solid #ef9a9a' }}>
+          ⚠️ Data Protection Alert: No backup email configured! Go to Settings - Backups to secure your data.
+        </div>
+      )}
+
+      {trialDaysLeft !== null && trialDaysLeft <= 2 && (
+        <div style={{ background: '#fff3e0', color: '#e65100', padding: '15px', borderRadius: '8px', marginBottom: '20px', fontWeight: 'bold', border: '1px solid #ffcc80' }}>
+          ⚠️ Trial Ending: You have {trialDaysLeft} day(s) left. Activate your software to avoid lockout.
+        </div>
+      )}
+
+      {powerMode === 'Battery' && (
+        <div style={{ background: '#fce4ec', color: '#c2185b', padding: '10px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px' }}>
+          🔋 You are running on battery power. Please plug in your laptop to prevent data loss.
+        </div>
+      )}
+
+      <div className="dashboard-grid">
+        <div className="card"><div className="card-header">Total Students</div><div className="card-body"><h2>{stats.totalStudents}</h2><p style={{ fontSize: '12px', color: '#666' }}>Boys: {stats.totalBoys} | Girls: {stats.totalGirls}</p></div></div>
+        <div className="card"><div className="card-header">Total Staff</div><div className="card-body"><h2>{stats.totalStaff}</h2><p style={{ fontSize: '12px', color: '#666' }}>Teachers: {stats.totalTeachers}</p></div></div>
+        <div className="card"><div className="card-header">Fees Collected</div><div className="card-body"><h2 style={{ color: 'green' }}>Ugx {stats.feesCollected.toLocaleString()}</h2></div></div>
+        <div className="card"><div className="card-header">Outstanding Debts</div><div className="card-body"><h2 style={{ color: 'red' }}>Ugx {stats.outstandingDebts.toLocaleString()}</h2></div></div>
+        <div className="card"><div className="card-header">Payroll Paid</div><div className="card-body"><h2 style={{ color: 'orange' }}>Ugx {stats.payroll.toLocaleString()}</h2></div></div>
+        <div className="card"><div className="card-header">EMIS Last Sync</div><div className="card-body"><h2 style={{ fontSize: '14px' }}>{stats.lastSync}</h2></div></div>
+      </div>
+    </div>
+  );
+}

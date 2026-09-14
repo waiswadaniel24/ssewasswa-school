@@ -1,0 +1,68 @@
+{
+    "name": "ssewasswa-school-v10-isolated",
+    "version": "10.0.0",
+    "description": "Commercial School ERP",
+    "main": "electron/main.js",
+    "scripts": {
+        "dev:vite": "vite",
+        "dev:electron": "wait-on tcp:5173 && cross-env NODE_ENV=development electron .",
+        "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
+        "build": "vite build",
+        "package": "npm run build && electron-builder",
+        "lint": "eslint \"src/**\" \"electron/**\" --ext .js,.jsx",
+        "format": "prettier --write \"src/**\" \"electron/**\" package.json",
+        "ci": "npm run lint && npm run build",
+        "test": "jest --runInBand"
+    },
+    "dependencies": {
+        "axios": "^1.6.2",
+        "bcryptjs": "^2.4.3",
+        "express": "^4.18.2",
+        "jspdf": "^2.5.2",
+        "jspdf-autotable": "^3.8.4",
+        "nodemailer": "^6.10.1",
+        "qrcode": "^1.5.4",
+        "qrcode.react": "^3.2.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-router-dom": "^6.20.1",
+        "sql.js": "^1.14.2"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-react": "^4.2.0",
+        "concurrently": "^8.2.2",
+        "cross-env": "^7.0.3",
+        "electron": "^28.0.0",
+        "electron-builder": "^24.9.1",
+        "eslint": "^8.0.0",
+        "eslint-config-prettier": "^9.0.0",
+        "eslint-plugin-react": "^7.32.0",
+        "javascript-obfuscator": "^5.5.0",
+        "jest": "^29.0.0",
+        "prettier": "^3.0.0",
+        "vite": "^5.0.0",
+        "wait-on": "^7.2.0"
+    },
+    "jest": {
+        "testEnvironment": "node",
+        "testPathIgnorePatterns": [
+            "/node_modules/",
+            "/dist/"
+        ]
+    },
+    "build": {
+        "appId": "com.ssewasswa.school",
+        "productName": "Ssewasswa School ERP V10",
+        "files": [
+            "dist/**/*",
+            "electron/**/*"
+        ],
+        "directories": {
+            "output": "release"
+        },
+        "win": {
+            "target": "nsis",
+            "icon": "public/icon.png"
+        }
+    }
+}

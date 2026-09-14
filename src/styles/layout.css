@@ -1,0 +1,13 @@
+.layout-container { display: flex; flex-direction: column; height: 100vh; }
+.layout-header { background: white; padding: 0 24px; height: 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #dadce0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.header-title { font-size: 1.2rem; font-weight: 600; color: #1a73e8; }
+.header-actions { display: flex; align-items: center; gap: 15px; }
+.layout-body { display: flex; flex: 1; overflow: hidden; }
+.layout-sidebar { width: 240px; background: white; border-right: 1px solid #dadce0; padding: 16px 0; overflow-y: auto; }
+.sidebar-link { display: block; padding: 12px 24px; text-decoration: none; color: #5f6368; font-weight: 500; }
+.sidebar-link.active { background: #e8f0fe; color: #1a73e8; border-left: 4px solid #1a73e8; }
+.layout-main { flex: 1; padding: 24px; overflow-y: auto; }
+.login-container { display: flex; align-items: center; justify-content: center; height: 100vh; }
+.page-container { padding: 10px; }
+.page-title { margin-bottom: 24px; color: #202124; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 24px; }
