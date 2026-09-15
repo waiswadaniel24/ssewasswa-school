@@ -321,12 +321,7 @@ export default function GenerateDocs() {
             <p style={{ color: '#666' }}>Loading documents data...</p>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-      {/* --- Tab: Requirements & Fees Form --- */}
+        </div>            {/* ─── Tab: Requirements & Fees Form ──────────────── */}
             {tab === 'reqs' && (
                 <div style={{ maxWidth: '700px' }}>
                     <div className="card">
@@ -764,6 +759,4 @@ export default function GenerateDocs() {
                 </div>
             )}
 
-    </div>
-  );
-}
+
