@@ -424,13 +424,6 @@ powerMonitor.on('suspend', () => { saveDb(); });
 // IPC HANDLERS — ALL AT MODULE SCOPE (never nested)
 // ═══════════════════════════════════════════════════════════
 
-ipcMain.handle('getLicenseTier', async () => {
-    try {
-        var r = db.exec("SELECT value FROM system_settings WHERE key = 'license_tier'");
-        if (r.length > 0 && r[0].values.length > 0) return { success: true, tier: r[0].values[0][0] };
-        return { success: true, tier: 'none' };
-    } catch (err) { return { success: true, tier: 'none' }; }
-});
 // ─── SYSTEM & INITIALIZATION ───────────────────────────────
 
 ipcMain.handle('checkInitialized', async () => {
@@ -483,27 +476,27 @@ ipcMain.handle('activateLicense', async (e, d) => {
 
 ipcMain.handle('validateLicenseKey', async (e, licenseData) => {
     try {
-        if (!licenseData || !licenseData.licenseKey) return { valid: false, error: 'No license key provided' };
-        var hwid = generateHWID();
-        var key = licenseData.licenseKey.trim().toUpperCase();
-        var parts = key.split('-');
-        if (parts.length < 5 || parts[0] !== 'SSEWASSWA') return { valid: false, error: 'Invalid license format' };
-
-        var tier = '';
-        if (parts[1] === 'PREM') tier = 'premium';
-        else if (parts[1] === 'ORD') tier = 'ordinary';
-        else return { valid: false, error: 'Invalid license tier' };
-
-        var licHwidHash = parts[4].substring(0, 16);
-        var curHwidHash = crypto.createHash('sha256').update(hwid).digest('hex').substring(0, 16);
-        if (licHwidHash !== curHwidHash) return { valid: false, error: 'License not bound to this computer' };
-
-        db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_key', ?)", [key]);
-        db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_hwid', ?)", [hwid]);
-        db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_tier', ?)", [tier]);
+        if (!licenseData || !licenseData.licenseKey) {
+            return { valid: false, error: 'No license key provided' };
+        }
+        const hwid = generateHWID();
+        const key = licenseData.licenseKey.trim();
+        const parts = key.split('-');
+        if (parts.length < 5 || parts[0] !== 'SSEWASSWA') {
+            return { valid: false, error: 'Invalid license format' };
+        }
+        const licenseHwidHash = parts[4].substring(0, 16);
+        const currentHwidHash = crypto.createHash('sha256').update(hwid).digest('hex').substring(0, 16);
+        if (licenseHwidHash !== currentHwidHash) {
+            return { valid: false, error: 'License not bound to this computer. Contact support.' };
+        }
+        safeRun("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_key', ?)", [key]);
+        safeRun("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_hwid', ?)", [hwid]);
         saveDb();
-        return { valid: true, tier: tier, message: 'License activated successfully' };
-    } catch (err) { return { valid: false, error: err.message }; }
+        return { valid: true, message: 'License activated successfully' };
+    } catch (err) {
+        return { valid: false, error: err.message };
+    }
 });
 
 ipcMain.handle('generateLicenseForHwid', async (e, hwid) => {
@@ -1737,7 +1730,6 @@ ipcMain.handle('setCurrentSchoolId', async (e, schoolId) => {
         return { success: false, error: err.message };
     }
 });
-
 
 
 

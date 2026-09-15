@@ -664,8 +664,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   getCurrentSchoolId: () => ipcRenderer.invoke('getCurrentSchoolId'),
   setCurrentSchoolId: (id) => ipcRenderer.invoke('setCurrentSchoolId', id),
-  getLicenseTier: () => ipcRenderer.invoke('getLicenseTier'),
 });
-
 
 

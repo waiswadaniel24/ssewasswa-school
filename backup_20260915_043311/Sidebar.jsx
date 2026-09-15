@@ -232,18 +232,6 @@ export default function Sidebar({ searchQuery = '', isDark }) {
 
   // ─── Get config for current school level ───────────────
   const config = LEVEL_CONFIG[schoolLevel] || LEVEL_CONFIG['Primary'];
-    var [licenseTier, setLicenseTier] = React.useState('premium');
-
-    React.useEffect(function() {
-        if (window.electronAPI && window.electronAPI.getLicenseTier) {
-            window.electronAPI.getLicenseTier().then(function(r) {
-                if (r && r.success) setLicenseTier(r.tier);
-            });
-        }
-    }, []);
-
-    // Sections visible only to Premium licenses
-    var premiumSections = ['emis', 'uneb'];
   const role = user?.role || 'Staff';
   const allowedSections = ROLES[role] || ROLES['Staff'];
 
@@ -256,7 +244,6 @@ export default function Sidebar({ searchQuery = '', isDark }) {
 
     // Check role permission
     if (!allowedSections.includes(item.section)) return false;
-        if (licenseTier !== 'premium' && premiumSections.indexOf(item.section) >= 0) return false;
 
     // EMIS-only items: only show if school level has EMIS enabled
     if (item.emisOnly && !config.showEMIS) return false;
@@ -411,6 +398,5 @@ export default function Sidebar({ searchQuery = '', isDark }) {
     </aside>
   );
 }
-
 
 

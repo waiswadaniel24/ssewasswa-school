@@ -1,9 +1,8 @@
-﻿// FileName: src/pages/Dashboard.jsx
+// FileName: src/pages/Dashboard.jsx
 // Ssewasswa School ERP V10 - EMIS Uganda Compliant
 // Description: Main dashboard — school stats, fees, payroll, trial alerts, power warnings
 
 import React, { useState, useEffect, useRef } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -360,44 +359,7 @@ export default function Dashboard() {
             </h2>
           </div>
         </div>
-      </div>            {/* --- Visual Charts --- */}
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px', marginBottom: '24px' }}>
-                <div className="card">
-                    <div className="card-header">📊 Fees Collection vs Outstanding</div>
-                    <div className="card-body" style={{ height: 300 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={[
-                                { name: 'Collected', amount: stats.feesCollected },
-                                { name: 'Outstanding', amount: stats.outstandingDebts }
-                            ]}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                                <YAxis tick={{ fontSize: 12 }} />
-                                <Tooltip formatter={(value) => `UGX ${value.toLocaleString()}`} />
-                                <Bar dataKey="amount" radius={[8, 8, 0, 0]}>
-                                    <Cell fill="#0d904f" />
-                                    <Cell fill="#d32f2f" />
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-                <div className="card">
-                    <div className="card-header">👥 Gender Distribution</div>
-                    <div className="card-body" style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie data={[{ name: 'Boys', value: stats.totalBoys }, { name: 'Girls', value: stats.totalGirls }]} dataKey="value" outerRadius={80} label>
-                                    <Cell fill="#1a73e8" />
-                                    <Cell fill="#e91e63" />
-                                </Pie>
-                                <Tooltip />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            </div>
-
+      </div>
     </div>
   );
 }

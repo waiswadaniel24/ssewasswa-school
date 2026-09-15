@@ -71,7 +71,8 @@ export default function Header(_ref) {
 
   return (
     <header style={{
-      background: isDark ? 'rgba(30,30,30,0.8)' : 'rgba(255,255,255,0.8)', backdropFilter: 'blur(12px)', padding: '0 24px', height: '60px', position: 'sticky', top: 0, zIndex: 100,
+      background: isDark ? '#1e1e1e' : 'white',
+      padding: '0 24px', height: '60px',
       borderBottom: '1px solid ' + (isDark ? '#333' : '#dadce0'),
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       flexShrink: 0
@@ -209,7 +210,6 @@ export default function Header(_ref) {
     </header>
   );
 }
-
 
 
 

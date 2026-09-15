@@ -48,7 +48,7 @@ export default function Students() {
       if (editData) {
         res = await window.electronAPI.queryDatabase("UPDATE students SET first_name=?, last_name=?, other_name=?, gender=?, date_of_birth=?, class_id=?, student_type=?, residence=?, guardian_name=?, guardian_phone=?, paycode=? WHERE id=?", [finalData.first_name, finalData.last_name, finalData.other_name, finalData.gender, finalData.date_of_birth, finalData.class_id || null, finalData.student_type, finalData.residence, finalData.guardian_name, finalData.guardian_phone, finalData.paycode, editData.id]);
       } else {
-        res = await window.electronAPI.queryDatabase("INSERT INTO students (first_name, last_name, other_name, gender, date_of_birth, class_id, student_type, residence, guardian_name, guardian_phone, admission_number, paycode, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,'Active')", [finalData.first_name, finalData.last_name, finalData.other_name, finalData.gender, finalData.date_of_birth, finalData.class_id || null, finalData.student_type, finalData.residence, finalData.guardian_name, finalData.guardian_phone, finalData.admission_number, finalData.paycode]);
+        res = await window.electronAPI.queryDatabase("INSERT INTO students (first_name, last_name, other_name, gender, date_of_birth, class_id, student_type, residence, guardian_name, guardian_phone, admission_number, paycode, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'Active')", [finalData.first_name, finalData.last_name, finalData.other_name, finalData.gender, finalData.date_of_birth, finalData.class_id || null, finalData.student_type, finalData.residence, finalData.guardian_name, finalData.guardian_phone, finalData.admission_number, finalData.paycode]);
       }
       if (res && res.success) {
         setMsg(editData ? 'Student updated!' : 'Student added! Paycode: ' + finalData.paycode);
@@ -138,5 +138,4 @@ export default function Students() {
     </div>
   );
 }
-
 
