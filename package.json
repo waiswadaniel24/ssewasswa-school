@@ -6,7 +6,8 @@
   "scripts": {
     "dev:vite": "vite",
     "dev:electron": "wait-on tcp:5173 && cross-env NODE_ENV=development electron .",
-    "dev": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
+    "dev": "npm run dev:vite",
+    "dev:desktop": "concurrently \"npm run dev:vite\" \"npm run dev:electron\"",
     "build": "vite build",
     "package": "npm run build && electron-builder",
     "lint": "eslint \"src/**/*.js\" \"src/**/*.jsx\" \"electron/main.js\"",
