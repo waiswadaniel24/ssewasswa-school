@@ -49,6 +49,13 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
   .setup-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
+.activation-plans { flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+  .activation-plans { flex-direction: column; padding: 20px !important; }
+  .activation-page-card { max-width: 100%; }
+}
+
 @media (max-width: 420px) {
   .school-header-brand h2 { max-width: 110px; }
   .school-header-brand span { display: none; }
