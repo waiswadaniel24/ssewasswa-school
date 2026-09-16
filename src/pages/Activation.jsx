@@ -1,17 +1,16 @@
-﻿import React, { useState, useEffect } from 'react';
-
+import React, { useState, useEffect } from 'react';
 export default function Activation() {
   var [licenseKey, setLicenseKey] = useState('');
   var [hwid, setHwid] = useState('Loading...');
   var [msg, setMsg] = useState('');
   var [loading, setLoading] = useState(false);
-
   useEffect(function() {
-    window.electronAPI.getHwid().then(function(res) {
-      if (res && res.success) setHwid(res.hwid.substring(0, 32) + '...');
-    });
+    if (window.electronAPI && window.electronAPI.getHwid) {
+      window.electronAPI.getHwid().then(function(res) {
+        if (res && res.success) setHwid(res.hwid.substring(0, 32) + '...');
+      });
+    }
   }, []);
-
   var handleActivate = async function(e) {
     e.preventDefault();
     setMsg('Validating...'); setLoading(true);
@@ -29,7 +28,6 @@ export default function Activation() {
       setMsg('❌ ' + ((res && res.error) || 'Invalid key'));
     }
   };
-
   return (
     <div style={{ minHeight: '100vh', background: '#f0f2f5', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif', padding: '20px' }}>
       <div style={{ background: 'white', width: '100%', maxWidth: '800px', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -37,7 +35,6 @@ export default function Activation() {
           <h1 style={{ margin: 0, fontSize: '24px' }}>Unlock Ssewasswa ERP</h1>
           <p style={{ margin: '5px 0 0', opacity: 0.9 }}>Choose your subscription plan</p>
         </div>
-
         <div style={{ padding: '30px', display: 'flex', gap: '20px' }}>
           {/* Ordinary Plan */}
           <div style={{ flex: 1, border: '2px solid #e0e0e0', borderRadius: '12px', padding: '20px' }}>
@@ -50,7 +47,6 @@ export default function Activation() {
               <li>Basic Settings</li>
             </ul>
           </div>
-
           {/* Premium Plan */}
           <div style={{ flex: 1, border: '2px solid #1a73e8', borderRadius: '12px', padding: '20px', background: '#e8f0fe' }}>
             <h3 style={{ marginTop: 0, color: '#1a73e8' }}>Premium Access ⭐</h3>
@@ -64,10 +60,8 @@ export default function Activation() {
             </ul>
           </div>
         </div>
-
         <div style={{ padding: '0 30px 30px' }}>
           {msg && <div style={{ padding: '12px', borderRadius: '8px', marginBottom: '15px', background: msg.includes('❌') ? '#ffebee' : '#e8f5e9', color: msg.includes('❌') ? '#c62828' : '#2e7d32', fontSize: '14px' }}>{msg}</div>}
-
           <form onSubmit={handleActivate}>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#444', marginBottom: '6px' }}>Enter Activation Key</label>
             <input style={{ width: '100%', padding: '14px', border: '1px solid #dadce0', borderRadius: '8px', fontSize: '16px', boxSizing: 'border-box' }} type="text" value={licenseKey} onChange={function(e) { setLicenseKey(e.target.value.toUpperCase()); }} placeholder="SSEWASSWA-PREM-XXXX-XXXX-XXXXXXXX" required disabled={loading} />
@@ -75,13 +69,11 @@ export default function Activation() {
               {loading ? 'Validating...' : 'Activate Software'}
             </button>
           </form>
-
           <div style={{ marginTop: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #eee' }}>
             <p style={{ margin: '0 0 5px 0', fontSize: '12px', fontWeight: 'bold', color: '#555' }}>🔒 MACHINE HARDWARE ID (HWID)</p>
             <p style={{ margin: 0, fontSize: '13px', fontFamily: 'monospace', color: '#333', wordBreak: 'break-all' }}>{hwid}</p>
             <p style={{ margin: '10px 0 0 0', fontSize: '11px', color: '#d32f2f' }}>Provide this ID when paying to get your activation key.</p>
           </div>
-
           <p style={{ textAlign: 'center', fontSize: '13px', color: '#555', marginTop: '20px' }}>Pay via MTN MoMo/Airtel/Bank to: +256 752 971 118</p>
         </div>
       </div>

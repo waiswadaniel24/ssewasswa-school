@@ -663,6 +663,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return ipcRenderer.invoke('authorizePurchase', id, status, data);
   },
   getCurrentSchoolId: () => ipcRenderer.invoke('getCurrentSchoolId'),
+  emisCompileReport: (yearId, term) => ipcRenderer.invoke('emisCompileReport', yearId, term),
   setCurrentSchoolId: (id) => ipcRenderer.invoke('setCurrentSchoolId', id),
   getLicenseTier: () => ipcRenderer.invoke('getLicenseTier'),
 });

@@ -22,6 +22,31 @@ function getGrade(score) {
   return 'F9';
 }
 
+// ═══ UNEB AGGREGATE CALCULATOR ═══
+function getUNEBAggregate(scores) {
+  const sorted = scores.filter(s => s !== null && !isNaN(s)).sort((a, b) => a - b);
+  if (sorted.length < 8) return 'N/A';
+  const best8 = sorted.slice(0, 8);
+  let totalPoints = 0;
+  for (const score of best8) {
+    if (score >= 80) totalPoints += 1;
+    else if (score >= 75) totalPoints += 2;
+    else if (score >= 70) totalPoints += 3;
+    else if (score >= 65) totalPoints += 4;
+    else if (score >= 60) totalPoints += 5;
+    else if (score >= 55) totalPoints += 6;
+    else if (score >= 50) totalPoints += 7;
+    else if (score >= 45) totalPoints += 8;
+    else totalPoints += 9;
+  }
+  let division = 'U';
+  if (totalPoints <= 32) division = 'Div 1';
+  else if (totalPoints <= 45) division = 'Div 2';
+  else if (totalPoints <= 58) division = 'Div 3';
+  else if (totalPoints <= 68) division = 'Div 4';
+  return totalPoints + ' (' + division + ')';
+}
+
 export default function BroadSheet() {
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);

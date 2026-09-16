@@ -72,9 +72,9 @@ export default function Students() {
     try { var r = await window.electronAPI.backfillPaycodes(); if (r && r.success) { setMsg('Generated ' + ((r.data && r.data.count) ? r.data.count : 0) + ' paycodes'); loadData(); } } catch (e) { setMsg('Error: ' + e.message); }
   };
 
-  var is = { width: '100%', padding: '10px', border: '1px solid #dadce0', borderRadius: '6px', fontSize: '14px' };
+  
 
-  if (loading) return React.createElement('div', { className: 'page-container' }, React.createElement('h1', { className: 'page-title' }, 'Students'), React.createElement('p', null, 'Loading...'));
+  if (loading) return (<div className='page-container'><h1 className='page-title'>Students</h1><p>Loading...</p></div>);
 
   return (
     <div className="page-container">

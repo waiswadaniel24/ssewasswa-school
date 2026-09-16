@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import { Toaster } from 'react-hot-toast';
+import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom/client";
 import "./App.css";
 import { AuthProvider } from "./context/AuthContext.jsx";

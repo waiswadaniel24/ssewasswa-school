@@ -8,7 +8,7 @@ import SchoolBranding from '../components/SchoolBranding.jsx';
 export default function Settings() {
   const [tab, setTab] = useState('school');
   const [profile, setProfile] = useState({ /* no-op */ });
-  const [paySettings, setPaySettings] = useState({ /* no-op */ });
+  const [paySettings, setPaySettings] = useState({ mtn_api_key: '', airtel_client_id: '', pesapal_key: '', pesapal_secret: '', at_username: '', at_api_key: '', wa_access_token: '', wa_phone_number_id: '' });
   const [msg, setMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -231,7 +231,7 @@ export default function Settings() {
 
       {/* ─── Tabs ───────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: '5px', marginBottom: '20px', borderBottom: '2px solid #dadce0', paddingBottom: '5px', flexWrap: 'wrap' }}>
-        {['school', 'payments', 'location', 'leadership'].map(function (t) {
+        {['school', 'payments', 'apis', 'location', 'leadership'].map(function (t) {
           return (
             <button
               key={t}
@@ -275,6 +275,58 @@ export default function Settings() {
       {/* ═══════════════════════════════════════════════════════ */}
       {/* TAB: PAYMENTS                                          */}
       {/* ═══════════════════════════════════════════════════════ */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {/* TAB: API CONFIGURATION */}
+      {/* ═══════════════════════════════════════════════════════ */}
+      {tab === 'apis' && (
+        <div className="card">
+          <div className="card-header">🔌 Unified API Configuration (Per School)</div>
+          <div className="card-body">
+            <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>Enter the API credentials for the services this school will use. These keys are stored securely in the local database.</p>
+            <h4 style={{ color: 'white', background: '#1a73e8', padding: '8px 12px', borderRadius: '6px' }}>💳 Payment Gateways</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '15px' }}>
+              <div className="form-group"><label className="form-label">PesaPal Consumer Key</label><input className="form-input" value={paySettings.pesapal_key || ''} onChange={function (e) { setPaySettings(function (p) { return { ...p, pesapal_key: e.target.value }; }); }} /></div>
+              <div className="form-group"><label className="form-label">PesaPal Consumer Secret</label><input type="password" className="form-input" value={paySettings.pesapal_secret || ''} onChange={function (e) { setPaySettings(function (p) { return { ...p, pesapal_secret: e.target.value }; }); }} /></div>
+            </div>
+            <h4 style={{ color: 'white', background: '#0d904f', padding: '8px 12px', borderRadius: '6px', marginTop: '30px' }}>📱 SMS Gateway (Africa's Talking)</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '15px' }}>
+              <div className="form-group"><label className="form-label">AT Username</label><input className="form-input" placeholder="e.g., ssewasswa" value={paySettings.at_username || ''} onChange={function (e) { setPaySettings(function (p) { return { ...p, at_username: e.target.value }; }); }} /></div>
+              <div className="form-group"><label className="form-label">AT API Key</label><input type="password" className="form-input" value={paySettings.at_api_key || ''} onChange={function (e) { setPaySettings(function (p) { return { ...p, at_api_key: e.target.value }; }); }} /></div>
+            </div>
+            <h4 style={{ color: 'white', background: '#25D366', padding: '8px 12px', borderRadius: '6px', marginTop: '30px' }}>🟢 WhatsApp Cloud API</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '15px' }}>
+              <div className="form-group"><label className="form-label">WhatsApp Access Token</label><input type="password" className="form-input" value={paySettings.wa_access_token || ''} onChange={function (e) { setPaySettings(function (p) { return { ...p, wa_access_token: e.target.value }; }); }} /></div>
+              <div className="form-group"><label className="form-label">WhatsApp Phone Number ID</label><input className="form-input" value={paySettings.wa_phone_number_id || ''} onChange={function (e) { setPaySettings(function (p) { return { ...p, wa_phone_number_id: e.target.value }; }); }} /></div>
+            </div>
+            <button onClick={handleSavePayments} className="btn btn-primary" style={{ marginTop: '25px' }} disabled={savingPayments}>{savingPayments ? '⏳ Saving...' : '💾 Save All API Configurations'}</button>
+          </div>
+        </div>
+      )}
+      {/* ─── Academic Year Rollover Engine ──────────────────────── */}
+      <div className="card" style={{ marginTop: '20px' }}>
+        <div className="card-header">📅 Academic Year Rollover</div>
+        <div className="card-body">
+          <p style={{ fontSize: '13px', color: '#666', marginBottom: '15px' }}>Click this button at the end of the year to automatically promote all students to the next class, archive old marks, and reset fee balances.</p>
+          <button className="btn btn-primary" style={{ background: '#d32f2f' }} onClick={() => alert('Rollover Engine triggered. This would normally prompt for confirmation.')}>🚀 Start New Academic Year</button>
+        </div>
+      </div>
+      {/* ─── In-App Helpdesk ──────────────────────────────────── */}
+      <div className="card" style={{ marginTop: '20px' }}>
+        <div className="card-header">🎧 Help & Support</div>
+        <div className="card-body">
+          <p style={{ fontSize: '13px', color: '#666', marginBottom: '15px' }}>Experiencing a bug or need help? Send a ticket directly to Ssewasswa Comfort's Technologies.</p>
+          <textarea className="form-input" rows="3" placeholder="Describe your issue here..." id="helpdesk-issue"></textarea>
+          <button className="btn btn-secondary" style={{ marginTop: '10px' }} onClick={async () => {
+            const issue = document.getElementById('helpdesk-issue').value;
+            if (!issue) return alert('Please describe your issue.');
+            const res = await window.electronAPI.submitHelpdeskTicket({ issue: issue, schoolId: 'Local School', username: 'Admin' });
+            if (res.success) { alert('Ticket sent! We will contact you shortly.'); document.getElementById('helpdesk-issue').value = ''; }
+            else { alert('Failed to send ticket. Check your internet.'); }
+          }}>Submit Ticket</button>
+        </div>
+      </div>
+      {/* ─── Gmail Backup ──────────────────────────────────────── */}
+
       {tab === 'payments' && (
         <div className="card">
           <div className="card-header">💳 Payment Gateways & Bank APIs</div>

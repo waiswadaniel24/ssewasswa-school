@@ -23,6 +23,7 @@ export const ROLE_PERMISSIONS = {
 
 // School levels and what modules they can access
 export const SCHOOL_LEVELS = {
+    'Kindergarten': { label: 'Kindergarten Only', modules: ['dashboard', 'students', 'attendance', 'nursery', 'ecd', 'finance', 'settings'], academicLevels: ['Kindergarten'], examTypes: [], showUNEB: false, showEMIS: false, showNursery: true, showSecondary: false, showExtracurricular: false },
     'Nursery': {
         label: 'Nursery Only',
         modules: [
@@ -311,4 +312,13 @@ export function getExamTypes(schoolLevel) {
 
 export function getSchoolLevelLabel(schoolLevel) {
     return SCHOOL_LEVELS[schoolLevel]?.label || schoolLevel;
+}
+// Dynamic Terminology Helper
+export function getTerminology(schoolLevel) {
+    const isPrimaryLevel = ['Kindergarten', 'Nursery', 'Primary', 'Nursery_Primary'].includes(schoolLevel);
+    return {
+        student: isPrimaryLevel ? 'Pupil' : 'Student',
+        students: isPrimaryLevel ? 'Pupils' : 'Students',
+        admission: isPrimaryLevel ? 'Pupil Admissions' : 'Student Admissions'
+    };
 }

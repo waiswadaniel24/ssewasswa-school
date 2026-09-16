@@ -142,7 +142,7 @@ export default function DataExport() {
 
     try {
       // FIXED: Uses selected year instead of hardcoded (1, 1)
-      var report = await window.electronAPI.invoke('emisCompileReport', selYear, 1);
+      var report = await window.electronAPI.emisCompileReport(selYear, 1);
       if (!mountedRef.current) return;
 
       if (!report || !report.success) {

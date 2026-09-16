@@ -25,8 +25,8 @@ export default function PurchaseAuthorization() {
             ...form,
             quantity: parseInt(form.quantity) || 1,
             estimated_cost: parseFloat(form.estimated_cost) || 0,
-            requested_by: user.id,
-            requested_by_name: `${user.role} - ${user.username}`
+            requested_by: user?.id || null,
+            requested_by_name: `${user?.role || 'System'} - ${user?.username || 'Unknown'}`
         });
         if (r.success) { setMsg('Request submitted'); setShowForm(false); setForm({ item_description: '', quantity: 1, estimated_cost: 0, vendor: '', urgency: 'Normal' }); loadRequests(); }
         else setMsg('Error: ' + r.error);

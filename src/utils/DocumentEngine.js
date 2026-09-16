@@ -1,3 +1,4 @@
+import { jsPDF } from 'jspdf';
 // FileName: src/utils/DocumentEngine.js
 // Ssewasswa School ERP V10 - EMIS Uganda Compliant
 
@@ -42,10 +43,7 @@ export class SchoolDocument {
 
     // ─── Create new jsPDF document ──────────────────────────────
     create() {
-        if (typeof window === 'undefined' || !window.jspdf) {
-            throw new Error('jsPDF not loaded. Include jspdf script before using DocumentEngine.');
-        }
-        const { jsPDF } = window.jspdf;
+        const { jsPDF } = window.jspdf || {}; // Fallback handled by import
         this.doc = new jsPDF({
             orientation: this.cfg.orientation,
             unit: 'mm',

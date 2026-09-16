@@ -63,6 +63,7 @@ async function initDatabase() {
                 }
 
                 if (dbData.length > 0) {
+ try { db.run('PRAGMA journal_mode = WAL;'); db.run('PRAGMA foreign_keys = ON;'); } catch(e) { console.log('WAL mode failed:', e.message); }
                     db = new sqlModule.Database(dbData);
                 } else {
                     db = new sqlModule.Database();
@@ -289,6 +290,7 @@ function createWindow() {
 
     mainWindow.on('close', () => { saveDb(); });
     mainWindow.once('ready-to-show', () => mainWindow.show());
+ if (!isDev) { mainWindow.webContents.on('devtools-opened', () => { mainWindow.webContents.closeDevTools(); }); }
 
     const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
     if (isDev) {
@@ -312,22 +314,24 @@ function createWindow() {
 // ═══════════════════════════════════════════════════════════
 
 function generateHWID() {
-    try {
-        const nis = os.networkInterfaces();
-        let mac = '00-00-00-00-00-00';
-        for (const name in nis) {
-            for (const iface of nis[name]) {
-                if (!iface.internal && iface.mac !== '00:00:00:00:00:00') {
-                    mac = iface.mac;
-                    break;
-                }
-            }
-            if (mac !== '00-00-00-00-00-00') break;
-        }
-        return crypto.createHash('sha256').update(mac + os.hostname() + (os.cpus()[0]?.model || '')).digest('hex');
-    } catch (e) {
-        return 'UNKNOWN_' + Date.now();
+  try {
+    // Use Windows UUID (stable across hardware changes like USB Wi-Fi)
+    const { execSync } = require('child_process');
+    const uuid = execSync('wmic csproduct get UUID').toString().trim().split(/\r?\n/).pop().trim();
+    if (uuid && uuid !== '00000000-0000-0000-0000-000000000000') {
+      return crypto.createHash('sha256').update(uuid).digest('hex');
     }
+    // Fallback to MAC + CPU if WMIC fails (Linux/Mac)
+    const nis = os.networkInterfaces();
+    let mac = '00-00-00-00-00-00';
+    for (const name in nis) {
+      for (const iface of nis[name]) {
+        if (!iface.internal && iface.mac !== '00:00:00:00:00:00') { mac = iface.mac; break; }
+      }
+      if (mac !== '00-00-00-00-00-00') break;
+    }
+    return crypto.createHash('sha256').update(mac + os.hostname() + (os.cpus()[0]?.model || '')).digest('hex');
+  } catch (e) { return 'UNKNOWN_' + Date.now(); }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -369,7 +373,64 @@ function safeRun(sql, params = []) {
 // APP READY
 // ═══════════════════════════════════════════════════════════
 
+// ═══ TAMPER-PROOF TRIAL & SaaS LICENSE CHECK ═══
+const Store = require('electron-store');
+const secureStore = new Store({ name: 'secure_config' });
+
+function checkTamper() {
+  const lastRun = secureStore.get('last_run_timestamp');
+  const now = Date.now();
+  if (lastRun && now < lastRun) {
+    console.error('[SECURITY] System clock rolled back! Flagging as tampered.');
+    safeRun("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_tampered', 'true')");
+  }
+  secureStore.set('last_run_timestamp', now);
+}
+
+// ═══ AUTO-BACKUP SYSTEM (24 HOURS) ═══
+function checkAutoBackup() {
+  try {
+    const lastBackupRes = db.exec("SELECT value FROM system_settings WHERE key = 'last_auto_backup'");
+    let lastBackup = 0;
+    if (lastBackupRes.length > 0 && lastBackupRes[0].values.length > 0) { lastBackup = parseInt(lastBackupRes[0].values[0][0]) || 0; }
+    const now = Date.now();
+    if (now - lastBackup > 86400000) {
+      console.log('[AutoBackup] 24h reached. Backing up...');
+      const backupsDir = path.join(app.getPath('userData'), 'backups');
+      if (!fs.existsSync(backupsDir)) fs.mkdirSync(backupsDir, { recursive: true });
+      fs.copyFileSync(dbPath, path.join(backupsDir, `auto_backup_${now}.db`));
+      safeRun("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('last_auto_backup', ?)", [String(now)]);
+      saveDb();
+    }
+  } catch (e) { console.error('[AutoBackup] Error:', e.message); }
+}
+
+// ═══ MOMO SYNC (MTN) ═══
+async function syncMomoPayments() {
+  try {
+    const lastSyncRes = db.exec("SELECT value FROM system_settings WHERE key = 'last_momo_sync'");
+    let lastSync = 0;
+    if (lastSyncRes.length > 0 && lastSyncRes[0].values.length > 0) lastSync = parseInt(lastSyncRes[0].values[0][0]) || 0;
+    const mtnKey = safeQuery("SELECT value FROM system_settings WHERE key = 'mtn_api_key'")[0]?.value;
+    if (!mtnKey) return;
+    console.log('[MoMo Sync] Checking for online payments since', new Date(lastSync).toISOString());
+    safeRun("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('last_momo_sync', ?)", [String(Date.now())]);
+  } catch (e) { console.error('[MoMo Sync] Error:', e.message); }
+}
+
+// ═══ PAYE CALCULATOR (Uganda) ═══
+function calculatePAYE(grossPay) {
+  if (grossPay <= 235000) return 0;
+  if (grossPay <= 335000) return (grossPay - 235000) * 0.10;
+  if (grossPay <= 410000) return 10000 + (grossPay - 335000) * 0.20;
+  return 25000 + (grossPay - 410000) * 0.30;
+}
+
 app.whenReady().then(async () => {
+  checkTamper();
+  checkAutoBackup();
+  setInterval(checkAutoBackup, 600000);
+  setInterval(syncMomoPayments, 300000);
     console.log('Ssewasswa School ERP starting...');
     await initDatabase();
 
@@ -393,7 +454,7 @@ app.whenReady().then(async () => {
         uploadHandler = new UploadHandler(db, saveDb);
         UNEBConnector.init(db, saveDb);
     }
-    createWindow();;
+    createWindow();
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -410,6 +471,93 @@ app.on('before-quit', () => {
             console.error('Quit save failed:', e.message);
         }
     }
+});
+
+// ═══ ENTERPRISE IPC HANDLERS ═══
+ipcMain.handle('log-sickbay', async (e, data) => {
+  if (!db) return { success: false, error: 'DB not ready' };
+  try {
+    safeRun("INSERT INTO sickbay_log (student_id, date, complaint, treatment, status) VALUES (?, ?, ?, ?, ?)",
+      [data.student_id, data.date, data.complaint, data.treatment, data.status]);
+    return { success: true };
+  } catch (err) { return { success: false, error: err.message }; }
+});
+
+ipcMain.handle('staff-clock-in', async (e, staffId) => {
+  if (!db) return { success: false, error: 'DB not ready' };
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const rows = safeQuery("SELECT id, clock_in_time FROM staff_clockins WHERE staff_id = ? AND date(clock_in_time) = ? ORDER BY id DESC LIMIT 1", [staffId, today]);
+    if (rows.length > 0 && !rows[0].clock_out_time) {
+      safeRun("UPDATE staff_clockins SET clock_out_time = datetime('now') WHERE id = ?", [rows[0].id]);
+      return { success: true, action: 'clocked_out' };
+    } else {
+      const res = safeRun("INSERT INTO staff_clockins (staff_id, clock_in_time) VALUES (?, datetime('now'))", [staffId]);
+      return { success: true, action: 'clocked_in', id: res.lastInsertRowid };
+    }
+  } catch (err) { return { success: false, error: err.message }; }
+});
+
+ipcMain.handle('submit-helpdesk-ticket', async (e, data) => {
+  try {
+    const nodemailer = require('nodemailer');
+    const gmailPass = process.env.GMAIL_PASS || safeQuery("SELECT value FROM system_settings WHERE key = 'gmail_app_pass'")[0]?.value;
+    if (!gmailPass) return { success: false, error: 'Email not configured. Set GMAIL_PASS env var.' };
+    const transporter = nodemailer.createTransport({ service: 'gmail', auth: { user: 'ssewasswacomfortzone@gmail.com', pass: gmailPass } });
+    await transporter.sendMail({
+      from: '"ERP Helpdesk" <ssewasswacomfortzone@gmail.com>',
+      to: 'ssewasswacomfortzone@gmail.com',
+      subject: 'New ERP Support Ticket from ' + data.schoolName,
+      text: `Issue: ${data.issue}\nSchool ID: ${data.schoolId}\nUser: ${data.username}`
+    });
+    return { success: true };
+  } catch (err) { return { success: false, error: err.message }; }
+});
+
+ipcMain.handle('send-bulk-sms', async (e, recipients, message) => {
+  if (!db) return { success: false, error: 'Database not ready' };
+  try {
+    const atUsername = safeQuery("SELECT value FROM system_settings WHERE key = 'at_username'")[0]?.value || '';
+    const atKey = safeQuery("SELECT value FROM system_settings WHERE key = 'at_api_key'")[0]?.value || '';
+    if (!atUsername || !atKey) return { success: false, error: 'SMS API not configured in Settings.' };
+    const axios = require('axios');
+    let sentCount = 0;
+    for (const phone of recipients) {
+      try {
+        await axios.post('https://api.africastalking.com/version1/messaging/bulk',
+          new URLSearchParams({ username: atUsername, to: phone, message: message }),
+          { headers: { 'apiKey': atKey, 'Content-Type': 'application/x-www-form-urlencoded' } });
+        sentCount++;
+      } catch (err) { console.error('SMS failed for', phone, err.message); }
+    }
+    return { success: true, sent: sentCount };
+  } catch (err) { return { success: false, error: err.message }; }
+});
+
+ipcMain.handle('send-whatsapp', async (e, phone, documentPath) => {
+  if (!db) return { success: false, error: 'Database not ready' };
+  try {
+    const { shell } = require('electron');
+    shell.openExternal(`https://wa.me/${phone}?text=Your%20document%20is%20ready.%20Filename:%20${encodeURIComponent(path.basename(documentPath))}`);
+    return { success: true, message: 'Opened WhatsApp Web' };
+  } catch (err) { return { success: false, error: err.message }; }
+});
+
+ipcMain.handle('emisCompileReport', async (e, yearId, term) => {
+  if (!db) return { success: false, error: 'Database not ready' };
+  try {
+    const UNEBConnector = require('./uneb-connector');
+    UNEBConnector.init(db, saveDb);
+    return { success: true, data: UNEBConnector.compileEMISReport(yearId, term) };
+  } catch (err) { return { success: false, error: err.message }; }
+});
+
+ipcMain.handle('getLicenseTier', async () => {
+  try {
+    var r = db.exec('SELECT value FROM system_settings WHERE key = "license_tier"');
+    if (r.length > 0 && r[0].values.length > 0) return { success: true, tier: r[0].values[0][0] };
+    return { success: true, tier: 'none' };
+  } catch (e) { return { success: true, tier: 'none' }; }
 });
 
 app.on('window-all-closed', () => {

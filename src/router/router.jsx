@@ -86,6 +86,7 @@ const DataExport = React.lazy(() => import('../pages/DataExport.jsx'));
 // Administration
 const Users = React.lazy(() => import('../pages/Users.jsx'));
 const Settings = React.lazy(() => import('../pages/Settings.jsx'));
+const NetworkSetup = React.lazy(() => import('../pages/NetworkSetup.jsx'));
 const Manuals = React.lazy(() => import('../pages/Manuals.jsx'));
 const About = React.lazy(() => import('../pages/About.jsx'));
 const Terms = React.lazy(() => import('../pages/Terms.jsx'));
@@ -309,6 +310,7 @@ export default function AppRouter({ isInitialized, isLocked }) {
                 // Administration
                 { path: 'users', element: <ProtectedRoute isLocked={isLocked}><Users /></ProtectedRoute> },
                 { path: 'settings', element: <ProtectedRoute isLocked={isLocked}><Settings /></ProtectedRoute> },
+ { path: 'network-setup', element: <ProtectedRoute isLocked={isLocked}><NetworkSetup /></ProtectedRoute> },
                 { path: 'manuals', element: <ProtectedRoute isLocked={isLocked}><Manuals /></ProtectedRoute> },
                 { path: 'school-management', element: <ProtectedRoute isLocked={isLocked}><SchoolManagement /></ProtectedRoute> },
                 { path: 'about', element: <ProtectedRoute isLocked={isLocked}><About /></ProtectedRoute> },
