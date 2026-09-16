@@ -79,8 +79,8 @@ export default function Header(_ref) {
       {/* ─── Left: School name + selector ────────────── */}
       <div className="school-header-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
         <img
-          src="/ssewasswa-school-emblem.png"
-          alt="Ssewasswa School emblem"
+          src="/ssewasswa-comforts-technologies-logo.png"
+          alt="Ssewasswa Comforts Technologies logo"
           className="school-header-emblem"
         />
         <h2 style={{

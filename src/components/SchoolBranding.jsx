@@ -47,7 +47,7 @@ export default function SchoolBranding() {
     const loadBranding = useCallback(async () => {
         if (!window.electronAPI) {
             setForm({ motto: 'Knowledge, discipline, service', slogan: 'Serving learners and building futures', scripture: '' });
-            setLogo('/ssewasswa-school-emblem.png');
+            setLogo('/ssewasswa-comforts-technologies-logo.png');
             setLoading(false);
             return;
         }
