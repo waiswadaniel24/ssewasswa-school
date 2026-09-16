@@ -2,7 +2,7 @@
 // Ssewasswa School ERP V10 - EMIS Uganda Compliant
 
 import React, { useMemo, Suspense } from 'react';
-import { createHashRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
 // Non-lazy imports (needed immediately before auth is ready)
@@ -201,6 +201,13 @@ const ProtectedRoute = ({ isLocked, children }) => (
     </Lock>
 );
 
+const DeveloperRoute = ({ isLocked, children }) => {
+    const { user } = useAuth();
+    const isDeveloper = Boolean(user && (user.isDeveloper || (user.username === 'A.S.S' && user.role === 'Super Admin')));
+    if (!isDeveloper) return <Navigate to="/" replace />;
+    return <ProtectedRoute isLocked={isLocked}>{children}</ProtectedRoute>;
+};
+
 // ─── Public route (no auth needed, still lazy + error boundary) ──
 const PublicRoute = ({ children }) => (
     <RouteErrorBoundary>
@@ -215,7 +222,7 @@ const PublicRoute = ({ children }) => (
 // ═══════════════════════════════════════════════════════════
 
 export default function AppRouter({ isInitialized, isLocked }) {
-    const router = useMemo(() => createHashRouter([
+    const router = useMemo(() => createBrowserRouter([
         // ─── Public routes (no auth required) ─────────────
         {
             path: '/setup',
@@ -223,7 +230,9 @@ export default function AppRouter({ isInitialized, isLocked }) {
         },
         {
             path: '/login',
-            element: isInitialized ? <PublicRoute><Login /></PublicRoute> : <Navigate to="/setup" replace />
+            // Existing users must always be able to reach sign-in, including
+            // browser/mobile deployments where the local Electron status API is unavailable.
+            element: <PublicRoute><Login /></PublicRoute>
         },
         {
             path: '/activation',
@@ -318,7 +327,7 @@ export default function AppRouter({ isInitialized, isLocked }) {
                 { path: 'copyright', element: <ProtectedRoute isLocked={isLocked}><Copyright /></ProtectedRoute> },
 
                 // Developer tools
-                { path: 'dev', element: <ProtectedRoute isLocked={isLocked}><DevDashboard /></ProtectedRoute> },
+                { path: 'dev', element: <DeveloperRoute isLocked={isLocked}><DevDashboard /></DeveloperRoute> },
             ]
         },
 

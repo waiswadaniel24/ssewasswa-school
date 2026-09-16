@@ -2,7 +2,9 @@
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function PurchaseAuthorization() {
-    const { user } = useAuth();
+    const auth = useAuth();
+    const user = auth && auth.user ? auth.user : null;
+    const userRole = user && user.role ? user.role : 'Viewer';
     const [tab, setTab] = useState('requests');
     const [msg, setMsg] = useState('');
     const [requests, setRequests] = useState([]);
@@ -33,10 +35,11 @@ export default function PurchaseAuthorization() {
     };
 
     const handleAuthorize = async (id, status) => {
+        if (!user) { setMsg('Please sign in again before authorizing purchases'); return; }
         if (status === 'Rejected' && !rejectReason.trim()) { setMsg('Give a rejection reason'); return; }
         const r = await window.electronAPI.authorizePurchase(id, status, {
-            authorized_by: user.id,
-            authorized_by_name: `${user.role} - ${user.username}`,
+            authorized_by: user ? user.id : null,
+            authorized_by_name: `${userRole} - ${(user && user.username) || 'Unknown'}`,
             rejection_reason: rejectReason
         });
         if (r.success) { setMsg(`Request ${status.toLowerCase()}`); setRejectId(null); setRejectReason(''); loadRequests(); }
@@ -119,7 +122,7 @@ export default function PurchaseAuthorization() {
                                         {r.status !== 'Pending' && r.authorized_by_name && <div style={{ fontSize: 11, color: '#999', marginTop: 2 }}>By: {r.authorized_by_name}</div>}
                                     </td>
                                     <td>
-                                        {r.status === 'Pending' && (user.role === 'Super Admin' || user.role === 'Admin' || user.role === 'Bursar') && (
+                                        {r.status === 'Pending' && (userRole === 'Super Admin' || userRole === 'Admin' || userRole === 'Bursar') && (
                                             <div style={{ display: 'flex', gap: 6 }}>
                                                 {rejectId === r.id ? (
                                                     <>

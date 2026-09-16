@@ -1,4 +1,5 @@
 ﻿import React, { createContext, useState, useEffect, useContext } from 'react';
+import { getSupabaseUser, supabase } from '../lib/supabase.js';
 
 var AuthContext = createContext({
     user: null, login: function() { /* no-op */ }, logout: function() { /* no-op */ },
@@ -22,9 +23,35 @@ export function AuthProvider(props) {
     });
     var [schools, setSchools] = useState([]);
 
-    var login = function(userData) { setUser(userData); localStorage.setItem('erp_user', JSON.stringify(userData)); };
-    var logout = function() { setUser(null); localStorage.removeItem('erp_user'); window.location.hash = '#/login'; };
+    var login = function(userData) {
+        if (!userData || typeof userData !== 'object') return;
+        var normalizedUser = {
+            ...userData,
+            id: userData.id ?? userData.user_id ?? null,
+            username: userData.username || userData.email || 'User',
+            role: userData.role || 'Staff'
+        };
+        setUser(normalizedUser);
+        localStorage.setItem('erp_user', JSON.stringify(normalizedUser));
+    };
+    var logout = function() { setUser(null); localStorage.removeItem('erp_user'); window.location.assign('/login'); };
     var switchSchool = function(schoolId) { setCurrentSchoolId(schoolId); localStorage.setItem('erp_school_id', String(schoolId)); window.location.reload(); };
+
+    useEffect(function() {
+        if (!supabase) return function() {};
+        var cancelled = false;
+        supabase.auth.getSession().then(function(result) {
+            if (!cancelled && result.data && result.data.session && result.data.session.user) {
+                login(getSupabaseUser(result.data.session.user));
+            }
+        });
+        var subscription = supabase.auth.onAuthStateChange(function(event, session) {
+            if (cancelled) return;
+            if (session && session.user) login(getSupabaseUser(session.user));
+            if (event === 'SIGNED_OUT') setUser(null);
+        });
+        return function() { cancelled = true; subscription.data.subscription.unsubscribe(); };
+    }, []);
 
     useEffect(function() {
         var cancelled = false;

@@ -28,14 +28,18 @@ export default function Activation() {
       setMsg('❌ ' + ((res && res.error) || 'Invalid key'));
     }
   };
+  var supportEmail = 'support@ssewasswacomfortstechnologies.com';
+  var supportPhone = '+256752971118';
+  var whatsappUrl = 'https://wa.me/256752971118';
   return (
     <div style={{ minHeight: '100vh', background: '#f0f2f5', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif', padding: '20px' }}>
       <div style={{ background: 'white', width: '100%', maxWidth: '800px', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ background: '#1a73e8', padding: '30px', textAlign: 'center', color: 'white' }}>
+          <img src="/ssewasswa-comforts-technologies-logo.png" alt="Ssewasswa Comforts Technologies logo" style={{ width: '82px', height: '82px', objectFit: 'contain', background: 'white', borderRadius: '16px', padding: '6px', marginBottom: '10px' }} />
           <h1 style={{ margin: 0, fontSize: '24px' }}>Unlock Ssewasswa ERP</h1>
           <p style={{ margin: '5px 0 0', opacity: 0.9 }}>Choose your subscription plan</p>
         </div>
-        <div style={{ padding: '30px', display: 'flex', gap: '20px' }}>
+        <div className="activation-plans" style={{ padding: '30px', display: 'flex', gap: '20px' }}>
           {/* Ordinary Plan */}
           <div style={{ flex: 1, border: '2px solid #e0e0e0', borderRadius: '12px', padding: '20px' }}>
             <h3 style={{ marginTop: 0, color: '#333' }}>Ordinary Access</h3>
@@ -61,6 +65,15 @@ export default function Activation() {
           </div>
         </div>
         <div style={{ padding: '0 30px 30px' }}>
+          <div style={{ padding: '14px', marginBottom: '18px', borderRadius: '10px', background: '#eef6ff', border: '1px solid #c7ddff', color: '#174a7c' }}>
+            <strong>Need help restoring access?</strong>
+            <p style={{ margin: '6px 0 10px', fontSize: '13px' }}>If you were logged out because a subscription expired, contact us to renew access or choose a plan.</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <a href={`mailto:${supportEmail}?subject=Help restoring school system access`} style={{ color: '#1769aa', fontWeight: 600 }}>Email support</a>
+              <a href={`tel:${supportPhone}`} style={{ color: '#1769aa', fontWeight: 600 }}>Call support</a>
+              <a href={whatsappUrl} target="_blank" rel="noreferrer" style={{ color: '#1769aa', fontWeight: 600 }}>WhatsApp support</a>
+            </div>
+          </div>
           {msg && <div style={{ padding: '12px', borderRadius: '8px', marginBottom: '15px', background: msg.includes('❌') ? '#ffebee' : '#e8f5e9', color: msg.includes('❌') ? '#c62828' : '#2e7d32', fontSize: '14px' }}>{msg}</div>}
           <form onSubmit={handleActivate}>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#444', marginBottom: '6px' }}>Enter Activation Key</label>

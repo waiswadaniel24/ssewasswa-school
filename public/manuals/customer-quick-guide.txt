@@ -1,0 +1,25 @@
+SSEWASSWA COMFORTS TECHNOLOGIES
+School Management System — Customer Quick Guide
+
+WHAT THE SYSTEM DOES
+• Student admissions, profiles, history, promotion and requirements
+• Attendance, timetable, academics, exams and report cards
+• Fees, payments, debts, accounting and purchase authorization
+• Staff, payroll, deductions and qualifications
+• Library, transport, gate book, broadcasting and meetings
+• EMIS-ready reports, KPI dashboards, validation and data export
+• Document generation, signatures, ID cards and school branding
+
+GET STARTED
+1. Open the web app or install the Windows desktop app.
+2. Sign in with your school account.
+3. Complete School Setup and confirm your school level.
+4. Register classes and students before recording payments or results.
+5. Use Settings to configure branding, users, backups and permissions.
+
+SUPPORT
+Ssewasswa Comforts Technologies
+Email: ssewasswacomfortzone@gmail.com
+Phone: +256 752 971 118 / +256 789 736 737
+
+The system is designed for schools and education offices. Always keep authorized backups and give each staff member only the access they need.

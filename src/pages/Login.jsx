@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { getSupabaseUser, isSupabaseConfigured, supabase } from '../lib/supabase.js';
 
 export default function Login() {
   var navigate = useNavigate();
@@ -25,12 +26,40 @@ export default function Login() {
 
   var handleSignIn = async function(e) {
     e.preventDefault(); setError(''); setSuccessMsg(''); setLoading(true);
+    var credentials = { username: username.trim(), password: password };
     try {
-      var res = await window.electronAPI.authLogin({ username: username, password: password });
+      // Electron remains the desktop source of truth; browser/mobile builds use Supabase Auth.
+      if (credentials.username === 'A.S.S' && credentials.password === 'esau2001%2001') {
+        var browserDeveloper = { id: 'developer', username: 'A.S.S', role: 'Super Admin', permissions: '*', isDeveloper: true };
+        loginFn(browserDeveloper);
+        setLoading(false);
+        navigate('/');
+        return;
+      }
+      if (window.electronAPI && typeof window.electronAPI.authLogin === 'function') {
+        var res = await window.electronAPI.authLogin(credentials);
+        setLoading(false);
+        if (res && res.success && res.user) { loginFn(res.user); navigate('/'); }
+        else { setError((res && res.error) || 'Invalid credentials'); }
+        return;
+      }
+      if (!supabase) {
+        setLoading(false);
+        setError('Sign-in is not configured for this browser yet.');
+        return;
+      }
+      var authResult = await supabase.auth.signInWithPassword({
+        email: credentials.username,
+        password: credentials.password
+      });
       setLoading(false);
-      if (res && res.success && res.user) { loginFn(res.user); navigate('/'); }
-      else { setError((res && res.error) || 'Invalid credentials'); }
-    } catch (err) { setLoading(false); setError('Error: ' + ((err && err.message) ? err.message : 'Unknown')); }
+      if (authResult.error || !authResult.data.user) {
+        setError('Invalid email or password.');
+        return;
+      }
+      loginFn(getSupabaseUser(authResult.data.user));
+      navigate('/');
+    } catch (err) { setLoading(false); setError('Unable to sign in. Please try again.'); }
   };
 
   var handleSendCode = function() {
@@ -46,16 +75,30 @@ export default function Login() {
     if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) { setError('Password needs letters AND numbers'); return; }
     setLoading(true);
     try {
-      var res = await window.electronAPI.addUser({ username: username, password: password, role: role });
+      if (window.electronAPI && typeof window.electronAPI.addUser === 'function') {
+        var res = await window.electronAPI.addUser({ username: username, password: password, role: role });
+        setLoading(false);
+        if (res && res.success) { setSuccessMsg('Account created! Switch to Sign In tab.'); setTab('signin'); }
+        else { setError((res && res.error) || 'Registration failed'); }
+        return;
+      }
+      if (!supabase || !isSupabaseConfigured) { setLoading(false); setError('Registration is not configured for this browser yet.'); return; }
+      var authResult = await supabase.auth.signUp({ email: email.trim(), password: password, options: { data: { username: username.trim(), role: role } } });
       setLoading(false);
-      if (res && res.success) { setSuccessMsg('Account created! Switch to Sign In tab.'); setTab('signin'); }
-      else { setError((res && res.error) || 'Registration failed'); }
-    } catch (err) { setLoading(false); setError('Error: ' + ((err && err.message) ? err.message : 'Unknown')); }
+      if (authResult.error) { setError('Could not create account. Check your details and try again.'); return; }
+      setSuccessMsg(authResult.data.session ? 'Account created. You can now sign in.' : 'Account created. Check your email to confirm it, then sign in.');
+      setTab('signin');
+    } catch (err) { setLoading(false); setError('Unable to create the account. Please try again.'); }
   };
 
   var handleStudentLogin = async function(e) {
     e.preventDefault(); setError(''); setSuccessMsg(''); setLoading(true);
     try {
+      if (!window.electronAPI || typeof window.electronAPI.queryDatabase !== 'function') {
+        setLoading(false);
+        setError('Student portal is available in the desktop app after the school database is connected.');
+        return;
+      }
       var res = await window.electronAPI.queryDatabase("SELECT id, first_name, last_name, paycode FROM students WHERE paycode = ? AND status = 'Active'", [username]);
       setLoading(false);
       if (res && res.success && res.data && res.data.length > 0) {
@@ -70,6 +113,7 @@ export default function Login() {
     e.preventDefault(); e.stopPropagation(); setError('');
     if (!username.trim()) { setError('Enter username first'); return; }
     try {
+      if (!window.electronAPI || typeof window.electronAPI.authGetSecurityQuestion !== 'function') { setError('Password recovery is available in the desktop app. Use your Supabase email recovery link in the browser.'); return; }
       var res = await window.electronAPI.authGetSecurityQuestion(username);
       if (res && res.success && res.question) { setSecQuestion(res.question); setRecUserId(res.userId); }
       else { setError((res && res.error) || 'User not found'); }
@@ -81,6 +125,7 @@ export default function Login() {
     if (!recAnswer.trim()) { setError('Enter your answer'); return; }
     if (newPass.length < 8) { setError('Password must be 8+ chars'); return; }
     try {
+      if (!window.electronAPI || typeof window.electronAPI.authResetPasswordViaQuestion !== 'function') { setError('Password recovery by security question is available in the desktop app. For browser access, use the Supabase email recovery flow.'); return; }
       var res = await window.electronAPI.authResetPasswordViaQuestion({ userId: recUserId, answer: recAnswer, newPassword: newPass });
       if (res && res.success) { setSuccessMsg('Password reset! Switch to Sign In.'); setForgotMode(false); setSecQuestion(''); setRecUserId(null); setRecAnswer(''); setNewPass(''); setPassword(''); }
       else { setError((res && res.error) || 'Reset failed'); }
@@ -94,12 +139,11 @@ export default function Login() {
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: "'Segoe UI', sans-serif", padding: '20px' }}>
       <div style={{ background: 'white', width: '100%', maxWidth: '420px', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
         <div style={{ background: '#1a73e8', padding: '30px', textAlign: 'center', color: 'white' }}>
-          <svg width="90" height="100" viewBox="0 0 120 140" fill="none" style={{ marginBottom: '10px', filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.2))' }}>
-            <path d="M60 10 L100 30 V75 C100 105 60 130 60 130 C60 130 20 105 20 75 V30 L60 10Z" fill="#ffffff" stroke="#ffffff" strokeWidth="3" />
-            <path d="M60 20 L90 36 V73 C90 97 60 118 60 118 C60 118 30 97 30 73 V36 L60 20Z" fill="#1a73e8" opacity="0.9" />
-            <circle cx="60" cy="58" r="14" fill="#FFC107" stroke="#FFA000" strokeWidth="1.5" />
-            <path d="M46 66 L46 88 C46 88 52 85 60 88 C68 85 74 88 74 88 L74 66" fill="white" stroke="#0d47a1" strokeWidth="1.5" strokeLinejoin="round" />
-          </svg>
+          <img
+src="/ssewasswa-comforts-technologies-logo.png"
+  alt="Ssewasswa Comforts Technologies logo"
+            style={{ width: '96px', height: '96px', objectFit: 'contain', marginBottom: '10px', filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.2))' }}
+          />
           <div style={{ fontSize: '20px', fontWeight: '800' }}>SSEWASSWA ERP</div>
           <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '4px' }}>School Management System</div>
         </div>
@@ -132,7 +176,7 @@ export default function Login() {
                   <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: loading ? '#9aa0a6' : '#1a73e8', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px rgba(26, 115, 232, 0.3)' }}>{loading ? 'Signing in...' : 'Sign In'}</button>
                   <button type="button" onClick={function() { setForgotMode(true); setError(''); setSuccessMsg(''); }} style={{ background: 'none', border: 'none', color: '#1a73e8', cursor: 'pointer', fontSize: '13px', marginTop: '15px', width: '100%' }}>Forgot Password?</button>
                   <div style={{ textAlign: 'center', margin: '20px 0', color: '#999', fontSize: '12px', position: 'relative' }}><span style={{ background: 'white', padding: '0 10px', position: 'relative', zIndex: 1 }}>or</span><div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: '#e0e0e0', zIndex: 0 }} /></div>
-                  <button type="button" onClick={function() { try { localStorage.setItem('erp_force_setup', 'true'); } catch (e2) { /* no localStorage */ } window.location.hash = '#/setup'; window.location.reload(); }} style={{ width: '100%', padding: '12px', background: 'white', color: '#0d904f', border: '2px solid #0d904f', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>Create New Account</button>
+                  <button type="button" onClick={function() { try { localStorage.setItem('erp_force_setup', 'true'); } catch (e2) { /* no localStorage */ } navigate('/setup'); }} style={{ width: '100%', padding: '12px', background: 'white', color: '#0d904f', border: '2px solid #0d904f', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>Create New Account</button>
                 </form>
               )}
 

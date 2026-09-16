@@ -1,8 +1,12 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../context/AuthContext.jsx';
+import { canUseSupabase, generateStudentPaycodes, getOrCreateSchool, isElectronAvailable, listClasses, listStudents, saveStudent, softDeleteStudent } from '../lib/supabase.js';
 
 var EMPTY = { first_name: '', last_name: '', other_name: '', gender: 'M', date_of_birth: '', class_id: '', student_type: 'Day', residence: '', guardian_name: '', guardian_phone: '', admission_number: '', paycode: '' };
 
 export default function Students() {
+  useAuth();
+  var [supabaseSchoolId, setSupabaseSchoolId] = useState(null);
   var [students, setStudents] = useState([]);
   var [classes, setClasses] = useState([]);
   var [showForm, setShowForm] = useState(false);
@@ -15,20 +19,34 @@ export default function Students() {
   var [saving, setSaving] = useState(false);
 
   var loadData = useCallback(async function() {
-    if (!window.electronAPI || !window.electronAPI.queryDatabase) { setLoading(false); return; }
     try {
-      var cRes = await window.electronAPI.queryDatabase("SELECT id, name FROM classes ORDER BY name");
-      if (cRes && cRes.success) setClasses(cRes.data || []);
+      if (canUseSupabase()) {
+        var school = supabaseSchoolId ? { data: { id: supabaseSchoolId } } : await getOrCreateSchool();
+        if (school.error) throw school.error;
+        var schoolId = school.data.id;
+        setSupabaseSchoolId(schoolId);
+        var cRes = await listClasses(schoolId);
+        if (cRes.error) throw cRes.error;
+        setClasses(cRes.data || []);
+        var sRes = await listStudents(schoolId, { classId: filterClass, search: searchTerm });
+        if (sRes.error) throw sRes.error;
+        setStudents(sRes.data || []);
+        setLoading(false);
+        return;
+      }
+      if (!isElectronAvailable() || !window.electronAPI.queryDatabase) { setLoading(false); return; }
+      var electronClasses = await window.electronAPI.queryDatabase("SELECT id, name FROM classes ORDER BY name");
+      if (electronClasses && electronClasses.success) setClasses(electronClasses.data || []);
       var query = "SELECT s.id, s.first_name, s.last_name, s.other_name, s.admission_number, s.gender, s.class_id, s.student_type, s.guardian_phone, s.status, s.paycode, c.name as class_name FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.status != 'Deleted'";
       var params = [];
       if (filterClass) { query += " AND s.class_id = ?"; params.push(filterClass); }
       if (searchTerm) { query += " AND (s.first_name LIKE ? OR s.last_name LIKE ? OR s.admission_number LIKE ?)"; var st = '%' + searchTerm + '%'; params.push(st, st, st); }
       query += " ORDER BY s.first_name LIMIT 200";
-      var sRes = await window.electronAPI.queryDatabase(query, params);
-      if (sRes && sRes.success) setStudents(sRes.data || []);
+      var electronStudents = await window.electronAPI.queryDatabase(query, params);
+      if (electronStudents && electronStudents.success) setStudents(electronStudents.data || []);
     } catch (e) { setMsg('Error loading: ' + e.message); }
     setLoading(false);
-  }, [searchTerm, filterClass]);
+  }, [searchTerm, filterClass, supabaseSchoolId]);
 
   useEffect(function() { loadData(); }, [loadData]);
 
@@ -45,16 +63,22 @@ export default function Students() {
 
     try {
       var res;
-      if (editData) {
-        res = await window.electronAPI.queryDatabase("UPDATE students SET first_name=?, last_name=?, other_name=?, gender=?, date_of_birth=?, class_id=?, student_type=?, residence=?, guardian_name=?, guardian_phone=?, paycode=? WHERE id=?", [finalData.first_name, finalData.last_name, finalData.other_name, finalData.gender, finalData.date_of_birth, finalData.class_id || null, finalData.student_type, finalData.residence, finalData.guardian_name, finalData.guardian_phone, finalData.paycode, editData.id]);
-      } else {
-        res = await window.electronAPI.queryDatabase("INSERT INTO students (first_name, last_name, other_name, gender, date_of_birth, class_id, student_type, residence, guardian_name, guardian_phone, admission_number, paycode, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,'Active')", [finalData.first_name, finalData.last_name, finalData.other_name, finalData.gender, finalData.date_of_birth, finalData.class_id || null, finalData.student_type, finalData.residence, finalData.guardian_name, finalData.guardian_phone, finalData.admission_number, finalData.paycode]);
-      }
-      if (res && res.success) {
-        setMsg(editData ? 'Student updated!' : 'Student added! Paycode: ' + finalData.paycode);
-        setShowForm(false); setEditData(null); setFormData(EMPTY);
-        await loadData();
-      } else { setMsg('Error: ' + ((res && res.error) ? res.error : 'Failed')); }
+      if (canUseSupabase()) {
+        if (!supabaseSchoolId) { var school = await getOrCreateSchool(); if (school.error) throw school.error; setSupabaseSchoolId(school.data.id); }
+        var supabaseData = { first_name: finalData.first_name, last_name: finalData.last_name, other_name: finalData.other_name || null, gender: finalData.gender, date_of_birth: finalData.date_of_birth || null, class_id: finalData.class_id || null, student_type: finalData.student_type, residence: finalData.residence || null, guardian_name: finalData.guardian_name || null, guardian_phone: finalData.guardian_phone || null, admission_number: finalData.admission_number || null, paycode: finalData.paycode, status: 'Active' };
+        res = await saveStudent(supabaseSchoolId, supabaseData, editData && editData.id);
+        if (res.error) throw res.error;
+      } else if (isElectronAvailable() && typeof window.electronAPI.queryDatabase === 'function') {
+        if (editData) {
+          res = await window.electronAPI.queryDatabase("UPDATE students SET first_name=?, last_name=?, other_name=?, gender=?, date_of_birth=?, class_id=?, student_type=?, residence=?, guardian_name=?, guardian_phone=?, paycode=? WHERE id=?", [finalData.first_name, finalData.last_name, finalData.other_name, finalData.gender, finalData.date_of_birth, finalData.class_id || null, finalData.student_type, finalData.residence, finalData.guardian_name, finalData.guardian_phone, finalData.paycode, editData.id]);
+        } else {
+          res = await window.electronAPI.queryDatabase("INSERT INTO students (first_name, last_name, other_name, gender, date_of_birth, class_id, student_type, residence, guardian_name, guardian_phone, admission_number, paycode, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,'Active')", [finalData.first_name, finalData.last_name, finalData.other_name, finalData.gender, finalData.date_of_birth, finalData.class_id || null, finalData.student_type, finalData.residence, finalData.guardian_name, finalData.guardian_phone, finalData.admission_number, finalData.paycode]);
+        }
+        if (!res || !res.success) throw new Error((res && res.error) || 'Failed');
+      } else throw new Error('No data service is available. Connect Supabase or open the desktop app.');
+      setMsg(editData ? 'Student updated!' : 'Student added! Paycode: ' + finalData.paycode);
+      setShowForm(false); setEditData(null); setFormData(EMPTY);
+      await loadData();
     } catch (err) { setMsg('Error: ' + err.message); }
     setSaving(false);
   };
@@ -63,13 +87,23 @@ export default function Students() {
 
   var handleDelete = async function(id) {
     if (!confirm('Delete this student?')) return;
-    await window.electronAPI.queryDatabase("UPDATE students SET status='Deleted' WHERE id=?", [id]);
-    setMsg('Student removed'); loadData();
+    try {
+      if (canUseSupabase()) { var result = await softDeleteStudent(supabaseSchoolId, id); if (result.error) throw result.error; }
+      else if (isElectronAvailable()) { await window.electronAPI.queryDatabase("UPDATE students SET status='Deleted' WHERE id=?", [id]); }
+      else throw new Error('No data service is available');
+      setMsg('Student removed'); loadData();
+    } catch (e) { setMsg('Error: ' + e.message); }
   };
 
   var generatePaycodes = async function() {
     if (!confirm('Generate missing paycodes?')) return;
-    try { var r = await window.electronAPI.backfillPaycodes(); if (r && r.success) { setMsg('Generated ' + ((r.data && r.data.count) ? r.data.count : 0) + ' paycodes'); loadData(); } } catch (e) { setMsg('Error: ' + e.message); }
+    try {
+      var r;
+      if (canUseSupabase()) { r = await generateStudentPaycodes(supabaseSchoolId); if (r.error) throw r.error; }
+      else if (isElectronAvailable()) { r = await window.electronAPI.backfillPaycodes(); if (!r || !r.success) throw new Error((r && r.error) || 'Failed'); }
+      else throw new Error('No data service is available');
+      setMsg('Generated ' + ((r.data && r.data.count) ? r.data.count : 0) + ' paycodes'); loadData();
+    } catch (e) { setMsg('Error: ' + e.message); }
   };
 
   

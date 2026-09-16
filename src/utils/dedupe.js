@@ -70,8 +70,8 @@ function fuzzyNameMatch(a, b) {
     if (aLast && bLast && aLast === bLast) {
         if (aFirst && bFirst) {
             if (aFirst === bFirst) return true;
-            // Only match prefix if both names are at least 4 chars (avoids "Jo" matching "John")
-            if (aFirst.length >= 4 && bFirst.length >= 4) {
+            // Allow common three-letter short forms (e.g. "Sam"/"Samuel") while avoiding two-letter false positives.
+            if (aFirst.length >= 3 && bFirst.length >= 3) {
                 if (aFirst.startsWith(bFirst) || bFirst.startsWith(aFirst)) return true;
             }
         }

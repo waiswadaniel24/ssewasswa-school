@@ -1,3 +1,65 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; color: #333; }
 .loading-screen { display: flex; justify-content: center; align-items: center; height: 100vh; font-size: 1.5rem; color: #1a73e8; }
+
+.school-header-emblem { width: 38px; height: 38px; object-fit: contain; flex: 0 0 auto; }
+
+@media (max-width: 720px) {
+  html, body, #root { min-width: 0; width: 100%; max-width: 100%; overflow-x: hidden; }
+  #root, #root * { max-width: 100%; }
+  .school-header-emblem { width: 32px; height: 32px; }
+  .school-header-brand h2 { max-width: 145px; font-size: 14px !important; }
+  header { width: 100% !important; min-width: 0 !important; max-width: 100vw !important; padding: 0 10px !important; gap: 8px; height: 56px !important; overflow: hidden !important; }
+  header > div:first-child { flex: 1 1 auto !important; min-width: 0 !important; overflow: hidden !important; }
+  header > div:first-child .school-header-brand { min-width: 0 !important; max-width: 100% !important; }
+  header > div:nth-child(2) { display: none !important; }
+  header > div:last-child { flex: 0 0 auto !important; gap: 5px !important; min-width: 0 !important; }
+  header > div:last-child > div:first-of-type { display: none !important; }
+  header > div:last-child > button:nth-of-type(2) { display: none !important; }
+  header button { padding-left: 7px !important; padding-right: 7px !important; }
+  .layout-header { width: 100%; min-width: 0; }
+  .layout-body, .layout-main, .page-container { width: 100%; max-width: 100%; min-width: 0; }
+  .layout-main { min-width: 0; padding: 16px !important; overflow-x: auto; }
+  .layout-body { flex-direction: column !important; overflow: auto !important; }
+  .layout-body > aside, aside { width: 100% !important; min-width: 0 !important; height: auto !important; max-height: 190px; border-right: 0 !important; border-bottom: 1px solid #dadce0; }
+  aside nav { display: flex; flex-wrap: wrap; align-content: flex-start; overflow-x: hidden !important; overflow-y: auto !important; }
+  aside nav > a, aside nav > div { flex: 0 0 auto; }
+  aside nav > div > p { margin: 4px 0 !important; padding: 6px 10px !important; }
+  aside nav > div > a, aside nav > a { padding: 8px 10px !important; font-size: 12px !important; }
+  aside > div:last-child { display: none; }
+  .page-container { padding: 16px !important; }
+  .card-body { padding: 16px !important; }
+  .data-table { min-width: 620px; }
+  .data-table-wrapper, .table-responsive { max-width: 100%; overflow-x: auto; }
+  .dashboard-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+  .btn { min-height: 42px; }
+  .setup-grid { display: grid; width: 100%; }
+  .setup-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .setup-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .setup-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .setup-grid-2, .setup-grid-3, .setup-grid-4 { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 721px) {
+  .setup-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .setup-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .setup-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.activation-plans { flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+  .activation-plans { flex-direction: column; padding: 20px !important; }
+  .activation-page-card { max-width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .school-header-brand h2 { max-width: 110px; }
+  .school-header-brand span { display: none; }
+  .school-header-emblem { width: 28px; height: 28px; }
+  .layout-main { padding: 12px !important; }
+  .page-title { font-size: 21px !important; margin-bottom: 16px !important; }
+}

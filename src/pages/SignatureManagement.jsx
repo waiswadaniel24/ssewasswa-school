@@ -24,7 +24,9 @@ const POSITIONS = [
 ];
 
 export default function SignatureManagement() {
-    const { user } = useAuth();
+    const auth = useAuth();
+    const user = auth && auth.user ? auth.user : null;
+    const userRole = user && user.role ? user.role : 'Viewer';
     const [msg, setMsg] = useState('');
     const [tab, setTab] = useState('capture'); // capture | assign | view
     const [mySignature, setMySignature] = useState(null);
@@ -63,6 +65,7 @@ export default function SignatureManagement() {
     };
 
     const handleSaveSignature = async (imageData) => {
+        if (!user) { setMsg('Please sign in again before saving a signature'); return; }
         setMySignature(imageData);
         const r = await window.electronAPI.saveSignature({
             person_id: user.id,
@@ -80,7 +83,8 @@ export default function SignatureManagement() {
 
         // Check if this user can assign to this doc type
         const docConfig = DOC_TYPES.find(d => d.value === selectedDoc);
-        if (docConfig && !docConfig.roles.includes(user.role) && user.role !== 'Super Admin') {
+        if (!user) { setMsg('Please sign in again before assigning signatures'); return; }
+        if (docConfig && !docConfig.roles.includes(userRole) && userRole !== 'Super Admin') {
             // Only allow assigning YOURSELF, or Super Admin can assign anyone
             if (String(staff.id) !== String(user.id)) {
                 setMsg(`Only ${docConfig.roles.join('/')} can assign signatures to ${docConfig.label}`);
@@ -175,7 +179,7 @@ export default function SignatureManagement() {
                             <div className="form-group">
                                 <label className="form-label">Document Type</label>
                                 <select className="form-input" value={selectedDoc} onChange={e => setSelectedDoc(e.target.value)}>
-                                    {DOC_TYPES.filter(d => d.roles.includes(user.role) || user.role === 'Super Admin').map(d => (
+                                    {DOC_TYPES.filter(d => d.roles.includes(userRole) || userRole === 'Super Admin').map(d => (
                                         <option key={d.value} value={d.value}>{d.label}</option>
                                     ))}
                                 </select>
@@ -188,7 +192,7 @@ export default function SignatureManagement() {
                             </div>
                             <button className="btn btn-primary" style={{ width: '100%', marginTop: 10 }} onClick={handleAssign}>Assign to This Document</button>
                             <p style={{ fontSize: 11, color: '#999', marginTop: 10 }}>
-                                Only {user.role} can assign to visible document types. Super Admin can assign anyone to anything.
+                                Only {userRole} can assign to visible document types. Super Admin can assign anyone to anything.
                             </p>
                         </div>
                     </div>

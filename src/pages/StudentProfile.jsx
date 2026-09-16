@@ -26,8 +26,7 @@ export default function StudentProfile() {
 
   // ─── Get student ID from URL hash (#/student/123) ─────────
   useEffect(() => {
-    const hash = window.location.hash;
-    const match = hash.match(/\/student\/(\d+)/);
+    const match = window.location.pathname.match(/\/student\/(\d+)/);
     if (match) {
       setStudentId(parseInt(match[1]));
     } else {

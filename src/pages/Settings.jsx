@@ -288,7 +288,7 @@ export default function Settings() {
               <div className="form-group"><label className="form-label">PesaPal Consumer Key</label><input className="form-input" value={paySettings.pesapal_key || ''} onChange={function (e) { setPaySettings(function (p) { return { ...p, pesapal_key: e.target.value }; }); }} /></div>
               <div className="form-group"><label className="form-label">PesaPal Consumer Secret</label><input type="password" className="form-input" value={paySettings.pesapal_secret || ''} onChange={function (e) { setPaySettings(function (p) { return { ...p, pesapal_secret: e.target.value }; }); }} /></div>
             </div>
-            <h4 style={{ color: 'white', background: '#0d904f', padding: '8px 12px', borderRadius: '6px', marginTop: '30px' }}>📱 SMS Gateway (Africa's Talking)</h4>
+            <h4 style={{ color: 'white', background: '#0d904f', padding: '8px 12px', borderRadius: '6px', marginTop: '30px' }}>📱 SMS Gateway (Africa&apos;s Talking)</h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '15px' }}>
               <div className="form-group"><label className="form-label">AT Username</label><input className="form-input" placeholder="e.g., ssewasswa" value={paySettings.at_username || ''} onChange={function (e) { setPaySettings(function (p) { return { ...p, at_username: e.target.value }; }); }} /></div>
               <div className="form-group"><label className="form-label">AT API Key</label><input type="password" className="form-input" value={paySettings.at_api_key || ''} onChange={function (e) { setPaySettings(function (p) { return { ...p, at_api_key: e.target.value }; }); }} /></div>
@@ -314,7 +314,7 @@ export default function Settings() {
       <div className="card" style={{ marginTop: '20px' }}>
         <div className="card-header">🎧 Help & Support</div>
         <div className="card-body">
-          <p style={{ fontSize: '13px', color: '#666', marginBottom: '15px' }}>Experiencing a bug or need help? Send a ticket directly to Ssewasswa Comfort's Technologies.</p>
+          <p style={{ fontSize: '13px', color: '#666', marginBottom: '15px' }}>Experiencing a bug or need help? Send a ticket directly to Ssewasswa Comfort&apos;s Technologies.</p>
           <textarea className="form-input" rows="3" placeholder="Describe your issue here..." id="helpdesk-issue"></textarea>
           <button className="btn btn-secondary" style={{ marginTop: '10px' }} onClick={async () => {
             const issue = document.getElementById('helpdesk-issue').value;

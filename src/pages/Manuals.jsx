@@ -21,7 +21,20 @@ export default function Manuals() {
 
   return (
     <div className="page-container">
-      <h1 className="page-title">📖 System Manuals</h1>
+      <h1 className="page-title">System Manuals & Customer Materials</h1>
+
+      <div className="card no-print" style={{ marginBottom: '20px' }}>
+        <div className="card-body">
+          <h3 style={{ marginTop: 0 }}>Downloadable materials</h3>
+          <p style={{ color: '#5f6368' }}>Use the customer flyer for marketing, the quick guide for school staff, and the developer guide for maintenance and releases.</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+            <a className="btn btn-secondary" href="/manuals/customer-quick-guide.txt" download>Download customer guide</a>
+            <a className="btn btn-secondary" href="/manuals/customer-flyer.txt" download>Download printable flyer</a>
+            {isDev && <a className="btn btn-secondary" href="/manuals/developer-maintenance-guide.txt" download>Download developer guide</a>}
+            <a className="btn btn-secondary" href="/education-software.html" target="_blank" rel="noreferrer">Open public product page</a>
+          </div>
+        </div>
+      </div>
 
       {/* ─── Print CSS ───────────────────────────────────────── */}
       <style>{`
