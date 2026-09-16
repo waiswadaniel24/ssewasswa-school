@@ -68,17 +68,17 @@ export default function SystemSetup() {
           <form onSubmit={handleSubmit}>
             <h4 style={{ color: '#1a73e8', marginBottom: '10px' }}>School Information</h4>
             <div style={{ marginBottom: '10px' }}><label style={ls}>School Name *</label><input style={is} type="text" name="schoolName" value={formData.schoolName} onChange={handleChange} placeholder="e.g. St. Peter's Secondary School" required autoFocus /></div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+            <div className="setup-grid setup-grid-3" style={{ gap: '10px', marginBottom: '10px' }}>
               <div><label style={ls}>School Level *</label><select style={is} name="schoolLevel" value={formData.schoolLevel} onChange={handleChange}><option value="Nursery">Nursery</option><option value="Nursery_Primary">Nursery & Primary</option><option value="Primary">Primary</option><option value="Secondary">Secondary (O & A)</option><option value="Primary_Secondary">Primary & Secondary</option><option value="Tertiary">Tertiary / College</option><option value="University">University</option></select></div>
               <div><label style={ls}>Gender Type *</label><select style={is} name="genderType" value={formData.genderType} onChange={handleChange}><option value="Mixed">Mixed (Boys & Girls)</option><option value="Boys">Boys Only</option><option value="Girls">Girls Only</option></select></div>
               <div><label style={ls}>Boarding *</label><select style={is} name="boardingStatus" value={formData.boardingStatus} onChange={handleChange}><option value="Day">Day School</option><option value="Boarding">Boarding School</option><option value="Day_Boarding">Day & Boarding</option></select></div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+            <div className="setup-grid setup-grid-2" style={{ gap: '10px', marginBottom: '10px' }}>
               <div><label style={ls}>Founding Year</label><input style={is} type="number" name="foundingYear" value={formData.foundingYear} onChange={handleChange} placeholder="e.g. 1995" /></div>
               <div><label style={ls}>Backup Email</label><input style={is} type="email" name="backupEmail" value={formData.backupEmail} onChange={handleChange} placeholder="gmail@gmail.com" /></div>
             </div>
             <div style={sd}><h4 style={{ color: '#1a73e8', marginBottom: '10px' }}>Location</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+              <div className="setup-grid setup-grid-2" style={{ gap: '10px', marginBottom: '10px' }}>
                 <div><label style={ls}>District *</label><select style={is} name="district" value={formData.district} onChange={handleChange} required><option value="">-- Select --</option>{UGANDA_DISTRICTS.map(function(d) { return <option key={d} value={d}>{d}</option>; })}</select></div>
                 <div><label style={ls}>County</label><input style={is} type="text" name="county" value={formData.county} onChange={handleChange} placeholder="e.g. Kyadondo" /></div>
                 <div><label style={ls}>Sub-County</label><input style={is} type="text" name="subCounty" value={formData.subCounty} onChange={handleChange} /></div>
@@ -87,20 +87,20 @@ export default function SystemSetup() {
               </div>
             </div>
             <div style={sd}><h4 style={{ color: '#1a73e8', marginBottom: '10px' }}>Ownership Details</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+              <div className="setup-grid setup-grid-3" style={{ gap: '10px', marginBottom: '10px' }}>
                 <div><label style={ls}>Owner / Director Name</label><input style={is} type="text" name="ownerName" value={formData.ownerName} onChange={handleChange} /></div>
                 <div><label style={ls}>Owner NIN</label><input style={is} type="text" name="ownerNin" value={formData.ownerNin} onChange={handleChange} placeholder="National ID" /></div>
                 <div><label style={ls}>Owner Phone</label><input style={is} type="text" name="ownerPhone" value={formData.ownerPhone} onChange={handleChange} placeholder="077X XXX XXX" /></div>
               </div>
             </div>
             <div style={sd}><h4 style={{ color: '#1a73e8', marginBottom: '10px' }}>Leadership & Contacts</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+              <div className="setup-grid setup-grid-4" style={{ gap: '10px', marginBottom: '10px' }}>
                 <div><label style={ls}>Head Teacher Name</label><input style={is} type="text" name="headTeacherName" value={formData.headTeacherName} onChange={handleChange} /></div>
                 <div><label style={ls}>HT Phone</label><input style={is} type="text" name="headTeacherPhone" value={formData.headTeacherPhone} onChange={handleChange} placeholder="077X XXX XXX" /></div>
                 <div><label style={ls}>Chairperson Name</label><input style={is} type="text" name="chairpersonName" value={formData.chairpersonName} onChange={handleChange} /></div>
                 <div><label style={ls}>CP Phone</label><input style={is} type="text" name="chairpersonPhone" value={formData.chairpersonPhone} onChange={handleChange} placeholder="077X XXX XXX" /></div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+              <div className="setup-grid setup-grid-3" style={{ gap: '10px', marginBottom: '10px' }}>
                 <div><label style={ls}>School Phone</label><input style={is} type="text" name="phone" value={formData.phone} onChange={handleChange} placeholder="0414 XXX XXX" /></div>
                 <div><label style={ls}>School Email</label><input style={is} type="email" name="email" value={formData.email} onChange={handleChange} placeholder="school@example.com" /></div>
                 <div><label style={ls}>Postal Address</label><input style={is} type="text" name="postalAddress" value={formData.postalAddress} onChange={handleChange} placeholder="P.O. Box XXX" /></div>
@@ -112,7 +112,7 @@ export default function SystemSetup() {
             </div>
             <div style={sd}><h4 style={{ color: '#1a73e8', marginBottom: '10px' }}>Super Admin Account</h4>
               <div style={{ marginBottom: '10px' }}><label style={ls}>Admin Username *</label><input style={is} type="text" name="adminUser" value={formData.adminUser} onChange={handleChange} required /></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+              <div className="setup-grid setup-grid-2" style={{ gap: '10px', marginBottom: '10px' }}>
                 <div><label style={ls}>Password *</label><input style={is} type="password" name="adminPass" value={formData.adminPass} onChange={handleChange} placeholder="Min 8 chars, letters + numbers" required /></div>
                 <div><label style={ls}>Confirm Password *</label><input style={is} type="password" name="confirmPass" value={formData.confirmPass} onChange={handleChange} required /></div>
               </div>

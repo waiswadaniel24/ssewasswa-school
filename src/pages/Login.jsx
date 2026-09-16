@@ -125,6 +125,7 @@ export default function Login() {
     if (!recAnswer.trim()) { setError('Enter your answer'); return; }
     if (newPass.length < 8) { setError('Password must be 8+ chars'); return; }
     try {
+      if (!window.electronAPI || typeof window.electronAPI.authResetPasswordViaQuestion !== 'function') { setError('Password recovery by security question is available in the desktop app. For browser access, use the Supabase email recovery flow.'); return; }
       var res = await window.electronAPI.authResetPasswordViaQuestion({ userId: recUserId, answer: recAnswer, newPassword: newPass });
       if (res && res.success) { setSuccessMsg('Password reset! Switch to Sign In.'); setForgotMode(false); setSecQuestion(''); setRecUserId(null); setRecAnswer(''); setNewPass(''); setPassword(''); }
       else { setError((res && res.error) || 'Reset failed'); }

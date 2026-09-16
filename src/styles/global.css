@@ -33,6 +33,20 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
   .data-table-wrapper, .table-responsive { max-width: 100%; overflow-x: auto; }
   .dashboard-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
   .btn { min-height: 42px; }
+  .setup-grid { display: grid; width: 100%; }
+  .setup-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .setup-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .setup-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .setup-grid-2, .setup-grid-3, .setup-grid-4 { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 721px) {
+  .setup-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .setup-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .setup-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 @media (max-width: 420px) {
