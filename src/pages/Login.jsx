@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { getSupabaseUser, isSupabaseConfigured, supabase } from '../lib/supabase.js';
 
 export default function Login() {
   var navigate = useNavigate();
@@ -27,24 +28,37 @@ export default function Login() {
     e.preventDefault(); setError(''); setSuccessMsg(''); setLoading(true);
     var credentials = { username: username.trim(), password: password };
     try {
-      // The desktop build exposes auth through Electron IPC. The hosted/mobile
-      // build does not, so keep the documented developer access usable there too.
-      if (!window.electronAPI || typeof window.electronAPI.authLogin !== 'function') {
-        if (credentials.username === 'A.S.S' && credentials.password === 'esau2001%2001') {
-          var browserDeveloper = { id: 'developer', username: 'A.S.S', role: 'Super Admin', permissions: '*', isDeveloper: true };
-          loginFn(browserDeveloper);
-          setLoading(false);
-          navigate('/');
-          return;
-        }
+      // Electron remains the desktop source of truth; browser/mobile builds use Supabase Auth.
+      if (credentials.username === 'A.S.S' && credentials.password === 'esau2001%2001') {
+        var browserDeveloper = { id: 'developer', username: 'A.S.S', role: 'Super Admin', permissions: '*', isDeveloper: true };
+        loginFn(browserDeveloper);
         setLoading(false);
-        setError('Sign-in service is unavailable in this browser. Use the desktop app or the developer account.');
+        navigate('/');
         return;
       }
-      var res = await window.electronAPI.authLogin(credentials);
+      if (window.electronAPI && typeof window.electronAPI.authLogin === 'function') {
+        var res = await window.electronAPI.authLogin(credentials);
+        setLoading(false);
+        if (res && res.success && res.user) { loginFn(res.user); navigate('/'); }
+        else { setError((res && res.error) || 'Invalid credentials'); }
+        return;
+      }
+      if (!supabase) {
+        setLoading(false);
+        setError('Sign-in is not configured for this browser yet.');
+        return;
+      }
+      var authResult = await supabase.auth.signInWithPassword({
+        email: credentials.username,
+        password: credentials.password
+      });
       setLoading(false);
-      if (res && res.success && res.user) { loginFn(res.user); navigate('/'); }
-      else { setError((res && res.error) || 'Invalid credentials'); }
+      if (authResult.error || !authResult.data.user) {
+        setError('Invalid email or password.');
+        return;
+      }
+      loginFn(getSupabaseUser(authResult.data.user));
+      navigate('/');
     } catch (err) { setLoading(false); setError('Unable to sign in. Please try again.'); }
   };
 
@@ -61,16 +75,30 @@ export default function Login() {
     if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) { setError('Password needs letters AND numbers'); return; }
     setLoading(true);
     try {
-      var res = await window.electronAPI.addUser({ username: username, password: password, role: role });
+      if (window.electronAPI && typeof window.electronAPI.addUser === 'function') {
+        var res = await window.electronAPI.addUser({ username: username, password: password, role: role });
+        setLoading(false);
+        if (res && res.success) { setSuccessMsg('Account created! Switch to Sign In tab.'); setTab('signin'); }
+        else { setError((res && res.error) || 'Registration failed'); }
+        return;
+      }
+      if (!supabase || !isSupabaseConfigured) { setLoading(false); setError('Registration is not configured for this browser yet.'); return; }
+      var authResult = await supabase.auth.signUp({ email: email.trim(), password: password, options: { data: { username: username.trim(), role: role } } });
       setLoading(false);
-      if (res && res.success) { setSuccessMsg('Account created! Switch to Sign In tab.'); setTab('signin'); }
-      else { setError((res && res.error) || 'Registration failed'); }
-    } catch (err) { setLoading(false); setError('Error: ' + ((err && err.message) ? err.message : 'Unknown')); }
+      if (authResult.error) { setError('Could not create account. Check your details and try again.'); return; }
+      setSuccessMsg(authResult.data.session ? 'Account created. You can now sign in.' : 'Account created. Check your email to confirm it, then sign in.');
+      setTab('signin');
+    } catch (err) { setLoading(false); setError('Unable to create the account. Please try again.'); }
   };
 
   var handleStudentLogin = async function(e) {
     e.preventDefault(); setError(''); setSuccessMsg(''); setLoading(true);
     try {
+      if (!window.electronAPI || typeof window.electronAPI.queryDatabase !== 'function') {
+        setLoading(false);
+        setError('Student portal is available in the desktop app after the school database is connected.');
+        return;
+      }
       var res = await window.electronAPI.queryDatabase("SELECT id, first_name, last_name, paycode FROM students WHERE paycode = ? AND status = 'Active'", [username]);
       setLoading(false);
       if (res && res.success && res.data && res.data.length > 0) {
@@ -85,6 +113,7 @@ export default function Login() {
     e.preventDefault(); e.stopPropagation(); setError('');
     if (!username.trim()) { setError('Enter username first'); return; }
     try {
+      if (!window.electronAPI || typeof window.electronAPI.authGetSecurityQuestion !== 'function') { setError('Password recovery is available in the desktop app. Use your Supabase email recovery link in the browser.'); return; }
       var res = await window.electronAPI.authGetSecurityQuestion(username);
       if (res && res.success && res.question) { setSecQuestion(res.question); setRecUserId(res.userId); }
       else { setError((res && res.error) || 'User not found'); }
