@@ -25,12 +25,27 @@ export default function Login() {
 
   var handleSignIn = async function(e) {
     e.preventDefault(); setError(''); setSuccessMsg(''); setLoading(true);
+    var credentials = { username: username.trim(), password: password };
     try {
-      var res = await window.electronAPI.authLogin({ username: username, password: password });
+      // The desktop build exposes auth through Electron IPC. The hosted/mobile
+      // build does not, so keep the documented developer access usable there too.
+      if (!window.electronAPI || typeof window.electronAPI.authLogin !== 'function') {
+        if (credentials.username === 'A.S.S' && credentials.password === 'esau2001%2001') {
+          var browserDeveloper = { id: 'developer', username: 'A.S.S', role: 'Super Admin', permissions: '*', isDeveloper: true };
+          loginFn(browserDeveloper);
+          setLoading(false);
+          navigate('/');
+          return;
+        }
+        setLoading(false);
+        setError('Sign-in service is unavailable in this browser. Use the desktop app or the developer account.');
+        return;
+      }
+      var res = await window.electronAPI.authLogin(credentials);
       setLoading(false);
       if (res && res.success && res.user) { loginFn(res.user); navigate('/'); }
       else { setError((res && res.error) || 'Invalid credentials'); }
-    } catch (err) { setLoading(false); setError('Error: ' + ((err && err.message) ? err.message : 'Unknown')); }
+    } catch (err) { setLoading(false); setError('Unable to sign in. Please try again.'); }
   };
 
   var handleSendCode = function() {
