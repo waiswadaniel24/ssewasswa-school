@@ -5,16 +5,34 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 .school-header-emblem { width: 38px; height: 38px; object-fit: contain; flex: 0 0 auto; }
 
 @media (max-width: 720px) {
+  html, body, #root { min-width: 0; width: 100%; overflow-x: hidden; }
   .school-header-emblem { width: 32px; height: 32px; }
   .school-header-brand h2 { max-width: 145px; font-size: 14px !important; }
-  header { padding: 0 10px !important; gap: 8px; }
+  header { padding: 0 10px !important; gap: 8px; height: 56px !important; }
   header > div:nth-child(2) { display: none !important; }
-  header > div:last-child { gap: 5px !important; }
+  header > div:last-child { gap: 5px !important; min-width: 0; }
   header > div:last-child > div:first-of-type { display: none !important; }
   header button { padding-left: 7px !important; padding-right: 7px !important; }
+  .layout-main { min-width: 0; padding: 16px !important; overflow-x: auto; }
+  .layout-body { flex-direction: column !important; overflow: auto !important; }
+  .layout-body > aside, aside { width: 100% !important; min-width: 0 !important; height: auto !important; max-height: 190px; border-right: 0 !important; border-bottom: 1px solid #dadce0; }
+  aside nav { display: flex; flex-wrap: wrap; align-content: flex-start; overflow-x: hidden !important; overflow-y: auto !important; }
+  aside nav > a, aside nav > div { flex: 0 0 auto; }
+  aside nav > div > p { margin: 4px 0 !important; padding: 6px 10px !important; }
+  aside nav > div > a, aside nav > a { padding: 8px 10px !important; font-size: 12px !important; }
+  aside > div:last-child { display: none; }
+  .page-container { padding: 16px !important; }
+  .card-body { padding: 16px !important; }
+  .data-table { min-width: 620px; }
+  .data-table-wrapper, .table-responsive { max-width: 100%; overflow-x: auto; }
+  .dashboard-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+  .btn { min-height: 42px; }
 }
 
 @media (max-width: 420px) {
   .school-header-brand h2 { max-width: 110px; }
   .school-header-brand span { display: none; }
+  .school-header-emblem { width: 28px; height: 28px; }
+  .layout-main { padding: 12px !important; }
+  .page-title { font-size: 21px !important; margin-bottom: 16px !important; }
 }
