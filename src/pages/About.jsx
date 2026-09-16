@@ -177,21 +177,21 @@ export default function About() {
         <div className="card-header">🔗 Quick Links</div>
         <div className="card-body">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '10px' }}>
-            <a href="#/manuals" style={{
+            <a href="/manuals" style={{
               display: 'block', padding: '10px 14px', borderRadius: '6px',
               background: '#e8f0fe', color: '#1a73e8',
               textDecoration: 'none', fontSize: '13px', fontWeight: '600'
             }}>
               📖 System Manuals
             </a>
-            <a href="#/terms" style={{
+            <a href="/terms" style={{
               display: 'block', padding: '10px 14px', borderRadius: '6px',
               background: '#e8f0fe', color: '#1a73e8',
               textDecoration: 'none', fontSize: '13px', fontWeight: '600'
             }}>
               📜 Terms &amp; Conditions
             </a>
-            <a href="#/copyright" style={{
+            <a href="/copyright" style={{
               display: 'block', padding: '10px 14px', borderRadius: '6px',
               background: '#e8f0fe', color: '#1a73e8',
               textDecoration: 'none', fontSize: '13px', fontWeight: '600'

@@ -37,7 +37,7 @@ export default function SystemSetup() {
       setLoading(false);
       if (res && res.success) {
         try { localStorage.removeItem('erp_force_setup'); } catch (e2) { /* no localStorage */ }
-        window.location.hash = '#/login'; window.location.reload();
+        window.location.assign('/login');
       } else { setError((res && res.error) || 'Setup failed'); }
     } catch (err) { setLoading(false); setError(err.message); }
   };
@@ -121,7 +121,7 @@ export default function SystemSetup() {
           </form>
           <div style={{ textAlign: 'center', marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #eee' }}>
             <p style={{ color: '#666', fontSize: '14px', margin: '0 0 5px 0' }}>Already have an account?</p>
-            <button onClick={function() { try { localStorage.removeItem('erp_force_setup'); } catch (e2) { /* no localStorage */ } window.location.hash = '#/login'; window.location.reload(); }} style={{ background: 'none', border: 'none', color: '#1a73e8', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>Sign In Here</button>
+            <button onClick={function() { try { localStorage.removeItem('erp_force_setup'); } catch (e2) { /* no localStorage */ } window.location.assign('/login'); }} style={{ background: 'none', border: 'none', color: '#1a73e8', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>Sign In Here</button>
           </div>
         </div>
       </div>

@@ -23,7 +23,7 @@ export function AuthProvider(props) {
     var [schools, setSchools] = useState([]);
 
     var login = function(userData) { setUser(userData); localStorage.setItem('erp_user', JSON.stringify(userData)); };
-    var logout = function() { setUser(null); localStorage.removeItem('erp_user'); window.location.hash = '#/login'; };
+    var logout = function() { setUser(null); localStorage.removeItem('erp_user'); window.location.assign('/login'); };
     var switchSchool = function(schoolId) { setCurrentSchoolId(schoolId); localStorage.setItem('erp_school_id', String(schoolId)); window.location.reload(); };
 
     useEffect(function() {

@@ -2,7 +2,7 @@
 // Ssewasswa School ERP V10 - EMIS Uganda Compliant
 
 import React, { useMemo, Suspense } from 'react';
-import { createHashRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
 // Non-lazy imports (needed immediately before auth is ready)
@@ -215,7 +215,7 @@ const PublicRoute = ({ children }) => (
 // ═══════════════════════════════════════════════════════════
 
 export default function AppRouter({ isInitialized, isLocked }) {
-    const router = useMemo(() => createHashRouter([
+    const router = useMemo(() => createBrowserRouter([
         // ─── Public routes (no auth required) ─────────────
         {
             path: '/setup',
