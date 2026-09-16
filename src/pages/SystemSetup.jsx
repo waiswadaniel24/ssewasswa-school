@@ -1,8 +1,10 @@
 ﻿import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 var UGANDA_DISTRICTS = ['Kampala','Wakiso','Mukono','Mpigi','Masaka','Mityana','Mubende','Buikwe','Bukomansimbi','Butambala','Buvuma','Gomba','Kalangala','Kalungu','Kayunga','Kiboga','Kyankwanzi','Lwengo','Lyantonde','Nakaseke','Nakasongola','Rakai','Ssembabule','Jinja','Mbale','Soroti','Tororo','Iganga','Kamuli','Kumi','Busia','Bugiri','Budaka','Bududa','Bukedea','Bulambuli','Butaleja','Butebo','Kaberamaido','Kaliro','Kapchorwa','Katakwi','Kibuku','Namayingo','Namutumba','Ngora','Pallisa','Serere','Sironko','Mbarara','Kasese','Kabale','Hoima','Masindi','Kisoro','Rukungiri','Ntungamo','Bushenyi','Ibanda','Isingiro','Kabarole','Kamwenge','Kanungu','Kyenjojo','Kiruhura','Kibaale','Kyegegwa','Mitooma','Ntoroko','Rubirizi','Sheema','Gulu','Lira','Kitgum','Pader','Apac','Amolatar','Amuru','Nwoya','Otuke','Oyam','Alebtong','Abim','Agago','Amudat','Lamwo','Napak','Nakapiripirit','Kaabong','Kotido','Arua','Nebbi','Adjumani','Moyo','Yumbe','Koboko','Maracha','Zombo','Other'];
 
 export default function SystemSetup() {
+  var navigate = useNavigate();
   var [formData, setFormData] = useState({
     schoolName: '', schoolLevel: 'Primary', genderType: 'Mixed', boardingStatus: 'Day',
     backupEmail: '', secQuestion: "What is your mother's maiden name?", secAnswer: '',
@@ -47,7 +49,7 @@ export default function SystemSetup() {
   var sd = { borderTop: '1px solid #eee', paddingTop: '15px', marginTop: '15px' };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: "'Segoe UI', sans-serif", padding: '20px' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', fontFamily: "'Segoe UI', sans-serif", padding: '20px 12px' }}>
       <div style={{ background: 'white', width: '100%', maxWidth: '700px', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
         <div style={{ background: '#1a73e8', padding: '30px', textAlign: 'center', color: 'white' }}>
           <svg width="90" height="100" viewBox="0 0 120 140" fill="none" style={{ marginBottom: '10px', filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.2))' }}>
@@ -121,7 +123,7 @@ export default function SystemSetup() {
           </form>
           <div style={{ textAlign: 'center', marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #eee' }}>
             <p style={{ color: '#666', fontSize: '14px', margin: '0 0 5px 0' }}>Already have an account?</p>
-            <button onClick={function() { try { localStorage.removeItem('erp_force_setup'); } catch (e2) { /* no localStorage */ } window.location.assign('/login'); }} style={{ background: 'none', border: 'none', color: '#1a73e8', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>Sign In Here</button>
+            <button onClick={function() { try { localStorage.removeItem('erp_force_setup'); } catch (e2) { /* no localStorage */ } navigate('/login'); }} style={{ background: 'none', border: 'none', color: '#1a73e8', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>Sign In Here</button>
           </div>
         </div>
       </div>

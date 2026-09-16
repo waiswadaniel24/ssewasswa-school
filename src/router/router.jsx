@@ -223,7 +223,9 @@ export default function AppRouter({ isInitialized, isLocked }) {
         },
         {
             path: '/login',
-            element: isInitialized ? <PublicRoute><Login /></PublicRoute> : <Navigate to="/setup" replace />
+            // Existing users must always be able to reach sign-in, including
+            // browser/mobile deployments where the local Electron status API is unavailable.
+            element: <PublicRoute><Login /></PublicRoute>
         },
         {
             path: '/activation',
