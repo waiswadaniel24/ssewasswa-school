@@ -201,6 +201,13 @@ const ProtectedRoute = ({ isLocked, children }) => (
     </Lock>
 );
 
+const DeveloperRoute = ({ isLocked, children }) => {
+    const { user } = useAuth();
+    const isDeveloper = Boolean(user && (user.isDeveloper || (user.username === 'A.S.S' && user.role === 'Super Admin')));
+    if (!isDeveloper) return <Navigate to="/" replace />;
+    return <ProtectedRoute isLocked={isLocked}>{children}</ProtectedRoute>;
+};
+
 // ─── Public route (no auth needed, still lazy + error boundary) ──
 const PublicRoute = ({ children }) => (
     <RouteErrorBoundary>
@@ -320,7 +327,7 @@ export default function AppRouter({ isInitialized, isLocked }) {
                 { path: 'copyright', element: <ProtectedRoute isLocked={isLocked}><Copyright /></ProtectedRoute> },
 
                 // Developer tools
-                { path: 'dev', element: <ProtectedRoute isLocked={isLocked}><DevDashboard /></ProtectedRoute> },
+                { path: 'dev', element: <DeveloperRoute isLocked={isLocked}><DevDashboard /></DeveloperRoute> },
             ]
         },
 

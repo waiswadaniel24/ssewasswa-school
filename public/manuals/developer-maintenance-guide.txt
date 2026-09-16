@@ -1,0 +1,32 @@
+SSEWASSWA COMFORTS TECHNOLOGIES
+Developer Maintenance Guide
+
+STACK
+React 18 + Vite + React Router, Electron desktop shell, SQLite/sql.js for desktop data, Supabase Auth and cloud ERP tables for browser/mobile data, jsPDF for generated documents.
+
+DEVELOPMENT
+npm install
+npm run dev
+npm run lint
+npm run build
+npm run package
+
+SECURITY RULES
+• Never expose service-role or secret Supabase keys in browser code.
+• Keep authenticated data protected by RLS and school-scoped queries.
+• Keep Electron IPC methods explicit in preload.js; do not expose generic IPC.
+• Parameterize SQL values and whitelist dynamic column names.
+• Restrict developer tools to the developer account and never place credentials in public marketing copy.
+
+RELEASE CHECKLIST
+1. Run npm run lint and npm run build.
+2. Test login, setup, student registration, documents, signatures, purchase authorization and mobile layout.
+3. Confirm Supabase tables and RLS policies are healthy.
+4. Build the Windows installer with npm run package.
+5. Publish the web app and update the public installer URL in the marketing page.
+6. Test backups and restore procedures before customer rollout.
+
+SUPPORT
+Ssewasswa Comforts Technologies
+ssewasswacomfortzone@gmail.com
++256 752 971 118 / +256 789 736 737
