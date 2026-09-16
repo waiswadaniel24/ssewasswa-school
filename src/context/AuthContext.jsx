@@ -22,7 +22,17 @@ export function AuthProvider(props) {
     });
     var [schools, setSchools] = useState([]);
 
-    var login = function(userData) { setUser(userData); localStorage.setItem('erp_user', JSON.stringify(userData)); };
+    var login = function(userData) {
+        if (!userData || typeof userData !== 'object') return;
+        var normalizedUser = {
+            ...userData,
+            id: userData.id ?? userData.user_id ?? null,
+            username: userData.username || userData.email || 'User',
+            role: userData.role || 'Staff'
+        };
+        setUser(normalizedUser);
+        localStorage.setItem('erp_user', JSON.stringify(normalizedUser));
+    };
     var logout = function() { setUser(null); localStorage.removeItem('erp_user'); window.location.assign('/login'); };
     var switchSchool = function(schoolId) { setCurrentSchoolId(schoolId); localStorage.setItem('erp_school_id', String(schoolId)); window.location.reload(); };
 
