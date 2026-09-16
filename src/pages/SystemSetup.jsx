@@ -105,7 +105,7 @@ export default function SystemSetup() {
               </div>
             </div>
             <div style={sd}><h4 style={{ color: '#1a73e8', marginBottom: '10px' }}>Security & Password Recovery</h4>
-              <div style={{ marginBottom: '10px' }}><label style={ls}>Security Question *</label><select style={is} name="secQuestion" value={formData.secQuestion} onChange={handleChange}><option>What is your mother's maiden name?</option><option>What was the name of your first pet?</option><option>In what city were you born?</option><option>What is the name of your first school?</option></select></div>
+              <div style={{ marginBottom: '10px' }}><label style={ls}>Security Question *</label><select style={is} name="secQuestion" value={formData.secQuestion} onChange={handleChange}><option>What is your mother&apos;s maiden name?</option><option>What was the name of your first pet?</option><option>In what city were you born?</option><option>What is the name of your first school?</option></select></div>
               <div style={{ marginBottom: '10px' }}><label style={ls}>Answer *</label><input style={is} type="text" name="secAnswer" value={formData.secAnswer} onChange={handleChange} placeholder="Used to reset your password" required /></div>
             </div>
             <div style={sd}><h4 style={{ color: '#1a73e8', marginBottom: '10px' }}>Super Admin Account</h4>
