@@ -77,11 +77,16 @@ export default function Header(_ref) {
       flexShrink: 0
     }}>
       {/* ─── Left: School name + selector ────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div className="school-header-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+        <img
+          src="/ssewasswa-school-emblem.png"
+          alt="Ssewasswa School emblem"
+          className="school-header-emblem"
+        />
         <h2 style={{
           margin: 0,
           color: isDark ? '#8ab4f8' : '#1a73e8',
-          fontSize: '18px', fontWeight: '700'
+          fontSize: '18px', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
         }}>
           {schoolName}
         </h2>

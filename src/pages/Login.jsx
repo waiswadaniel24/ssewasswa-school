@@ -138,12 +138,11 @@ export default function Login() {
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: "'Segoe UI', sans-serif", padding: '20px' }}>
       <div style={{ background: 'white', width: '100%', maxWidth: '420px', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
         <div style={{ background: '#1a73e8', padding: '30px', textAlign: 'center', color: 'white' }}>
-          <svg width="90" height="100" viewBox="0 0 120 140" fill="none" style={{ marginBottom: '10px', filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.2))' }}>
-            <path d="M60 10 L100 30 V75 C100 105 60 130 60 130 C60 130 20 105 20 75 V30 L60 10Z" fill="#ffffff" stroke="#ffffff" strokeWidth="3" />
-            <path d="M60 20 L90 36 V73 C90 97 60 118 60 118 C60 118 30 97 30 73 V36 L60 20Z" fill="#1a73e8" opacity="0.9" />
-            <circle cx="60" cy="58" r="14" fill="#FFC107" stroke="#FFA000" strokeWidth="1.5" />
-            <path d="M46 66 L46 88 C46 88 52 85 60 88 C68 85 74 88 74 88 L74 66" fill="white" stroke="#0d47a1" strokeWidth="1.5" strokeLinejoin="round" />
-          </svg>
+          <img
+            src="/ssewasswa-school-emblem.png"
+            alt="Ssewasswa School emblem representing service, learning, and community"
+            style={{ width: '96px', height: '96px', objectFit: 'contain', marginBottom: '10px', filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.2))' }}
+          />
           <div style={{ fontSize: '20px', fontWeight: '800' }}>SSEWASSWA ERP</div>
           <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '4px' }}>School Management System</div>
         </div>

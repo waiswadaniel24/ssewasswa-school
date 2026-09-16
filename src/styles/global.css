@@ -1,3 +1,20 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; color: #333; }
 .loading-screen { display: flex; justify-content: center; align-items: center; height: 100vh; font-size: 1.5rem; color: #1a73e8; }
+
+.school-header-emblem { width: 38px; height: 38px; object-fit: contain; flex: 0 0 auto; }
+
+@media (max-width: 720px) {
+  .school-header-emblem { width: 32px; height: 32px; }
+  .school-header-brand h2 { max-width: 145px; font-size: 14px !important; }
+  header { padding: 0 10px !important; gap: 8px; }
+  header > div:nth-child(2) { display: none !important; }
+  header > div:last-child { gap: 5px !important; }
+  header > div:last-child > div:first-of-type { display: none !important; }
+  header button { padding-left: 7px !important; padding-right: 7px !important; }
+}
+
+@media (max-width: 420px) {
+  .school-header-brand h2 { max-width: 110px; }
+  .school-header-brand span { display: none; }
+}
