@@ -5,14 +5,20 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 .school-header-emblem { width: 38px; height: 38px; object-fit: contain; flex: 0 0 auto; }
 
 @media (max-width: 720px) {
-  html, body, #root { min-width: 0; width: 100%; overflow-x: hidden; }
+  html, body, #root { min-width: 0; width: 100%; max-width: 100%; overflow-x: hidden; }
+  #root, #root * { max-width: 100%; }
   .school-header-emblem { width: 32px; height: 32px; }
   .school-header-brand h2 { max-width: 145px; font-size: 14px !important; }
-  header { padding: 0 10px !important; gap: 8px; height: 56px !important; }
+  header { width: 100% !important; min-width: 0 !important; max-width: 100vw !important; padding: 0 10px !important; gap: 8px; height: 56px !important; overflow: hidden !important; }
+  header > div:first-child { flex: 1 1 auto !important; min-width: 0 !important; overflow: hidden !important; }
+  header > div:first-child .school-header-brand { min-width: 0 !important; max-width: 100% !important; }
   header > div:nth-child(2) { display: none !important; }
-  header > div:last-child { gap: 5px !important; min-width: 0; }
+  header > div:last-child { flex: 0 0 auto !important; gap: 5px !important; min-width: 0 !important; }
   header > div:last-child > div:first-of-type { display: none !important; }
+  header > div:last-child > button:nth-of-type(2) { display: none !important; }
   header button { padding-left: 7px !important; padding-right: 7px !important; }
+  .layout-header { width: 100%; min-width: 0; }
+  .layout-body, .layout-main, .page-container { width: 100%; max-width: 100%; min-width: 0; }
   .layout-main { min-width: 0; padding: 16px !important; overflow-x: auto; }
   .layout-body { flex-direction: column !important; overflow: auto !important; }
   .layout-body > aside, aside { width: 100% !important; min-width: 0 !important; height: auto !important; max-height: 190px; border-right: 0 !important; border-bottom: 1px solid #dadce0; }
