@@ -96,8 +96,10 @@ export default function Login() {
 
   var handleRegister = async function(e) {
     e.preventDefault(); setError(''); setSuccessMsg('');
-    if (!sentCode) { setError('Click Send Code and enter the code from your email.'); return; }
-    if (code.trim().length < 6) { setError('Enter the 6-digit code from your email.'); return; }
+    var isDesktop = Boolean(window.electronAPI && typeof window.electronAPI.addUser === 'function');
+    if (!isDesktop && !sentCode) { setError('Click Send Code and enter the code from your email.'); return; }
+    if (!isDesktop && code.trim().length < 6) { setError('Enter the 6-digit code from your email.'); return; }
+    if (!username.trim()) { setError('Enter a username first.'); return; }
     if (password.length < 8) { setError('Password must be 8+ chars'); return; }
     if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) { setError('Password needs letters AND numbers'); return; }
     setLoading(true);
@@ -105,8 +107,12 @@ export default function Login() {
       if (window.electronAPI && typeof window.electronAPI.addUser === 'function') {
         var res = await window.electronAPI.addUser({ username: username, password: password, role: role });
         setLoading(false);
-        if (res && res.success) { setSuccessMsg('Account created! Switch to Sign In tab.'); setTab('signin'); }
-        else { setError((res && res.error) || 'Registration failed'); }
+        if (res && res.success) {
+          setSuccessMsg('Account created! You can now sign in with your username and password.');
+          setTab('signin');
+        } else {
+          setError((res && res.error) || 'Registration failed. Start the desktop app through the provided launcher and try again.');
+        }
         return;
       }
       if (!supabase || !isSupabaseConfigured) { setLoading(false); setError('Registration is not configured for this browser yet.'); return; }
@@ -209,7 +215,7 @@ src="/ssewasswa-comforts-school-erp-mark.png"
                   <button type="button" onClick={function() { setForgotMode(true); setError(''); setSuccessMsg(''); }} style={{ background: 'none', border: 'none', color: '#1a73e8', cursor: 'pointer', fontSize: '13px', marginTop: '15px', width: '100%' }}>Forgot Password?</button>
                   <div style={{ textAlign: 'center', margin: '20px 0', color: '#999', fontSize: '12px', position: 'relative' }}><span style={{ background: 'white', padding: '0 10px', position: 'relative', zIndex: 1 }}>or</span><div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: '#e0e0e0', zIndex: 0 }} /></div>
                   <button type="button" onClick={handleGitHubSignIn} disabled={loading} style={{ width: '100%', padding: '12px', background: '#24292f', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', marginBottom: '10px' }}>Continue with GitHub</button>
-                  <button type="button" onClick={function() { try { localStorage.setItem('erp_force_setup', 'true'); } catch (e2) { /* no localStorage */ } navigate('/setup'); }} style={{ width: '100%', padding: '12px', background: 'white', color: '#0d904f', border: '2px solid #0d904f', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>Create New Account</button>
+                  <button type="button" onClick={function() { setTab('register'); setError(''); setSuccessMsg(''); }} style={{ width: '100%', padding: '12px', background: 'white', color: '#0d904f', border: '2px solid #0d904f', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>Create New Account</button>
                 </form>
               )}
 
