@@ -101,10 +101,18 @@ export default function Login() {
       setCodeCooldown(60);
       setSuccessMsg('A verification code was sent to ' + normalizedEmail + '. Check spam or promotions if needed.');
     } catch (err) {
-      var message = err?.message || 'Unable to send the verification code.';
-      if (/rate limit|too many requests|429/i.test(message)) {
+      var rawMessage = String(err?.message || '').trim();
+      var normalizedMessage = rawMessage.toLowerCase();
+      var message = 'Unable to send the verification code. Please try again.';
+      if (/rate limit|too many requests|429|over_email_send_rate_limit/i.test(rawMessage)) {
         setCodeCooldown(60);
-        message = 'Supabase email limit reached. Wait a minute, then try once. Check your inbox and spam folder before requesting another code.';
+        message = 'Email sending is temporarily rate-limited. Wait a minute, then try once. Check your inbox and spam folder before requesting another code.';
+      } else if (/email_address_invalid|invalid email|email.*invalid/i.test(normalizedMessage)) {
+        message = 'Enter a real email address that can receive the verification code.';
+      } else if (/email_not_authorized|not authorized/i.test(normalizedMessage)) {
+        message = 'This email cannot receive mail from the current Supabase email provider. Use an approved school email or configure SMTP.';
+      } else if (/signup_disabled|signups.*disabled/i.test(normalizedMessage)) {
+        message = 'New account registration is currently disabled.';
       }
       setError(message);
     } finally { setLoading(false); }
@@ -113,8 +121,7 @@ export default function Login() {
   var handleRegister = async function(e) {
     e.preventDefault(); setError(''); setSuccessMsg('');
     var isDesktop = Boolean(window.electronAPI && typeof window.electronAPI.addUser === 'function' && typeof window.electronAPI.authLogin === 'function');
-    if (!isDesktop && !sentCode) { setError('Click Send Code and enter the code from your email.'); return; }
-    if (!isDesktop && code.trim().length < 6) { setError('Enter the 6-digit code from your email.'); return; }
+    if (!isDesktop && !email.trim()) { setError('Enter an email address first.'); return; }
     if (!username.trim()) { setError('Enter a username first.'); return; }
     if (password.length < 8) { setError('Password must be 8+ chars'); return; }
     if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) { setError('Password needs letters AND numbers'); return; }
@@ -132,14 +139,30 @@ export default function Login() {
       return;
       }
       if (!supabase || !isSupabaseConfigured) { setLoading(false); setError('Registration is not configured for this browser yet.'); return; }
-      var verified = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: code.trim(), type: 'email' });
-      if (verified.error || !verified.data.user) { setLoading(false); setError(verified.error?.message || 'Invalid or expired verification code.'); return; }
-      var updated = await supabase.auth.updateUser({ password: password, data: { username: username.trim(), role: role } });
+      var result = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password: password,
+        options: {
+          emailRedirectTo: import.meta.env.VITE_DEV_SUPABASE_REDIRECT_URL || import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || window.location.origin + '/auth/callback',
+          data: { username: username.trim(), role: role }
+        }
+      });
       setLoading(false);
-      if (updated.error) { setError(updated.error.message || 'Account created, but password setup failed.'); return; }
-      loginFn(getSupabaseUser(updated.data.user));
-      setSuccessMsg('Account created successfully.');
-      navigate('/');
+      if (result.error) {
+        var signupMessage = String(result.error.message || '').toLowerCase();
+        if (/already registered|already exists|user exists/.test(signupMessage)) setError('Unable to create this account. Try signing in or use another email.');
+        else if (/password/.test(signupMessage)) setError('Choose a stronger password with at least 8 characters, letters, and numbers.');
+        else setError('Unable to create the account. Please check the details and try again.');
+        return;
+      }
+      if (result.data.session && result.data.user) {
+        loginFn(getSupabaseUser(result.data.user));
+        setSuccessMsg('Account created successfully.');
+        navigate('/');
+      } else {
+        setSuccessMsg('Account created. Check your email to confirm it, then sign in.');
+        setTab('signin');
+      }
     } catch (err) { setLoading(false); setError('Unable to create the account. Please try again.'); }
   };
 
@@ -237,8 +260,7 @@ src="/ssewasswa-comforts-school-erp-mark.png"
 
               {tab === 'register' && (
                 <form onSubmit={handleRegister}>
-                  <div style={{ marginBottom: '15px' }}><label style={ls}>Email Address</label><div style={{ display: 'flex', gap: '5px' }}><input style={is} type="email" value={email} onChange={function(e) { setEmail(e.target.value); }} placeholder="your@email.com" required /><button type="button" onClick={handleSendCode} disabled={loading || codeCooldown > 0} style={{ width: '120px', padding: '0 10px', background: '#e8f0fe', color: '#1a73e8', border: '1px solid #1a73e8', borderRadius: '6px', cursor: loading || codeCooldown > 0 ? 'not-allowed' : 'pointer', fontSize: '12px', opacity: loading || codeCooldown > 0 ? 0.6 : 1 }}>{codeCooldown > 0 ? 'Wait ' + codeCooldown + 's' : 'Send Code'}</button></div></div>
-                  <div style={{ marginBottom: '15px' }}><label style={ls}>Confirmation Code</label><input style={is} type="text" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={function(e) { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); }} placeholder="6-digit code from email" required /><small style={{ display: 'block', marginTop: '5px', color: '#666' }}>The email must contain a six-digit code. If it contains neither a code nor a link, the Supabase email template needs to be configured.</small></div>
+                  <div style={{ marginBottom: '15px' }}><label style={ls}>Email Address</label><input style={is} type="email" value={email} onChange={function(e) { setEmail(e.target.value); }} placeholder="your@email.com" required /><small style={{ display: 'block', marginTop: '5px', color: '#666' }}>Use an email address you can access. If confirmation is enabled, Supabase will send a confirmation link.</small></div>
                   <div style={{ marginBottom: '15px' }}><label style={ls}>Username</label><input style={is} type="text" value={username} onChange={function(e) { setUsername(e.target.value); }} required /></div>
                   <div style={{ marginBottom: '15px' }}><label style={ls}>Password</label><input style={is} type="password" value={password} onChange={function(e) { setPassword(e.target.value); }} placeholder="Min 8 chars, letters + numbers" required /></div>
                   <div style={{ marginBottom: '15px' }}><label style={ls}>Role</label><select style={is} value={role} onChange={function(e) { setRole(e.target.value); }}><option>Teacher</option><option>Admin</option><option>Bursar</option><option>Staff</option></select></div>
