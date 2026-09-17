@@ -101,10 +101,18 @@ export default function Login() {
       setCodeCooldown(60);
       setSuccessMsg('A verification code was sent to ' + normalizedEmail + '. Check spam or promotions if needed.');
     } catch (err) {
-      var message = err?.message || 'Unable to send the verification code.';
-      if (/rate limit|too many requests|429/i.test(message)) {
+      var rawMessage = String(err?.message || '').trim();
+      var normalizedMessage = rawMessage.toLowerCase();
+      var message = 'Unable to send the verification code. Please try again.';
+      if (/rate limit|too many requests|429|over_email_send_rate_limit/i.test(rawMessage)) {
         setCodeCooldown(60);
-        message = 'Supabase email limit reached. Wait a minute, then try once. Check your inbox and spam folder before requesting another code.';
+        message = 'Email sending is temporarily rate-limited. Wait a minute, then try once. Check your inbox and spam folder before requesting another code.';
+      } else if (/email_address_invalid|invalid email|email.*invalid/i.test(normalizedMessage)) {
+        message = 'Enter a real email address that can receive the verification code.';
+      } else if (/email_not_authorized|not authorized/i.test(normalizedMessage)) {
+        message = 'This email cannot receive mail from the current Supabase email provider. Use an approved school email or configure SMTP.';
+      } else if (/signup_disabled|signups.*disabled/i.test(normalizedMessage)) {
+        message = 'New account registration is currently disabled.';
       }
       setError(message);
     } finally { setLoading(false); }
