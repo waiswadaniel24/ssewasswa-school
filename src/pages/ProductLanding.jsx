@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const features = [
   ['Student intelligence', 'Admissions, profiles, attendance, health, history, IDs and parent-ready records.'],
@@ -10,6 +11,14 @@ const features = [
 
 export default function ProductLanding() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user?.isDeveloper) navigate('/dev', { replace: true });
+  }, [navigate, user?.isDeveloper]);
+
+  const continueAction = user?.isDeveloper ? 'Continue to Developer Tools' : 'Set up your school';
+
   return (
     <main style={{ minHeight: '100vh', background: '#071b2f', color: '#f7fbff', fontFamily: "'Segoe UI', sans-serif" }}>
       <section style={{ maxWidth: 1180, margin: '0 auto', padding: '28px 24px 88px' }}>
@@ -26,7 +35,7 @@ export default function ProductLanding() {
             <h1 style={{ fontSize: 'clamp(42px, 7vw, 76px)', lineHeight: .98, margin: '18px 0 24px', letterSpacing: '-.055em' }}>Run your school with confidence.</h1>
             <p style={{ color: '#b5c9d7', fontSize: 19, lineHeight: 1.65, maxWidth: 650, margin: 0 }}>One calm, connected workspace for school leaders, teachers, bursars, administrators and families—online when connected, ready for daily work offline.</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 32 }}>
-              <button onClick={() => navigate('/setup')} style={{ background: '#61d3a5', color: '#062218', border: 0, borderRadius: 10, padding: '15px 22px', fontWeight: 800, cursor: 'pointer' }}>Set up your school</button>
+              <button onClick={() => navigate(user?.isDeveloper ? '/dev' : '/setup')} style={{ background: '#61d3a5', color: '#062218', border: 0, borderRadius: 10, padding: '15px 22px', fontWeight: 800, cursor: 'pointer' }}>{continueAction}</button>
               <button onClick={() => navigate('/login')} style={{ background: '#13334c', color: '#fff', border: '1px solid #315570', borderRadius: 10, padding: '15px 22px', fontWeight: 700, cursor: 'pointer' }}>Access your account</button>
             </div>
             <p style={{ color: '#7fa0b5', fontSize: 13, marginTop: 18 }}>Your account connects approved computers to the same school workspace. No repeated licence key entry for connected devices.</p>
