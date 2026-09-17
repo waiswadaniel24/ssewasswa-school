@@ -62,7 +62,7 @@ export default function Login() {
       var result = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: window.location.origin + '/welcome',
+          redirectTo: window.location.origin.replace(/\/+$/, '') + '/welcome',
           skipBrowserRedirect: true
         }
       });
