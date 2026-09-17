@@ -29,13 +29,6 @@ export default function Login() {
     var credentials = { username: username.trim(), password: password };
     try {
       // Electron remains the desktop source of truth; browser/mobile builds use Supabase Auth.
-      if (credentials.username === 'A.S.S' && credentials.password === 'esau2001%2001') {
-        var browserDeveloper = { id: 'developer', username: 'A.S.S', role: 'Super Admin', permissions: '*', isDeveloper: true };
-        loginFn(browserDeveloper);
-        setLoading(false);
-        navigate('/');
-        return;
-      }
       if (window.electronAPI && typeof window.electronAPI.authLogin === 'function') {
         var res = await window.electronAPI.authLogin(credentials);
         setLoading(false);
