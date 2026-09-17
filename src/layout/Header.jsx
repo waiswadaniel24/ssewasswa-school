@@ -23,7 +23,7 @@ export default function Header(_ref) {
   var lang = (langCtx && langCtx.lang) ? langCtx.lang : 'en';
   var setLang = (langCtx && langCtx.setLang) ? langCtx.setLang : function () { /* no-op */ };
 
-  var [schoolName, setSchoolName] = useState('Ssewasswa School');
+  var [schoolName, setSchoolName] = useState('Ssewasswa Comforts School ERP™');
   var [netMode, setNetMode] = useState('Standalone');
   var mountedRef = useRef(true);
 
@@ -80,7 +80,7 @@ export default function Header(_ref) {
       {/* ─── Left: School name + selector ────────────── */}
       <div className="school-header-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
         <img
-          src="/ssewasswa-comforts-technologies-logo.png"
+          src="/ssewasswa-comforts-school-erp-mark.png"
           alt="Ssewasswa Comforts Technologies logo"
   className="school-header-emblem"
           style={{ width: '38px', height: '38px', objectFit: 'contain', flex: '0 0 38px' }}

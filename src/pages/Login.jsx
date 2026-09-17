@@ -140,12 +140,13 @@ export default function Login() {
       <div style={{ background: 'white', width: '100%', maxWidth: '420px', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
         <div style={{ background: '#1a73e8', padding: '30px', textAlign: 'center', color: 'white' }}>
           <img
-src="/ssewasswa-comforts-technologies-logo.png"
+src="/ssewasswa-comforts-school-erp-mark.png"
   alt="Ssewasswa Comforts Technologies logo"
             style={{ width: '96px', height: '96px', objectFit: 'contain', marginBottom: '10px', filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.2))' }}
           />
-          <div style={{ fontSize: '20px', fontWeight: '800' }}>SSEWASSWA ERP</div>
-          <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '4px' }}>School Management System</div>
+          <div style={{ fontSize: '20px', fontWeight: '800' }}>SSEWASSWA COMFORTS SCHOOL ERP™</div>
+          <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '4px' }}>School Management SaaS</div>
+          <div style={{ fontSize: '11px', opacity: 0.82, marginTop: '8px', letterSpacing: '0.04em' }}>A product of Ssewasswa Comforts Technologies™</div>
         </div>
         <div style={{ padding: '30px' }}>
           {error && (<div style={{ background: '#ffebee', color: '#c62828', padding: '12px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', border: '1px solid #ef9a9a' }}>{error}</div>)}
