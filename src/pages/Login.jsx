@@ -96,7 +96,7 @@ export default function Login() {
 
   var handleRegister = async function(e) {
     e.preventDefault(); setError(''); setSuccessMsg('');
-    var isDesktop = Boolean(window.electronAPI && typeof window.electronAPI.addUser === 'function');
+    var isDesktop = Boolean(window.electronAPI && typeof window.electronAPI.addUser === 'function' && typeof window.electronAPI.authLogin === 'function');
     if (!isDesktop && !sentCode) { setError('Click Send Code and enter the code from your email.'); return; }
     if (!isDesktop && code.trim().length < 6) { setError('Enter the 6-digit code from your email.'); return; }
     if (!username.trim()) { setError('Enter a username first.'); return; }
@@ -110,10 +110,10 @@ export default function Login() {
         if (res && res.success) {
           setSuccessMsg('Account created! You can now sign in with your username and password.');
           setTab('signin');
-        } else {
-          setError((res && res.error) || 'Registration failed. Start the desktop app through the provided launcher and try again.');
-        }
-        return;
+      } else {
+        setError((res && res.error) || 'Registration failed. The desktop database is not ready. Restart the Electron app through its launcher.');
+      }
+      return;
       }
       if (!supabase || !isSupabaseConfigured) { setLoading(false); setError('Registration is not configured for this browser yet.'); return; }
       var verified = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: code.trim(), type: 'email' });
