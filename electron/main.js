@@ -63,8 +63,8 @@ async function initDatabase() {
                 }
 
                 if (dbData.length > 0) {
- try { db.run('PRAGMA journal_mode = WAL;'); db.run('PRAGMA foreign_keys = ON;'); } catch(e) { console.log('WAL mode failed:', e.message); }
                     db = new sqlModule.Database(dbData);
+                    try { db.run('PRAGMA foreign_keys = ON;'); } catch (e) { console.log('Foreign key setup failed:', e.message); }
                 } else {
                     db = new sqlModule.Database();
                 }
@@ -300,7 +300,12 @@ function createWindow() {
         mainWindow.loadURL('http://localhost:5173');
         mainWindow.webContents.openDevTools();
     } else {
-        mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+        const rendererPath = path.join(__dirname, '..', 'dist', 'index.html');
+        if (!fs.existsSync(rendererPath)) {
+            dialog.showErrorBox('Ssewasswa School could not start', `The desktop renderer was not found at:\n${rendererPath}\n\nRun the build before launching the packaged app.`);
+            return;
+        }
+        mainWindow.loadFile(rendererPath);
     }
 
     mainWindow.on('closed', () => {
@@ -443,8 +448,6 @@ app.whenReady().then(async () => {
         if (fs.existsSync(migPath)) {
             const runMigrations = require(migPath);
             if (typeof runMigrations === 'function') runMigrations(db, saveDb);
-            const UNEBConnector = require('./uneb-connector');
-            UNEBConnector.init(db, saveDb);
         }
 
     } catch (e) {
@@ -462,18 +465,6 @@ app.whenReady().then(async () => {
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
-});
-
-// Save database before quitting (single handler at module scope)
-app.on('before-quit', () => {
-    if (db) {
-        try {
-            saveDb();
-            console.log('[AutoSave] Database saved on quit');
-        } catch (e) {
-            console.error('Quit save failed:', e.message);
-        }
-    }
 });
 
 // ═══ ENTERPRISE IPC HANDLERS ═══
