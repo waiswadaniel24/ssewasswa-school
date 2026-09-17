@@ -24,6 +24,12 @@ export default function Login() {
       setMessage({ type: 'error', text: 'Authentication is not configured. Add the Supabase URL and publishable key.' });
       return;
     }
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedUsername = username.trim();
+    if (mode === 'signup' && normalizedUsername.length < 2) {
+      setMessage({ type: 'error', text: 'Enter a username with at least 2 characters.' });
+      return;
+    }
     if (mode === 'signup' && password.length < 8) {
       setMessage({ type: 'error', text: 'Use a password with at least 8 characters.' });
       return;
@@ -32,15 +38,15 @@ export default function Login() {
     try {
       if (mode === 'signup') {
         const result = await supabase.auth.signUp({
-          email: email.trim().toLowerCase(), password,
-          options: { emailRedirectTo: import.meta.env.VITE_DEV_SUPABASE_REDIRECT_URL || import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`, data: { username: username.trim(), role } },
+          email: normalizedEmail, password,
+          options: { emailRedirectTo: import.meta.env.VITE_DEV_SUPABASE_REDIRECT_URL || import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`, data: { username: normalizedUsername, role } },
         });
         if (result.error) throw result.error;
         if (result.data.session && result.data.user) { login(getSupabaseUser(result.data.user)); navigate('/'); return; }
         setMessage({ type: 'success', text: 'Account created. Check your email to confirm it, then sign in.' });
         setMode('signin');
       } else {
-        const result = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+        const result = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
         if (result.error || !result.data.user) throw result.error || new Error('Invalid credentials');
         login(getSupabaseUser(result.data.user));
         navigate('/');
@@ -58,7 +64,7 @@ export default function Login() {
   const github = async () => {
     if (!supabase) return setMessage({ type: 'error', text: 'GitHub sign-in is not configured.' });
     setLoading(true);
-    const result = await supabase.auth.signInWithOAuth({ provider: 'github', options: { redirectTo: `${window.location.origin}/auth/callback` } });
+    const result = await supabase.auth.signInWithOAuth({ provider: 'github', options: { redirectTo: import.meta.env.VITE_DEV_SUPABASE_REDIRECT_URL || import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback` } });
     if (result.error) { setLoading(false); setMessage({ type: 'error', text: 'Unable to start GitHub sign-in.' }); }
   };
 

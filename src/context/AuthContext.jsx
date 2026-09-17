@@ -52,6 +52,7 @@ export function AuthProvider({ children }) {
       if (!active) return;
       if (session?.user) login(getSupabaseUser(session.user));
       else setUser(null);
+      setAuthReady(true);
     });
     return () => { active = false; listener.subscription.unsubscribe(); };
   }, []);
