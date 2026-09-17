@@ -1,11 +1,14 @@
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
-  const n = req.body;
+  if (!supabase) return res.status(500).json({ error: 'Supabase server configuration is missing' });
+  const n = req.body || {};
   if (n.status === 'COMPLETED') {
     const hwid = n.merchant_reference || n.hwid || 'UNKNOWN_HWID';
     const userEmail = n.email || n.customer_email;
