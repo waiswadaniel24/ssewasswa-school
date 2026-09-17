@@ -1,7 +1,6 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { canUseSupabase, generateStudentPaycodes, getOrCreateSchool, isElectronAvailable, listClasses, listStudents, saveStudent, softDeleteStudent } from '../lib/supabase.js';
-import { listClassesFromApi, listStudentsFromApi, shouldUseApi } from '../lib/schoolDataAdapters.js';
 
 var EMPTY = { first_name: '', last_name: '', other_name: '', gender: 'M', date_of_birth: '', class_id: '', student_type: 'Day', residence: '', guardian_name: '', guardian_phone: '', admission_number: '', paycode: '' };
 
@@ -21,16 +20,6 @@ export default function Students() {
 
   var loadData = useCallback(async function() {
     try {
-      if (shouldUseApi()) {
-        const [apiClasses, apiStudents] = await Promise.all([
-          listClassesFromApi(),
-          listStudentsFromApi({ search: searchTerm, classId: filterClass }),
-        ]);
-        setClasses(apiClasses || []);
-        setStudents(apiStudents || []);
-        setLoading(false);
-        return;
-      }
       if (canUseSupabase()) {
         var school = supabaseSchoolId ? { data: { id: supabaseSchoolId } } : await getOrCreateSchool();
         if (school.error) throw school.error;
