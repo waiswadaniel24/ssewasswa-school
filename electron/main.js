@@ -1,7 +1,7 @@
 ﻿// FileName: electron/main.js
 // Ssewasswa School ERP V10 - EMIS Uganda Compliant
 
-const { app, BrowserWindow, ipcMain, dialog, powerMonitor, safeStorage } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, powerMonitor, safeStorage, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -289,6 +289,14 @@ function createWindow() {
     });
 
     mainWindow.on('close', () => { saveDb(); });
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        if (/^https?:\/\//i.test(url)) shell.openExternal(url);
+        return { action: 'deny' };
+    });
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+        const allowed = isDev ? url.startsWith('http://localhost:5173') : url.startsWith('file://');
+        if (!allowed) event.preventDefault();
+    });
   const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
 
   mainWindow.once('ready-to-show', () => mainWindow.show());
@@ -379,7 +387,7 @@ function safeRun(sql, params = []) {
 
 // ═══════════════════════════════════════════════════════════
 // APP READY
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════���══════════════════════
 
 // ═══ TAMPER-PROOF TRIAL & SaaS LICENSE CHECK ═══
 const Store = require('electron-store');
@@ -562,7 +570,7 @@ app.on('window-all-closed', () => {
 powerMonitor.on('shutdown', () => { saveDb(); });
 powerMonitor.on('suspend', () => { saveDb(); });
 
-// ═══════════════════════════════════════════════════════════
+// ═════════════════════════════════��═════════════════════════
 // IPC HANDLERS — ALL AT MODULE SCOPE (never nested)
 // ═══════════════════════════════════════════════════════════
 
@@ -1301,7 +1309,7 @@ ipcMain.handle('emisGetDashboardStats', async () => {
     }
 });
 
-// ─── EMIS: SPECIAL NEEDS & OVC ─────────────────────────────
+// ─── EMIS: SPECIAL NEEDS & OVC ──────────���──────────────────
 
 ipcMain.handle('emisGetSpecialNeeds', async () => {
     if (!db) return { success: false, error: 'Database not ready' };
