@@ -289,10 +289,13 @@ function createWindow() {
     });
 
     mainWindow.on('close', () => { saveDb(); });
-    mainWindow.once('ready-to-show', () => mainWindow.show());
- if (!isDev) { mainWindow.webContents.on('devtools-opened', () => { mainWindow.webContents.closeDevTools(); }); }
+  const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
 
-    const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
+  mainWindow.once('ready-to-show', () => mainWindow.show());
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    console.error('[Desktop] Renderer failed to load:', errorCode, errorDescription, validatedURL);
+  });
+  if (!isDev) { mainWindow.webContents.on('devtools-opened', () => { mainWindow.webContents.closeDevTools(); }); }
     if (isDev) {
         mainWindow.loadURL('http://localhost:5173');
         mainWindow.webContents.openDevTools();
