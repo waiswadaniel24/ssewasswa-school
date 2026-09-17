@@ -33,7 +33,9 @@ export default function SystemSetup() {
       var schoolCategory = formData.boardingStatus + '_' + formData.genderType;
       var payload = {}; for (var k in formData) payload[k] = formData[k]; payload.schoolCategory = schoolCategory;
       if (!window.electronAPI || typeof window.electronAPI.authSetup !== 'function') {
-        setError('Electron not available. Run with start.bat'); setLoading(false); return;
+        setError('Desktop setup is unavailable in this browser preview because it requires the Electron database. Use “Sign In Here” below, then choose “Create New Account” to register with your email, or open the installed desktop app to initialize the school database.');
+        setLoading(false);
+        return;
       }
       var res = await window.electronAPI.authSetup(payload);
       setLoading(false);
