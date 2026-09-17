@@ -195,8 +195,9 @@ const Lock = ({ isLocked, children }) => {
 
 // ─── Protected route (auth + lock + lazy + error boundary) ──
 const ProtectedRoute = ({ isLocked, children }) => {
-    const { user, schoolLevel } = useAuth();
+    const { user, authReady, schoolLevel } = useAuth();
     const location = useLocation();
+    if (!authReady) return <LoadingFallback />;
     const path = location.pathname === '/' ? '/' : location.pathname;
     const allowed = path === '/' || canAccess(user?.role || 'Viewer', schoolLevel, path);
 
@@ -214,7 +215,8 @@ const ProtectedRoute = ({ isLocked, children }) => {
 };
 
 const DeveloperRoute = ({ isLocked, children }) => {
-    const { user } = useAuth();
+    const { user, authReady } = useAuth();
+    if (!authReady) return <LoadingFallback />;
     const isDeveloper = Boolean(user?.isDeveloper);
     if (!isDeveloper) return <Navigate to="/" replace />;
     return (

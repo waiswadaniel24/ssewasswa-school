@@ -2,7 +2,7 @@
 import { getSupabaseUser, supabase } from '../lib/supabase.js';
 
 var AuthContext = createContext({
-    user: null, login: function() { /* no-op */ }, logout: function() { /* no-op */ },
+    user: null, authReady: false, login: function() { /* no-op */ }, logout: function() { /* no-op */ },
     schoolLevel: 'Primary', setSchoolLevel: function() { /* no-op */ },
     currentSchoolId: 1, switchSchool: function() { /* no-op */ }, schools: []
 });
@@ -10,6 +10,7 @@ var AuthContext = createContext({
 export function AuthProvider(props) {
     var children = props.children;
     var [user, setUser] = useState(function() {
+        if (supabase) return null;
         try { var s = localStorage.getItem('erp_user'); return s ? JSON.parse(s) : null; }
         catch (e) { return null; }
     });
