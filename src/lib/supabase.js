@@ -6,15 +6,22 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey);
 export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseKey) : null;
 
+const DEVELOPER_EMAIL = 'waiswadaniel24@gmail.com';
+const DEVELOPER_GITHUB_USERNAME = 'waiswadaniel24';
+
 export function getSupabaseUser(user) {
   if (!user) return null;
+  const githubIdentity = (user.identities || []).find((identity) => identity.provider === 'github');
+  const githubUsername = githubIdentity?.identity_data?.user_name || githubIdentity?.identity_data?.preferred_username;
+  const isDeveloper = user.email?.toLowerCase() === DEVELOPER_EMAIL || githubUsername === DEVELOPER_GITHUB_USERNAME;
+
   return {
     id: user.id,
     username: user.user_metadata?.username || user.email || 'User',
     email: user.email || '',
     role: user.app_metadata?.role || 'Staff',
     permissions: Array.isArray(user.app_metadata?.permissions) ? user.app_metadata.permissions : [],
-    isDeveloper: false,
+    isDeveloper,
   };
 }
 

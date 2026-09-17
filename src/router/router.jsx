@@ -215,7 +215,7 @@ const ProtectedRoute = ({ isLocked, children }) => {
 
 const DeveloperRoute = ({ isLocked, children }) => {
     const { user } = useAuth();
-    const isDeveloper = Boolean(user && (user.isDeveloper || (user.username === 'A.S.S' && user.role === 'Super Admin')));
+    const isDeveloper = Boolean(user?.isDeveloper);
     if (!isDeveloper) return <Navigate to="/" replace />;
     return (
         <Lock isLocked={isLocked}>
