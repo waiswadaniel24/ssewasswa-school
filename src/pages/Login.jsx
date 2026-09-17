@@ -55,6 +55,18 @@ export default function Login() {
     } catch (err) { setLoading(false); setError('Unable to sign in. Please try again.'); }
   };
 
+  var handleGitHubSignIn = async function() {
+    setError(''); setSuccessMsg(''); setLoading(true);
+    try {
+      if (!supabase) { setLoading(false); setError('GitHub sign-in is not configured yet.'); return; }
+      var result = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: { redirectTo: window.location.origin + '/login' }
+      });
+      if (result.error) { setLoading(false); setError(result.error.message || 'Unable to start GitHub sign-in.'); }
+    } catch (err) { setLoading(false); setError('Unable to start GitHub sign-in. Please try again.'); }
+  };
+
   var handleSendCode = function() {
     if (!email || email.indexOf('@') < 0) { setError('Enter a valid email first'); return; }
     var c = String(Math.floor(100000 + Math.random() * 900000));
@@ -170,6 +182,7 @@ src="/ssewasswa-comforts-school-erp-mark.png"
                   <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: loading ? '#9aa0a6' : '#1a73e8', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px rgba(26, 115, 232, 0.3)' }}>{loading ? 'Signing in...' : 'Sign In'}</button>
                   <button type="button" onClick={function() { setForgotMode(true); setError(''); setSuccessMsg(''); }} style={{ background: 'none', border: 'none', color: '#1a73e8', cursor: 'pointer', fontSize: '13px', marginTop: '15px', width: '100%' }}>Forgot Password?</button>
                   <div style={{ textAlign: 'center', margin: '20px 0', color: '#999', fontSize: '12px', position: 'relative' }}><span style={{ background: 'white', padding: '0 10px', position: 'relative', zIndex: 1 }}>or</span><div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: '#e0e0e0', zIndex: 0 }} /></div>
+                  <button type="button" onClick={handleGitHubSignIn} disabled={loading} style={{ width: '100%', padding: '12px', background: '#24292f', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', marginBottom: '10px' }}>Continue with GitHub</button>
                   <button type="button" onClick={function() { try { localStorage.setItem('erp_force_setup', 'true'); } catch (e2) { /* no localStorage */ } navigate('/setup'); }} style={{ width: '100%', padding: '12px', background: 'white', color: '#0d904f', border: '2px solid #0d904f', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>Create New Account</button>
                 </form>
               )}
