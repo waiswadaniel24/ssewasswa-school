@@ -6,7 +6,7 @@ const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey);
 export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseKey) : null;
 
-const DEVELOPER_EMAIL = 'waiswadaniel24@gmail.com';
+const DEVELOPER_GITHUB_ID = '279316239';
 const DEVELOPER_GITHUB_USERNAME = 'waiswadaniel24';
 
 export function getSupabaseUser(user) {
@@ -15,8 +15,10 @@ export function getSupabaseUser(user) {
   const identityData = githubIdentity?.identity_data || {};
   const metadata = user.user_metadata || {};
   const githubUsername = identityData.user_name || identityData.preferred_username || metadata.user_name || metadata.preferred_username;
+  const githubId = String(identityData.provider_id || identityData.sub || metadata.provider_id || '');
   const isGitHubUser = githubIdentity?.provider === 'github' || metadata.provider === 'github' || metadata.providers?.includes?.('github');
-  const isDeveloper = user.email?.toLowerCase() === DEVELOPER_EMAIL || (isGitHubUser && githubUsername === DEVELOPER_GITHUB_USERNAME);
+  const appRole = user.app_metadata?.role;
+  const isDeveloper = isGitHubUser && (githubId === DEVELOPER_GITHUB_ID || githubUsername === DEVELOPER_GITHUB_USERNAME || appRole === 'developer');
 
   return {
     id: user.id,
