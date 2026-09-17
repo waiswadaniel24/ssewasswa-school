@@ -39,7 +39,12 @@ export function AuthProvider(props) {
             window.location.replace('/dev');
         }
     };
-    var logout = function() { setUser(null); localStorage.removeItem('erp_user'); window.location.assign('/login'); };
+    var logout = async function() {
+        setUser(null);
+        localStorage.removeItem('erp_user');
+        if (supabase) await supabase.auth.signOut();
+        window.location.assign('/login');
+    };
     var switchSchool = function(schoolId) { setCurrentSchoolId(schoolId); localStorage.setItem('erp_school_id', String(schoolId)); window.location.reload(); };
 
     useEffect(function() {
@@ -59,8 +64,12 @@ export function AuthProvider(props) {
         });
         var subscription = supabase.auth.onAuthStateChange(function(event, session) {
             if (cancelled) return;
-            if (session && session.user) login(getSupabaseUser(session.user));
-            if (event === 'SIGNED_OUT') setUser(null);
+            if (session && session.user) {
+                login(getSupabaseUser(session.user));
+            } else if (event === 'SIGNED_OUT') {
+                setUser(null);
+                localStorage.removeItem('erp_user');
+            }
         });
         return function() { cancelled = true; subscription.data.subscription.unsubscribe(); };
     }, []);

@@ -7,6 +7,7 @@ export default function Login() {
   var navigate = useNavigate();
   var auth = useAuth();
   var loginFn = (auth && auth.login) ? auth.login : function() { /* no-op */ };
+  var logoutFn = (auth && auth.logout) ? auth.logout : function() { /* no-op */ };
   var [tab, setTab] = useState('signin');
   var [username, setUsername] = useState('');
   var [password, setPassword] = useState('');
@@ -151,8 +152,9 @@ export default function Login() {
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: "'Segoe UI', sans-serif", padding: '20px' }}>
       <div style={{ background: 'white', width: '100%', maxWidth: '420px', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-        <div style={{ background: '#1a73e8', padding: '30px', textAlign: 'center', color: 'white' }}>
-          <img
+  <div style={{ background: '#1a73e8', padding: '30px', textAlign: 'center', color: 'white' }}>
+  {auth?.user && <button type="button" onClick={logoutFn} style={{ float: 'right', background: 'transparent', color: 'white', border: '1px solid rgba(255,255,255,0.7)', borderRadius: '6px', padding: '5px 9px', cursor: 'pointer' }}>Log out</button>}
+  <img
 src="/ssewasswa-comforts-school-erp-mark.png"
   alt="Ssewasswa Comforts Technologies logo"
             style={{ width: '96px', height: '96px', objectFit: 'contain', marginBottom: '10px', filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.2))' }}
