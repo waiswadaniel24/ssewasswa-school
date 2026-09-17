@@ -22,6 +22,7 @@ export function AuthProvider(props) {
         catch (e) { return 1; }
     });
     var [schools, setSchools] = useState([]);
+    var [authReady, setAuthReady] = useState(!supabase);
 
     var login = function(userData) {
         if (!userData || typeof userData !== 'object') return;
@@ -41,9 +42,13 @@ export function AuthProvider(props) {
         if (!supabase) return function() {};
         var cancelled = false;
         supabase.auth.getSession().then(function(result) {
-            if (!cancelled && result.data && result.data.session && result.data.session.user) {
+            if (cancelled) return;
+            if (result.data && result.data.session && result.data.session.user) {
                 login(getSupabaseUser(result.data.session.user));
             }
+            setAuthReady(true);
+        }).catch(function() {
+            if (!cancelled) setAuthReady(true);
         });
         var subscription = supabase.auth.onAuthStateChange(function(event, session) {
             if (cancelled) return;
@@ -78,7 +83,7 @@ export function AuthProvider(props) {
     }, [schoolLevel]);
 
     return React.createElement(AuthContext.Provider, {
-        value: { user: user, login: login, logout: logout, schoolLevel: schoolLevel, setSchoolLevel: setSchoolLevel, currentSchoolId: currentSchoolId, switchSchool: switchSchool, schools: schools }
+        value: { user: user, login: login, logout: logout, authReady: authReady, schoolLevel: schoolLevel, setSchoolLevel: setSchoolLevel, currentSchoolId: currentSchoolId, switchSchool: switchSchool, schools: schools }
     }, children);
 }
 
