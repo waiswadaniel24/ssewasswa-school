@@ -11,6 +11,7 @@ import { useLocation } from 'react-router-dom';
 import SystemSetup from '../pages/SystemSetup.jsx';
 import Login from '../pages/Login.jsx';
 import Activation from '../pages/Activation.jsx';
+import ProductLanding from '../pages/ProductLanding.jsx';
 
 // ─── Lazy-loaded pages (code-split for faster startup) ─────
 const Dashboard = React.lazy(() => import('../pages/Dashboard.jsx'));
@@ -246,6 +247,10 @@ export default function AppRouter({ isInitialized, isLocked }) {
         {
             path: '/setup',
             element: isInitialized ? <Navigate to="/login" replace /> : <PublicRoute><SystemSetup /></PublicRoute>
+        },
+        {
+            path: '/welcome',
+            element: <PublicRoute><ProductLanding /></PublicRoute>
         },
         {
             path: '/login',

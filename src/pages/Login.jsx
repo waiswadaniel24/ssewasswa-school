@@ -61,7 +61,7 @@ export default function Login() {
       if (!supabase) { setLoading(false); setError('GitHub sign-in is not configured yet.'); return; }
       var result = await supabase.auth.signInWithOAuth({
         provider: 'github',
-        options: { redirectTo: window.location.origin + '/login' }
+        options: { redirectTo: window.location.origin + '/welcome' }
       });
       if (result.error) { setLoading(false); setError(result.error.message || 'Unable to start GitHub sign-in.'); }
     } catch (err) { setLoading(false); setError('Unable to start GitHub sign-in. Please try again.'); }
