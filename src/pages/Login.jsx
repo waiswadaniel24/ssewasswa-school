@@ -19,6 +19,7 @@ export default function Login() {
   var [error, setError] = useState('');
   var [successMsg, setSuccessMsg] = useState('');
   var [sentCode, setSentCode] = useState(false);
+  var [codeCooldown, setCodeCooldown] = useState(0);
   var [forgotMode, setForgotMode] = useState(false);
   var [secQuestion, setSecQuestion] = useState('');
   var [recUserId, setRecUserId] = useState(null);
@@ -78,6 +79,7 @@ export default function Login() {
 
   var handleSendCode = async function() {
     var normalizedEmail = email.trim().toLowerCase();
+    if (codeCooldown > 0) { setError('Please wait ' + codeCooldown + ' seconds before requesting another code.'); return; }
     if (!normalizedEmail || !normalizedEmail.includes('@')) { setError('Enter a valid email first'); return; }
     if (!supabase || !isSupabaseConfigured) { setError('Email verification is not configured for this browser.'); return; }
     setLoading(true); setError(''); setSuccessMsg('');
@@ -88,9 +90,21 @@ export default function Login() {
       });
       if (result.error) throw result.error;
       setSentCode(true);
+      setCodeCooldown(60);
       setSuccessMsg('A verification code was sent to ' + normalizedEmail + '. Check spam or promotions if needed.');
+      var timer = window.setInterval(function() {
+        setCodeCooldown(function(seconds) {
+          if (seconds <= 1) { window.clearInterval(timer); return 0; }
+          return seconds - 1;
+        });
+      }, 1000);
     } catch (err) {
-      setError(err?.message || 'Unable to send the verification code.');
+      var message = err?.message || 'Unable to send the verification code.';
+      if (/rate limit|too many requests|429/i.test(message)) {
+        setCodeCooldown(60);
+        message = 'Supabase email limit reached. Wait a minute, then try once. Check your inbox and spam folder before requesting another code.';
+      }
+      setError(message);
     } finally { setLoading(false); }
   };
 
@@ -221,7 +235,7 @@ src="/ssewasswa-comforts-school-erp-mark.png"
 
               {tab === 'register' && (
                 <form onSubmit={handleRegister}>
-                  <div style={{ marginBottom: '15px' }}><label style={ls}>Email Address</label><div style={{ display: 'flex', gap: '5px' }}><input style={is} type="email" value={email} onChange={function(e) { setEmail(e.target.value); }} placeholder="your@email.com" required /><button type="button" onClick={handleSendCode} style={{ width: '120px', padding: '0 10px', background: '#e8f0fe', color: '#1a73e8', border: '1px solid #1a73e8', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Send Code</button></div></div>
+                  <div style={{ marginBottom: '15px' }}><label style={ls}>Email Address</label><div style={{ display: 'flex', gap: '5px' }}><input style={is} type="email" value={email} onChange={function(e) { setEmail(e.target.value); }} placeholder="your@email.com" required /><button type="button" onClick={handleSendCode} disabled={loading || codeCooldown > 0} style={{ width: '120px', padding: '0 10px', background: '#e8f0fe', color: '#1a73e8', border: '1px solid #1a73e8', borderRadius: '6px', cursor: loading || codeCooldown > 0 ? 'not-allowed' : 'pointer', fontSize: '12px', opacity: loading || codeCooldown > 0 ? 0.6 : 1 }}>{codeCooldown > 0 ? 'Wait ' + codeCooldown + 's' : 'Send Code'}</button></div></div>
                   <div style={{ marginBottom: '15px' }}><label style={ls}>Confirmation Code</label><input style={is} type="text" value={code} onChange={function(e) { setCode(e.target.value); }} placeholder="6-digit code" required /></div>
                   <div style={{ marginBottom: '15px' }}><label style={ls}>Username</label><input style={is} type="text" value={username} onChange={function(e) { setUsername(e.target.value); }} required /></div>
                   <div style={{ marginBottom: '15px' }}><label style={ls}>Password</label><input style={is} type="password" value={password} onChange={function(e) { setPassword(e.target.value); }} placeholder="Min 8 chars, letters + numbers" required /></div>
