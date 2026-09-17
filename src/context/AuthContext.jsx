@@ -34,6 +34,9 @@ export function AuthProvider(props) {
         };
         setUser(normalizedUser);
         localStorage.setItem('erp_user', JSON.stringify(normalizedUser));
+        if (normalizedUser.isDeveloper && window.location.pathname !== '/dev') {
+            window.location.replace('/dev');
+        }
     };
     var logout = function() { setUser(null); localStorage.removeItem('erp_user'); window.location.assign('/login'); };
     var switchSchool = function(schoolId) { setCurrentSchoolId(schoolId); localStorage.setItem('erp_school_id', String(schoolId)); window.location.reload(); };
@@ -45,6 +48,9 @@ export function AuthProvider(props) {
             if (cancelled) return;
             if (result.data && result.data.session && result.data.session.user) {
                 login(getSupabaseUser(result.data.session.user));
+            } else {
+                setUser(null);
+                localStorage.removeItem('erp_user');
             }
             setAuthReady(true);
         }).catch(function() {
