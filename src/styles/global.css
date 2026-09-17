@@ -7,6 +7,12 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-
 @media (max-width: 720px) {
   html, body, #root { min-width: 0; width: 100%; max-width: 100%; overflow-x: hidden; }
   #root, #root * { max-width: 100%; }
+  .app-shell { width: 100vw !important; max-width: 100vw !important; min-width: 0 !important; overflow: hidden !important; }
+  .app-body { display: flex !important; flex-direction: column !important; width: 100% !important; min-width: 0 !important; overflow: hidden !important; }
+  .app-sidebar { order: 1; width: 100% !important; min-width: 0 !important; max-width: 100% !important; height: auto !important; max-height: 154px !important; overflow: hidden !important; border-right: 0 !important; border-bottom: 1px solid #dadce0 !important; }
+  .app-sidebar nav { display: flex !important; flex-wrap: wrap !important; align-content: flex-start !important; width: 100% !important; max-height: 112px; overflow-y: auto !important; overflow-x: hidden !important; }
+  .app-sidebar nav > div { flex: 0 0 auto !important; }
+  .app-main { order: 2; width: 100% !important; max-width: 100% !important; min-width: 0 !important; flex: 1 1 auto !important; padding: 16px !important; overflow-x: hidden !important; overflow-y: auto !important; }
   .school-header-emblem { width: 32px; height: 32px; }
   .school-header-brand h2 { max-width: 145px; font-size: 14px !important; }
   header { width: 100% !important; min-width: 0 !important; max-width: 100vw !important; padding: 0 10px !important; gap: 8px; height: 56px !important; overflow: hidden !important; }

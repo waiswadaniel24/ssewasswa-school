@@ -105,7 +105,7 @@ export default function Layout() {
   }, [logout]);
 
   return (
-    <div style={{
+    <div className="app-shell" style={{
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
@@ -122,7 +122,7 @@ export default function Layout() {
       />
 
       {/* ─── Middle: Sidebar + Content ────────────────── */}
-      <div style={{
+      <div className="app-body" style={{
         flex: 1,
         display: 'flex',
         flexDirection: 'row',
@@ -133,7 +133,7 @@ export default function Layout() {
         <Sidebar searchQuery={searchQuery} isDark={isDark} />
 
         {/* Main Content — Outlet renders the active route */}
-        <main style={{
+        <main className="app-main" style={{
           flex: 1,
           overflowY: 'auto',
           padding: '24px 32px',
