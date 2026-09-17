@@ -11,11 +11,13 @@ const features = [
 
 export default function ProductLanding() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, authReady } = useAuth();
 
   useEffect(() => {
-    if (user && user.isDeveloper) navigate('/dev', { replace: true });
-  }, [navigate, user]);
+    if (authReady && user?.isDeveloper) navigate('/dev', { replace: true });
+  }, [authReady, navigate, user?.isDeveloper]);
+
+  if (!authReady) return <main style={{ minHeight: '100vh', background: '#071b2f', color: '#f7fbff', display: 'grid', placeItems: 'center', fontFamily: "'Segoe UI', sans-serif" }}>Checking your developer access…</main>;
 
   const continueAction = user?.isDeveloper ? 'Continue to Developer Tools' : 'Set up your school';
 
