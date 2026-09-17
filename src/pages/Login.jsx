@@ -96,8 +96,10 @@ export default function Login() {
 
   var handleRegister = async function(e) {
     e.preventDefault(); setError(''); setSuccessMsg('');
-    if (!sentCode) { setError('Click Send Code and enter the code from your email.'); return; }
-    if (code.trim().length < 6) { setError('Enter the 6-digit code from your email.'); return; }
+    var isDesktop = Boolean(window.electronAPI && typeof window.electronAPI.addUser === 'function');
+    if (!isDesktop && !sentCode) { setError('Click Send Code and enter the code from your email.'); return; }
+    if (!isDesktop && code.trim().length < 6) { setError('Enter the 6-digit code from your email.'); return; }
+    if (!username.trim()) { setError('Enter a username first.'); return; }
     if (password.length < 8) { setError('Password must be 8+ chars'); return; }
     if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) { setError('Password needs letters AND numbers'); return; }
     setLoading(true);
@@ -105,8 +107,12 @@ export default function Login() {
       if (window.electronAPI && typeof window.electronAPI.addUser === 'function') {
         var res = await window.electronAPI.addUser({ username: username, password: password, role: role });
         setLoading(false);
-        if (res && res.success) { setSuccessMsg('Account created! Switch to Sign In tab.'); setTab('signin'); }
-        else { setError((res && res.error) || 'Registration failed'); }
+        if (res && res.success) {
+          setSuccessMsg('Account created! You can now sign in with your username and password.');
+          setTab('signin');
+        } else {
+          setError((res && res.error) || 'Registration failed. Start the desktop app through the provided launcher and try again.');
+        }
         return;
       }
       if (!supabase || !isSupabaseConfigured) { setLoading(false); setError('Registration is not configured for this browser yet.'); return; }

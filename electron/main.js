@@ -387,7 +387,7 @@ function safeRun(sql, params = []) {
 
 // ═══════════════════════════════════════════════════════════
 // APP READY
-// ════════════════════════════════════���══════════════════════
+// ═════════��══════════════════════════���══════════════════════
 
 // ═══ TAMPER-PROOF TRIAL & SaaS LICENSE CHECK ═══
 const Store = require('electron-store');
@@ -968,7 +968,8 @@ ipcMain.handle('auth-login', async (e, c) => {
 });
 
 ipcMain.handle('addUser', async (e, d) => {
-    if (!db) return { success: false, error: 'DATABASE FAILED TO LOAD' };
+  if (!db) return { success: false, error: 'DATABASE FAILED TO LOAD. Close the app and start it through the launcher again.' };
+  if (!d || !String(d.username || '').trim() || !String(d.password || '').trim()) return { success: false, error: 'Username and password are required' };
     if (!bcrypt) return { success: false, error: 'BCRYPTJS MODULE MISSING' };
     try {
         safeRun("INSERT INTO users (username, password, role, permissions) VALUES (?,?,?,?)",
