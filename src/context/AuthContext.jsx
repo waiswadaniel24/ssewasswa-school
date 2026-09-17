@@ -1,109 +1,81 @@
-﻿import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { getSupabaseUser, supabase } from '../lib/supabase.js';
 
-var AuthContext = createContext({
-    user: null, authReady: false, login: function() { /* no-op */ }, logout: function() { /* no-op */ },
-    schoolLevel: 'Primary', setSchoolLevel: function() { /* no-op */ },
-    currentSchoolId: 1, switchSchool: function() { /* no-op */ }, schools: []
-});
+const AuthContext = createContext(null);
 
-export function AuthProvider(props) {
-    var children = props.children;
-    var [user, setUser] = useState(function() {
-        if (supabase) return null;
-        try { var s = localStorage.getItem('erp_user'); return s ? JSON.parse(s) : null; }
-        catch (e) { return null; }
-    });
-    var [schoolLevel, setSchoolLevel] = useState(function() {
-        try { return localStorage.getItem('erp_school_level') || 'Primary'; }
-        catch (e) { return 'Primary'; }
-    });
-    var [currentSchoolId, setCurrentSchoolId] = useState(function() {
-        try { return parseInt(localStorage.getItem('erp_school_id')) || 1; }
-        catch (e) { return 1; }
-    });
-    var [schools, setSchools] = useState([]);
-    var [authReady, setAuthReady] = useState(!supabase);
+function readLocal(key, fallback) {
+  try { return localStorage.getItem(key) || fallback; } catch { return fallback; }
+}
 
-    var login = function(userData) {
-        if (!userData || typeof userData !== 'object') return;
-        var normalizedUser = {
-            ...userData,
-            id: userData.id ?? userData.user_id ?? null,
-            username: userData.username || userData.email || 'User',
-            role: userData.role || 'Staff'
-        };
-        setUser(normalizedUser);
-        localStorage.setItem('erp_user', JSON.stringify(normalizedUser));
-        if (normalizedUser.isDeveloper && window.location.pathname !== '/dev') {
-            window.location.replace('/dev');
-        }
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(!supabase);
+  const [schoolLevel, setSchoolLevel] = useState(() => readLocal('erp_school_level', 'Primary'));
+  const [currentSchoolId, setCurrentSchoolId] = useState(() => Number(readLocal('erp_school_id', '1')) || 1);
+  const [schools, setSchools] = useState([]);
+
+  const login = (userData) => {
+    if (!userData) return;
+    const normalized = {
+      ...userData,
+      id: userData.id || userData.user_id || null,
+      username: userData.username || userData.email || 'User',
+      role: userData.role || 'Staff',
     };
-    var logout = async function() {
-        setUser(null);
-        localStorage.removeItem('erp_user');
-        if (supabase) await supabase.auth.signOut();
-        window.location.assign('/login');
-    };
-    var switchSchool = function(schoolId) { setCurrentSchoolId(schoolId); localStorage.setItem('erp_school_id', String(schoolId)); window.location.reload(); };
+    setUser(normalized);
+    try { localStorage.setItem('erp_user', JSON.stringify(normalized)); } catch { /* storage unavailable */ }
+    if (normalized.isDeveloper && window.location.pathname !== '/dev') window.location.replace('/dev');
+  };
 
-    useEffect(function() {
-        if (!supabase) return function() {};
-        var cancelled = false;
-        supabase.auth.getSession().then(function(result) {
-            if (cancelled) return;
-            if (result.data && result.data.session && result.data.session.user) {
-                login(getSupabaseUser(result.data.session.user));
-            } else {
-                setUser(null);
-                localStorage.removeItem('erp_user');
-            }
-            setAuthReady(true);
-        }).catch(function() {
-            if (!cancelled) setAuthReady(true);
-        });
-        var subscription = supabase.auth.onAuthStateChange(function(event, session) {
-            if (cancelled) return;
-            if (session && session.user) {
-                login(getSupabaseUser(session.user));
-            } else if (event === 'SIGNED_OUT') {
-                setUser(null);
-                localStorage.removeItem('erp_user');
-            }
-        });
-        return function() { cancelled = true; subscription.data.subscription.unsubscribe(); };
-    }, []);
+  const logout = async () => {
+    if (supabase) await supabase.auth.signOut();
+    setUser(null);
+    try { localStorage.removeItem('erp_user'); } catch { /* storage unavailable */ }
+    window.location.assign('/login');
+  };
 
-    useEffect(function() {
-        var cancelled = false;
-        var syncLevel = async function() {
-            if (!window.electronAPI || !window.electronAPI.queryDatabase) return;
-            try {
-                var result = await window.electronAPI.queryDatabase("SELECT value FROM system_settings WHERE key = 'school_level'");
-                if (!cancelled && result && result.success && result.data && result.data.length > 0) {
-                    var level = result.data[0].value;
-                    if (level && level !== schoolLevel) { setSchoolLevel(level); localStorage.setItem('erp_school_level', level); }
-                }
-            } catch (e) { /* settings not available yet */ }
-        };
-        var loadSchools = async function() {
-            if (!window.electronAPI || !window.electronAPI.queryDatabase) return;
-            try {
-                var r = await window.electronAPI.queryDatabase("SELECT id, school_name, emis_number, school_level FROM schools WHERE is_active = 1 ORDER BY school_name");
-                if (!cancelled && r && r.success && Array.isArray(r.data)) { setSchools(r.data); }
-            } catch (e) { /* schools table might not exist yet */ }
-        };
-        syncLevel(); loadSchools();
-        var interval = setInterval(syncLevel, 30000);
-        return function() { cancelled = true; clearInterval(interval); };
-    }, [schoolLevel]);
+  const switchSchool = (schoolId) => {
+    setCurrentSchoolId(schoolId);
+    try { localStorage.setItem('erp_school_id', String(schoolId)); } catch { /* storage unavailable */ }
+    window.location.reload();
+  };
 
-    return React.createElement(AuthContext.Provider, {
-        value: { user: user, login: login, logout: logout, authReady: authReady, schoolLevel: schoolLevel, setSchoolLevel: setSchoolLevel, currentSchoolId: currentSchoolId, switchSchool: switchSchool, schools: schools }
-    }, children);
+  useEffect(() => {
+    if (!supabase) return undefined;
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      if (data.session?.user) login(getSupabaseUser(data.session.user));
+      setAuthReady(true);
+    }).catch(() => active && setAuthReady(true));
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      if (session?.user) login(getSupabaseUser(session.user));
+      else setUser(null);
+      setAuthReady(true);
+    });
+    return () => { active = false; listener.subscription.unsubscribe(); };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const query = async (sql) => window.electronAPI?.queryDatabase?.(sql);
+    Promise.all([
+      query("SELECT value FROM system_settings WHERE key = 'school_level'"),
+      query('SELECT id, school_name, emis_number, school_level FROM schools WHERE is_active = 1 ORDER BY school_name'),
+    ]).then(([settings, schoolRows]) => {
+      if (!active) return;
+      const level = settings?.success && settings.data?.[0]?.value;
+      if (level) { setSchoolLevel(level); try { localStorage.setItem('erp_school_level', level); } catch {} }
+      if (schoolRows?.success && Array.isArray(schoolRows.data)) setSchools(schoolRows.data);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  const value = useMemo(() => ({ user, login, logout, authReady, schoolLevel, setSchoolLevel, currentSchoolId, switchSchool, schools }), [user, authReady, schoolLevel, currentSchoolId, schools]);
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() { return useContext(AuthContext); }
 export { AuthContext };
-
-
+export default AuthContext;
