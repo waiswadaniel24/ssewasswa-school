@@ -1,8 +1,8 @@
 ﻿// FileName: src/router/router.jsx
 // Ssewasswa School ERP V10 - EMIS Uganda Compliant
 
-import React, { useMemo, Suspense } from 'react';
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import React, { useMemo, Suspense, useEffect } from 'react';
+import { createBrowserRouter, RouterProvider, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { canAccess } from '../config/accessControl.js';
 import { useLocation } from 'react-router-dom';
@@ -12,6 +12,16 @@ import SystemSetup from '../pages/SystemSetup.jsx';
 import Login from '../pages/Login.jsx';
 import Activation from '../pages/Activation.jsx';
 import ProductLanding from '../pages/ProductLanding.jsx';
+
+function AuthCallback() {
+    const { user, authReady } = useAuth();
+    const navigate = useNavigate();
+    useEffect(() => {
+        if (!authReady) return;
+        navigate(user?.isDeveloper ? '/dev' : '/', { replace: true });
+    }, [authReady, navigate, user?.isDeveloper]);
+    return <LoadingFallback />;
+}
 
 // ─── Lazy-loaded pages (code-split for faster startup) ─────
 const Dashboard = React.lazy(() => import('../pages/Dashboard.jsx'));
@@ -249,6 +259,10 @@ export default function AppRouter({ isInitialized, isLocked }) {
         {
             path: '/setup',
             element: isInitialized ? <Navigate to="/login" replace /> : <PublicRoute><SystemSetup /></PublicRoute>
+        },
+        {
+            path: '/auth/callback',
+            element: <PublicRoute><AuthCallback /></PublicRoute>
         },
         {
             path: '/welcome',
