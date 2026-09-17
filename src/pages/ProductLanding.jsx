@@ -14,7 +14,10 @@ export default function ProductLanding() {
   const { user, authReady } = useAuth();
 
   useEffect(() => {
-    if (authReady && user?.isDeveloper) navigate('/dev', { replace: true });
+    if (!authReady) return;
+    if (user?.isDeveloper) {
+      navigate('/dev', { replace: true });
+    }
   }, [authReady, navigate, user?.isDeveloper]);
 
   if (!authReady) return <main style={{ minHeight: '100vh', background: '#071b2f', color: '#f7fbff', display: 'grid', placeItems: 'center', fontFamily: "'Segoe UI', sans-serif" }}>Checking your developer access…</main>;
