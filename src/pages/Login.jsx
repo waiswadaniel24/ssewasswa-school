@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { getSupabaseUser, isSupabaseConfigured, supabase } from '../lib/supabase.js';
@@ -17,6 +17,18 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
+  useEffect(() => {
+    if (!supabase) return undefined;
+    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setRecoveryReady(true);
+        setMode('recovery');
+        setMessage({ type: 'success', text: 'Choose a new password below. This will replace your old password.' });
+      }
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
   const submit = async (event) => {
     event.preventDefault();
     setMessage({ type: '', text: '' });
@@ -30,13 +42,20 @@ export default function Login() {
       setMessage({ type: 'error', text: 'Enter a username with at least 2 characters.' });
       return;
     }
-    if (mode === 'signup' && password.length < 8) {
+    if ((mode === 'signup' || mode === 'recovery') && password.length < 8) {
       setMessage({ type: 'error', text: 'Use a password with at least 8 characters.' });
       return;
     }
     setLoading(true);
     try {
-      if (mode === 'signup') {
+      if (mode === 'recovery') {
+        const result = await supabase.auth.updateUser({ password });
+        if (result.error) throw result.error;
+        setRecoveryReady(false);
+        setPassword('');
+        setMode('signin');
+        setMessage({ type: 'success', text: 'Your password was changed. You can now sign in with the new password.' });
+      } else if (mode === 'signup') {
         const result = await supabase.auth.signUp({
           email: normalizedEmail, password,
           options: { emailRedirectTo: import.meta.env.VITE_DEV_SUPABASE_REDIRECT_URL || import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`, data: { username: normalizedUsername, role } },
@@ -61,6 +80,26 @@ export default function Login() {
     } finally { setLoading(false); }
   };
 
+  const requestPasswordReset = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      setMessage({ type: 'error', text: 'Enter your email address first, then select Forgot password.' });
+      return;
+    }
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const result = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+        redirectTo: `${window.location.origin}/login`,
+      });
+      if (result.error) throw result.error;
+      setMessage({ type: 'success', text: 'Password reset email sent. Open the email, select Reset password, then choose a new password here. Check spam or junk if you do not see it.' });
+    } catch (error) {
+      const text = String(error?.message || '').toLowerCase();
+      setMessage({ type: 'error', text: /rate limit|too many|429/.test(text) ? 'Too many reset requests. Wait a moment and try again.' : 'We could not send the reset email. Check the email address and try again.' });
+    } finally { setLoading(false); }
+  };
+
   const github = async () => {
     if (!supabase) return setMessage({ type: 'error', text: 'GitHub sign-in is not configured.' });
     setLoading(true);
@@ -77,10 +116,12 @@ export default function Login() {
         <form onSubmit={submit}>
           {mode === 'signup' && <><label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Username<input style={{ ...inputStyle, marginTop: 6 }} value={username} onChange={e => setUsername(e.target.value)} required /></label><label style={{ display: 'block', fontSize: 13, fontWeight: 700, margin: '15px 0 6px' }}>Role<select style={{ ...inputStyle, marginTop: 6 }} value={role} onChange={e => setRole(e.target.value)}><option>Teacher</option><option>Administrator</option><option>Accountant</option><option>Staff</option></select></label></>}
           <label style={{ display: 'block', fontSize: 13, fontWeight: 700, margin: '15px 0 6px' }}>Email address<input type="email" style={{ ...inputStyle, marginTop: 6 }} value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" required /></label>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 700, margin: '15px 0 6px' }}>Password<input type="password" style={{ ...inputStyle, marginTop: 6 }} value={password} onChange={e => setPassword(e.target.value)} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required /></label>
-          <button type="submit" disabled={loading} style={{ ...buttonStyle, marginTop: 22, background: loading ? '#9ab4e8' : '#155eef' }}>{loading ? 'Please wait...' : mode === 'signup' ? 'Create account' : 'Sign in'}</button>
+          {mode !== 'recovery' && <label style={{ display: 'block', fontSize: 13, fontWeight: 700, margin: '15px 0 6px' }}>Password<input type="password" style={{ ...inputStyle, marginTop: 6 }} value={password} onChange={e => setPassword(e.target.value)} autoComplete={mode === 'signup' ? 'new-password' : mode === 'recovery' ? 'new-password' : 'current-password'} required /></label>}
+          {mode === 'recovery' && <label style={{ display: 'block', fontSize: 13, fontWeight: 700, margin: '15px 0 6px' }}>New password<input type="password" style={{ ...inputStyle, marginTop: 6 }} value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" required /></label>}
+          <button type="submit" disabled={loading} style={{ ...buttonStyle, marginTop: 22, background: loading ? '#9ab4e8' : '#155eef' }}>{loading ? 'Please wait...' : mode === 'signup' ? 'Create account' : mode === 'recovery' ? 'Save new password' : 'Sign in'}</button>
         </form>
-        {mode === 'signin' && <><div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#8793a3', fontSize: 12, margin: '22px 0' }}><hr style={{ flex: 1, border: 0, borderTop: '1px solid #e5e9ef' }} />OR<hr style={{ flex: 1, border: 0, borderTop: '1px solid #e5e9ef' }} /></div><button type="button" onClick={github} disabled={loading} style={{ ...buttonStyle, background: '#24292f' }}>Continue with GitHub</button></>}
+        {mode === 'signin' && <><button type="button" onClick={requestPasswordReset} disabled={loading} style={{ width: '100%', border: 0, background: 'transparent', color: '#155eef', cursor: 'pointer', fontWeight: 700, fontSize: 13, marginTop: 14 }}>Forgot password?</button><div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#8793a3', fontSize: 12, margin: '22px 0' }}><hr style={{ flex: 1, border: 0, borderTop: '1px solid #e5e9ef' }} />OR<hr style={{ flex: 1, border: 0, borderTop: '1px solid #e5e9ef' }} /></div><button type="button" onClick={github} disabled={loading} style={{ ...buttonStyle, background: '#24292f' }}>Continue with GitHub</button></>}
+        {mode === 'recovery' && <button type="button" onClick={() => { setMode('signin'); setRecoveryReady(false); setMessage({ type: '', text: '' }); }} style={{ width: '100%', border: 0, background: 'transparent', color: '#526070', cursor: 'pointer', fontWeight: 700, fontSize: 13, marginTop: 14 }}>Back to sign in</button>}
       </div>
     </section>
   </main>;
