@@ -18,7 +18,7 @@ export default function Login() {
   var [loading, setLoading] = useState(false);
   var [error, setError] = useState('');
   var [successMsg, setSuccessMsg] = useState('');
-  var [sentCode, setSentCode] = useState('');
+  var [sentCode, setSentCode] = useState(false);
   var [forgotMode, setForgotMode] = useState(false);
   var [secQuestion, setSecQuestion] = useState('');
   var [recUserId, setRecUserId] = useState(null);
@@ -76,15 +76,28 @@ export default function Login() {
     } catch (err) { setLoading(false); setError('Unable to start GitHub sign-in. Please try again.'); }
   };
 
-  var handleSendCode = function() {
-    if (!email || email.indexOf('@') < 0) { setError('Enter a valid email first'); return; }
-    var c = String(Math.floor(100000 + Math.random() * 900000));
-    setSentCode(c); setError(''); setSuccessMsg('Confirmation code sent: ' + c + ' (check your email)');
+  var handleSendCode = async function() {
+    var normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes('@')) { setError('Enter a valid email first'); return; }
+    if (!supabase || !isSupabaseConfigured) { setError('Email verification is not configured for this browser.'); return; }
+    setLoading(true); setError(''); setSuccessMsg('');
+    try {
+      var result = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: { shouldCreateUser: true, data: { username: username.trim(), role: role } }
+      });
+      if (result.error) throw result.error;
+      setSentCode(true);
+      setSuccessMsg('A verification code was sent to ' + normalizedEmail + '. Check spam or promotions if needed.');
+    } catch (err) {
+      setError(err?.message || 'Unable to send the verification code.');
+    } finally { setLoading(false); }
   };
 
   var handleRegister = async function(e) {
     e.preventDefault(); setError(''); setSuccessMsg('');
-    if (code !== sentCode) { setError('Invalid confirmation code'); return; }
+    if (!sentCode) { setError('Click Send Code and enter the code from your email.'); return; }
+    if (code.trim().length < 6) { setError('Enter the 6-digit code from your email.'); return; }
     if (password.length < 8) { setError('Password must be 8+ chars'); return; }
     if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) { setError('Password needs letters AND numbers'); return; }
     setLoading(true);
@@ -97,11 +110,14 @@ export default function Login() {
         return;
       }
       if (!supabase || !isSupabaseConfigured) { setLoading(false); setError('Registration is not configured for this browser yet.'); return; }
-      var authResult = await supabase.auth.signUp({ email: email.trim(), password: password, options: { data: { username: username.trim(), role: role } } });
+      var verified = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: code.trim(), type: 'email' });
+      if (verified.error || !verified.data.user) { setLoading(false); setError(verified.error?.message || 'Invalid or expired verification code.'); return; }
+      var updated = await supabase.auth.updateUser({ password: password, data: { username: username.trim(), role: role } });
       setLoading(false);
-      if (authResult.error) { setError('Could not create account. Check your details and try again.'); return; }
-      setSuccessMsg(authResult.data.session ? 'Account created. You can now sign in.' : 'Account created. Check your email to confirm it, then sign in.');
-      setTab('signin');
+      if (updated.error) { setError(updated.error.message || 'Account created, but password setup failed.'); return; }
+      loginFn(getSupabaseUser(updated.data.user));
+      setSuccessMsg('Account created successfully.');
+      navigate('/');
     } catch (err) { setLoading(false); setError('Unable to create the account. Please try again.'); }
   };
 
