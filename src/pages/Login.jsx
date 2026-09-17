@@ -21,7 +21,6 @@ export default function Login() {
     if (!supabase) return undefined;
     const { data: listener } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
-        setRecoveryReady(true);
         setMode('recovery');
         setMessage({ type: 'success', text: 'Choose a new password below. This will replace your old password.' });
       }
@@ -51,7 +50,6 @@ export default function Login() {
       if (mode === 'recovery') {
         const result = await supabase.auth.updateUser({ password });
         if (result.error) throw result.error;
-        setRecoveryReady(false);
         setPassword('');
         setMode('signin');
         setMessage({ type: 'success', text: 'Your password was changed. You can now sign in with the new password.' });
@@ -121,7 +119,7 @@ export default function Login() {
           <button type="submit" disabled={loading} style={{ ...buttonStyle, marginTop: 22, background: loading ? '#9ab4e8' : '#155eef' }}>{loading ? 'Please wait...' : mode === 'signup' ? 'Create account' : mode === 'recovery' ? 'Save new password' : 'Sign in'}</button>
         </form>
         {mode === 'signin' && <><button type="button" onClick={requestPasswordReset} disabled={loading} style={{ width: '100%', border: 0, background: 'transparent', color: '#155eef', cursor: 'pointer', fontWeight: 700, fontSize: 13, marginTop: 14 }}>Forgot password?</button><div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#8793a3', fontSize: 12, margin: '22px 0' }}><hr style={{ flex: 1, border: 0, borderTop: '1px solid #e5e9ef' }} />OR<hr style={{ flex: 1, border: 0, borderTop: '1px solid #e5e9ef' }} /></div><button type="button" onClick={github} disabled={loading} style={{ ...buttonStyle, background: '#24292f' }}>Continue with GitHub</button></>}
-        {mode === 'recovery' && <button type="button" onClick={() => { setMode('signin'); setRecoveryReady(false); setMessage({ type: '', text: '' }); }} style={{ width: '100%', border: 0, background: 'transparent', color: '#526070', cursor: 'pointer', fontWeight: 700, fontSize: 13, marginTop: 14 }}>Back to sign in</button>}
+        {mode === 'recovery' && <button type="button" onClick={() => {         setMode('signin'); setMessage({ type: '', text: '' }); }} style={{ width: '100%', border: 0, background: 'transparent', color: '#526070', cursor: 'pointer', fontWeight: 700, fontSize: 13, marginTop: 14 }}>Back to sign in</button>}
       </div>
     </section>
   </main>;
