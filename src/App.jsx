@@ -50,12 +50,18 @@ function App() {
       }
 
       try {
-        const init = await window.electronAPI.checkInitialized();
-        const hasUser = init.success && init.data === true;
+        const init = await Promise.race([
+          window.electronAPI.checkInitialized(),
+          new Promise((resolve) => setTimeout(() => resolve({ success: false, data: false }), 2500)),
+        ]);
+        const hasUser = Boolean(init?.success && init.data === true);
         setIsInitialized(hasUser);
 
-        if (hasUser) {
-          const licRes = await window.electronAPI.checkLicense();
+        if (hasUser && typeof window.electronAPI.checkLicense === 'function') {
+          const licRes = await Promise.race([
+            window.electronAPI.checkLicense(),
+            new Promise((resolve) => setTimeout(() => resolve({ success: false, isTrial: true }), 2500)),
+          ]);
           if (!licRes.success && !licRes.isTrial) {
             setIsLocked(true);
           }
