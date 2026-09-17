@@ -61,9 +61,17 @@ export default function Login() {
       if (!supabase) { setLoading(false); setError('GitHub sign-in is not configured yet.'); return; }
       var result = await supabase.auth.signInWithOAuth({
         provider: 'github',
-        options: { redirectTo: window.location.origin + '/welcome' }
+        options: {
+          redirectTo: window.location.origin + '/welcome',
+          skipBrowserRedirect: true
+        }
       });
-      if (result.error) { setLoading(false); setError(result.error.message || 'Unable to start GitHub sign-in.'); }
+      if (result.error) { setLoading(false); setError(result.error.message || 'Unable to start GitHub sign-in.'); return; }
+      if (result.data?.url) {
+        var isEmbedded = window.self !== window.top;
+        if (isEmbedded) window.open(result.data.url, '_blank', 'noopener,noreferrer');
+        else window.location.assign(result.data.url);
+      }
     } catch (err) { setLoading(false); setError('Unable to start GitHub sign-in. Please try again.'); }
   };
 
