@@ -4,11 +4,14 @@
 import React, { useMemo, Suspense } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import { canAccess } from '../config/accessControl.js';
+import { useLocation } from 'react-router-dom';
 
 // Non-lazy imports (needed immediately before auth is ready)
 import SystemSetup from '../pages/SystemSetup.jsx';
 import Login from '../pages/Login.jsx';
 import Activation from '../pages/Activation.jsx';
+import ProductLanding from '../pages/ProductLanding.jsx';
 
 // ─── Lazy-loaded pages (code-split for faster startup) ─────
 const Dashboard = React.lazy(() => import('../pages/Dashboard.jsx'));
@@ -191,21 +194,38 @@ const Lock = ({ isLocked, children }) => {
 };
 
 // ─── Protected route (auth + lock + lazy + error boundary) ──
-const ProtectedRoute = ({ isLocked, children }) => (
-    <Lock isLocked={isLocked}>
-        <RouteErrorBoundary>
-            <Suspense fallback={<LoadingFallback />}>
-                {children}
-            </Suspense>
-        </RouteErrorBoundary>
-    </Lock>
-);
+const ProtectedRoute = ({ isLocked, children }) => {
+    const { user, schoolLevel } = useAuth();
+    const location = useLocation();
+    const path = location.pathname === '/' ? '/' : location.pathname;
+    const allowed = path === '/' || canAccess(user?.role || 'Viewer', schoolLevel, path);
+
+    if (!allowed) return <Navigate to="/" replace />;
+
+    return (
+        <Lock isLocked={isLocked}>
+            <RouteErrorBoundary>
+                <Suspense fallback={<LoadingFallback />}>
+                    {children}
+                </Suspense>
+            </RouteErrorBoundary>
+        </Lock>
+    );
+};
 
 const DeveloperRoute = ({ isLocked, children }) => {
     const { user } = useAuth();
     const isDeveloper = Boolean(user && (user.isDeveloper || (user.username === 'A.S.S' && user.role === 'Super Admin')));
     if (!isDeveloper) return <Navigate to="/" replace />;
-    return <ProtectedRoute isLocked={isLocked}>{children}</ProtectedRoute>;
+    return (
+        <Lock isLocked={isLocked}>
+            <RouteErrorBoundary>
+                <Suspense fallback={<LoadingFallback />}>
+                    {children}
+                </Suspense>
+            </RouteErrorBoundary>
+        </Lock>
+    );
 };
 
 // ─── Public route (no auth needed, still lazy + error boundary) ──
@@ -227,6 +247,10 @@ export default function AppRouter({ isInitialized, isLocked }) {
         {
             path: '/setup',
             element: isInitialized ? <Navigate to="/login" replace /> : <PublicRoute><SystemSetup /></PublicRoute>
+        },
+        {
+            path: '/welcome',
+            element: <PublicRoute><ProductLanding /></PublicRoute>
         },
         {
             path: '/login',

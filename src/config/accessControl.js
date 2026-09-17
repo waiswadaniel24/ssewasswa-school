@@ -168,6 +168,7 @@ export const MENU_ITEMS = [
     // STUDENT MANAGEMENT
     { path: '/students', name: 'Students & Admissions', icon: '🎓', section: 'Student Management', roles: ['Super Admin', 'Admin', 'Teacher', 'Staff'], levels: 'all' },
     { path: '/student/:id', name: 'Student Profile', icon: '👤', section: 'Student Management', roles: ['Super Admin', 'Admin', 'Teacher', 'Staff'], levels: 'all', hidden: true },
+    { path: '/student-history', name: 'Student History', icon: '🗂️', section: 'Student Management', roles: ['Super Admin', 'Admin', 'Teacher', 'Staff'], levels: 'all' },
     { path: '/requirements', name: 'Requirements', icon: '📋', section: 'Student Management', roles: ['Super Admin', 'Admin', 'Teacher', 'Staff'], levels: ['Primary', 'Nursery_Primary', 'Secondary', 'Primary_Secondary'] },
 
     // STAFF MANAGEMENT

@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  // Expose only public client configuration to the browser; never expose service-role secrets.
+  envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
   server: {
     host: true,
     allowedHosts: ['.vercel.run'],

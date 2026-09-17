@@ -7,7 +7,7 @@ export default function Terms() {
             <div className="card" style={{ marginBottom: '20px' }}>
                 <div className="card-header">1. Acceptance of Terms</div>
                 <div className="card-body">
-                    <p>By accessing and using the Ssewasswa School ERP system, you agree to be bound by these Terms of Service.</p>
+                    <p>By accessing and using the Ssewasswa Comforts School ERP™ system, you agree to be bound by these Terms of Service.</p>
                 </div>
             </div>
             <div className="card" style={{ marginBottom: '20px' }}>

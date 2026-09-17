@@ -5,7 +5,7 @@ import { jsPDF } from 'jspdf';
 export class SchoolDocument {
     constructor(schoolProfile = {}, config = {}) {
         this.school = {
-            name: schoolProfile.school_name || 'SSEWASSWA SCHOOL',
+            name: schoolProfile.school_name || 'SSEWASSWA COMFORTS SCHOOL ERP™',
             motto: schoolProfile.motto || '',
             slogan: schoolProfile.slogan || '',
             scripture: schoolProfile.scripture || '',
@@ -622,7 +622,7 @@ export class SchoolDocument {
         this.save('ReportCard_' + (student.admission_number || student.first_name) + '_' + term.replace(/\s/g, '_') + '.pdf');
     }
 
-    // ═══════════════════════════════════════════════════════════
+    // ═══════���═══════════════════════════════════════════════════
     // OFFICIAL LETTER
     // ═══════════════════════════════════════════════════════════
 
@@ -803,7 +803,7 @@ export class SchoolDocument {
 
     // ═══════════════════════════════════════════════════════════
     // ID CARD (landscape, 85.6mm x 54mm — standard CR80 size)
-    // ═══════════════════════════════════════════════════════════
+    // ════════════════════��══════════════════════════════════════
 
     idCard({ person, type, photo }) {
         if (!window.jspdf) {

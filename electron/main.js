@@ -1,7 +1,7 @@
 ﻿// FileName: electron/main.js
 // Ssewasswa School ERP V10 - EMIS Uganda Compliant
 
-const { app, BrowserWindow, ipcMain, dialog, powerMonitor, safeStorage } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, powerMonitor, safeStorage, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -63,8 +63,8 @@ async function initDatabase() {
                 }
 
                 if (dbData.length > 0) {
- try { db.run('PRAGMA journal_mode = WAL;'); db.run('PRAGMA foreign_keys = ON;'); } catch(e) { console.log('WAL mode failed:', e.message); }
                     db = new sqlModule.Database(dbData);
+                    try { db.run('PRAGMA foreign_keys = ON;'); } catch (e) { console.log('Foreign key setup failed:', e.message); }
                 } else {
                     db = new sqlModule.Database();
                 }
@@ -289,15 +289,31 @@ function createWindow() {
     });
 
     mainWindow.on('close', () => { saveDb(); });
-    mainWindow.once('ready-to-show', () => mainWindow.show());
- if (!isDev) { mainWindow.webContents.on('devtools-opened', () => { mainWindow.webContents.closeDevTools(); }); }
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+        if (/^https?:\/\//i.test(url)) shell.openExternal(url);
+        return { action: 'deny' };
+    });
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+        const allowed = isDev ? url.startsWith('http://localhost:5173') : url.startsWith('file://');
+        if (!allowed) event.preventDefault();
+    });
+  const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
 
-    const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
+  mainWindow.once('ready-to-show', () => mainWindow.show());
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    console.error('[Desktop] Renderer failed to load:', errorCode, errorDescription, validatedURL);
+  });
+  if (!isDev) { mainWindow.webContents.on('devtools-opened', () => { mainWindow.webContents.closeDevTools(); }); }
     if (isDev) {
         mainWindow.loadURL('http://localhost:5173');
         mainWindow.webContents.openDevTools();
     } else {
-        mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
+        const rendererPath = path.join(__dirname, '..', 'dist', 'index.html');
+        if (!fs.existsSync(rendererPath)) {
+            dialog.showErrorBox('Ssewasswa School could not start', `The desktop renderer was not found at:\n${rendererPath}\n\nRun the build before launching the packaged app.`);
+            return;
+        }
+        mainWindow.loadFile(rendererPath);
     }
 
     mainWindow.on('closed', () => {
@@ -371,7 +387,7 @@ function safeRun(sql, params = []) {
 
 // ═══════════════════════════════════════════════════════════
 // APP READY
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════���══════════════════════
 
 // ═══ TAMPER-PROOF TRIAL & SaaS LICENSE CHECK ═══
 const Store = require('electron-store');
@@ -440,8 +456,6 @@ app.whenReady().then(async () => {
         if (fs.existsSync(migPath)) {
             const runMigrations = require(migPath);
             if (typeof runMigrations === 'function') runMigrations(db, saveDb);
-            const UNEBConnector = require('./uneb-connector');
-            UNEBConnector.init(db, saveDb);
         }
 
     } catch (e) {
@@ -459,18 +473,6 @@ app.whenReady().then(async () => {
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });
-});
-
-// Save database before quitting (single handler at module scope)
-app.on('before-quit', () => {
-    if (db) {
-        try {
-            saveDb();
-            console.log('[AutoSave] Database saved on quit');
-        } catch (e) {
-            console.error('Quit save failed:', e.message);
-        }
-    }
 });
 
 // ═══ ENTERPRISE IPC HANDLERS ═══
@@ -568,7 +570,7 @@ app.on('window-all-closed', () => {
 powerMonitor.on('shutdown', () => { saveDb(); });
 powerMonitor.on('suspend', () => { saveDb(); });
 
-// ═══════════════════════════════════════════════════════════
+// ═════════════════════════════════��═════════════════════════
 // IPC HANDLERS — ALL AT MODULE SCOPE (never nested)
 // ═══════════════════════════════════════════════════════════
 
@@ -1307,7 +1309,7 @@ ipcMain.handle('emisGetDashboardStats', async () => {
     }
 });
 
-// ─── EMIS: SPECIAL NEEDS & OVC ─────────────────────────────
+// ─── EMIS: SPECIAL NEEDS & OVC ──────────���──────────────────
 
 ipcMain.handle('emisGetSpecialNeeds', async () => {
     if (!db) return { success: false, error: 'Database not ready' };

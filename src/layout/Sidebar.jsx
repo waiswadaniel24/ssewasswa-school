@@ -303,8 +303,8 @@ export default function Sidebar({ searchQuery = '', isDark }) {
   });
 
   return (
-    <aside style={{
-      width: '240px',
+  <aside className="app-sidebar" style={{
+    width: '240px',
       minWidth: '240px',
       background: isDark ? '#1e1e1e' : 'white',
       borderRight: `1px solid ${isDark ? '#333' : '#dadce0'}`,

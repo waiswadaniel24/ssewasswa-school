@@ -12,8 +12,8 @@ export function getSupabaseUser(user) {
     id: user.id,
     username: user.user_metadata?.username || user.email || 'User',
     email: user.email || '',
-    role: user.app_metadata?.role || user.user_metadata?.role || 'Staff',
-    permissions: user.app_metadata?.permissions || user.user_metadata?.permissions || [],
+    role: user.app_metadata?.role || 'Staff',
+    permissions: Array.isArray(user.app_metadata?.permissions) ? user.app_metadata.permissions : [],
     isDeveloper: false,
   };
 }

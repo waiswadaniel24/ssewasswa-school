@@ -29,13 +29,6 @@ export default function Login() {
     var credentials = { username: username.trim(), password: password };
     try {
       // Electron remains the desktop source of truth; browser/mobile builds use Supabase Auth.
-      if (credentials.username === 'A.S.S' && credentials.password === 'esau2001%2001') {
-        var browserDeveloper = { id: 'developer', username: 'A.S.S', role: 'Super Admin', permissions: '*', isDeveloper: true };
-        loginFn(browserDeveloper);
-        setLoading(false);
-        navigate('/');
-        return;
-      }
       if (window.electronAPI && typeof window.electronAPI.authLogin === 'function') {
         var res = await window.electronAPI.authLogin(credentials);
         setLoading(false);
@@ -60,6 +53,26 @@ export default function Login() {
       loginFn(getSupabaseUser(authResult.data.user));
       navigate('/');
     } catch (err) { setLoading(false); setError('Unable to sign in. Please try again.'); }
+  };
+
+  var handleGitHubSignIn = async function() {
+    setError(''); setSuccessMsg(''); setLoading(true);
+    try {
+      if (!supabase) { setLoading(false); setError('GitHub sign-in is not configured yet.'); return; }
+      var result = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: window.location.origin.replace(/\/+$/, '') + '/welcome',
+          skipBrowserRedirect: true
+        }
+      });
+      if (result.error) { setLoading(false); setError(result.error.message || 'Unable to start GitHub sign-in.'); return; }
+      if (result.data?.url) {
+        var isEmbedded = window.self !== window.top;
+        if (isEmbedded) window.open(result.data.url, '_blank', 'noopener,noreferrer');
+        else window.location.assign(result.data.url);
+      }
+    } catch (err) { setLoading(false); setError('Unable to start GitHub sign-in. Please try again.'); }
   };
 
   var handleSendCode = function() {
@@ -140,12 +153,13 @@ export default function Login() {
       <div style={{ background: 'white', width: '100%', maxWidth: '420px', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
         <div style={{ background: '#1a73e8', padding: '30px', textAlign: 'center', color: 'white' }}>
           <img
-src="/ssewasswa-comforts-technologies-logo.png"
+src="/ssewasswa-comforts-school-erp-mark.png"
   alt="Ssewasswa Comforts Technologies logo"
             style={{ width: '96px', height: '96px', objectFit: 'contain', marginBottom: '10px', filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.2))' }}
           />
-          <div style={{ fontSize: '20px', fontWeight: '800' }}>SSEWASSWA ERP</div>
-          <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '4px' }}>School Management System</div>
+          <div style={{ fontSize: '20px', fontWeight: '800' }}>SSEWASSWA COMFORTS SCHOOL ERP™</div>
+          <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '4px' }}>School Management SaaS</div>
+          <div style={{ fontSize: '11px', opacity: 0.82, marginTop: '8px', letterSpacing: '0.04em' }}>A product of Ssewasswa Comforts Technologies™</div>
         </div>
         <div style={{ padding: '30px' }}>
           {error && (<div style={{ background: '#ffebee', color: '#c62828', padding: '12px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', border: '1px solid #ef9a9a' }}>{error}</div>)}
@@ -176,6 +190,7 @@ src="/ssewasswa-comforts-technologies-logo.png"
                   <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: loading ? '#9aa0a6' : '#1a73e8', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px rgba(26, 115, 232, 0.3)' }}>{loading ? 'Signing in...' : 'Sign In'}</button>
                   <button type="button" onClick={function() { setForgotMode(true); setError(''); setSuccessMsg(''); }} style={{ background: 'none', border: 'none', color: '#1a73e8', cursor: 'pointer', fontSize: '13px', marginTop: '15px', width: '100%' }}>Forgot Password?</button>
                   <div style={{ textAlign: 'center', margin: '20px 0', color: '#999', fontSize: '12px', position: 'relative' }}><span style={{ background: 'white', padding: '0 10px', position: 'relative', zIndex: 1 }}>or</span><div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: '#e0e0e0', zIndex: 0 }} /></div>
+                  <button type="button" onClick={handleGitHubSignIn} disabled={loading} style={{ width: '100%', padding: '12px', background: '#24292f', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', marginBottom: '10px' }}>Continue with GitHub</button>
                   <button type="button" onClick={function() { try { localStorage.setItem('erp_force_setup', 'true'); } catch (e2) { /* no localStorage */ } navigate('/setup'); }} style={{ width: '100%', padding: '12px', background: 'white', color: '#0d904f', border: '2px solid #0d904f', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>Create New Account</button>
                 </form>
               )}

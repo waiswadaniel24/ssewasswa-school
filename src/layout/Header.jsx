@@ -23,7 +23,7 @@ export default function Header(_ref) {
   var lang = (langCtx && langCtx.lang) ? langCtx.lang : 'en';
   var setLang = (langCtx && langCtx.setLang) ? langCtx.setLang : function () { /* no-op */ };
 
-  var [schoolName, setSchoolName] = useState('Loading...');
+  var [schoolName, setSchoolName] = useState('Ssewasswa Comforts School ERP™');
   var [netMode, setNetMode] = useState('Standalone');
   var mountedRef = useRef(true);
 
@@ -35,9 +35,10 @@ export default function Header(_ref) {
   useEffect(function () {
     if (!window.electronAPI || !window.electronAPI.queryDatabase) return;
 
-    window.electronAPI.queryDatabase(
-      "SELECT value FROM system_settings WHERE key = 'school_name'"
-    ).then(function (r) {
+    Promise.race([
+      window.electronAPI.queryDatabase("SELECT value FROM system_settings WHERE key = 'school_name'"),
+      new Promise(function (resolve) { setTimeout(function () { resolve({ success: false }); }, 2000); })
+    ]).then(function (r) {
       if (!mountedRef.current) return;
       if (r && r.success && r.data && r.data.length > 0 && r.data[0].value) {
         setSchoolName(r.data[0].value);
@@ -79,10 +80,11 @@ export default function Header(_ref) {
       {/* ─── Left: School name + selector ────────────── */}
       <div className="school-header-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
         <img
-          src="/ssewasswa-comforts-technologies-logo.png"
+          src="/ssewasswa-comforts-school-erp-mark.png"
           alt="Ssewasswa Comforts Technologies logo"
-          className="school-header-emblem"
-        />
+  className="school-header-emblem"
+          style={{ width: '38px', height: '38px', objectFit: 'contain', flex: '0 0 38px' }}
+  />
         <h2 style={{
           margin: 0,
           color: isDark ? '#8ab4f8' : '#1a73e8',
