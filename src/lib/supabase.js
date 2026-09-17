@@ -12,8 +12,11 @@ const DEVELOPER_GITHUB_USERNAME = 'waiswadaniel24';
 export function getSupabaseUser(user) {
   if (!user) return null;
   const githubIdentity = (user.identities || []).find((identity) => identity.provider === 'github');
-  const githubUsername = githubIdentity?.identity_data?.user_name || githubIdentity?.identity_data?.preferred_username;
-  const isDeveloper = user.email?.toLowerCase() === DEVELOPER_EMAIL || githubUsername === DEVELOPER_GITHUB_USERNAME;
+  const identityData = githubIdentity?.identity_data || {};
+  const metadata = user.user_metadata || {};
+  const githubUsername = identityData.user_name || identityData.preferred_username || metadata.user_name || metadata.preferred_username;
+  const isGitHubUser = githubIdentity?.provider === 'github' || metadata.provider === 'github' || metadata.providers?.includes?.('github');
+  const isDeveloper = user.email?.toLowerCase() === DEVELOPER_EMAIL || (isGitHubUser && githubUsername === DEVELOPER_GITHUB_USERNAME);
 
   return {
     id: user.id,

@@ -14,8 +14,8 @@ export default function ProductLanding() {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (user?.isDeveloper) navigate('/dev', { replace: true });
-  }, [navigate, user?.isDeveloper]);
+    if (user && user.isDeveloper) navigate('/dev', { replace: true });
+  }, [navigate, user]);
 
   const continueAction = user?.isDeveloper ? 'Continue to Developer Tools' : 'Set up your school';
 
