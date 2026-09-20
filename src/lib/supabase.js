@@ -1,10 +1,32 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { createClient as createNeonClient, SupabaseAuthAdapter } from '@neondatabase/neon-js';
 
+const backendPreference = (import.meta.env.VITE_BACKEND_PROVIDER || 'auto').toLowerCase();
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const neonUrl = import.meta.env.VITE_NEON_URL || import.meta.env.VITE_NEON_DATABASE_URL;
+const neonAuthUrl = import.meta.env.VITE_NEON_AUTH_URL;
+const neonDataApiUrl = import.meta.env.VITE_NEON_DATA_API_URL;
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey);
-export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseKey) : null;
+export const isNeonConfigured = Boolean(neonUrl || (neonAuthUrl && neonDataApiUrl));
+
+const supabaseClient = isSupabaseConfigured ? createSupabaseClient(supabaseUrl, supabaseKey) : null;
+const neonConfig = neonUrl || (isNeonConfigured ? { auth: { url: neonAuthUrl }, dataApi: { url: neonDataApiUrl } } : null);
+const neonClient = isNeonConfigured
+  ? createNeonClient(neonConfig, { auth: { adapter: SupabaseAuthAdapter() } })
+  : null;
+
+// Controlled active/passive selection: deployments can switch providers without code changes.
+// In auto mode, Supabase remains primary and Neon is used when Supabase variables are absent.
+const activeClient = backendPreference === 'neon'
+  ? (neonClient || supabaseClient)
+  : (supabaseClient || neonClient);
+
+export const activeBackend = activeClient === neonClient ? 'neon' : activeClient === supabaseClient ? 'supabase' : 'none';
+export const isBackendConfigured = Boolean(activeClient);
+// Keep the existing export name so current data helpers remain compatible with Neon.
+export const supabase = activeClient;
 
 const DEVELOPER_SUPABASE_USER_ID = '8693c628-8688-410c-816a-c6365bc93337';
 const DEVELOPER_GITHUB_ID = '279316239';
