@@ -48,13 +48,20 @@ export function AuthProvider({ children }) {
       if (data.session?.user) login(getSupabaseUser(data.session.user));
       setAuthReady(true);
     }).catch(() => active && setAuthReady(true));
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!active) return;
-      if (session?.user) login(getSupabaseUser(session.user));
-      else setUser(null);
-      setAuthReady(true);
-    });
-    return () => { active = false; listener.subscription.unsubscribe(); };
+    const authStateChange = supabase.auth.onAuthStateChange;
+    const listener = typeof authStateChange === 'function'
+      ? authStateChange.call(supabase.auth, (_event, session) => {
+          if (!active) return;
+          if (session?.user) login(getSupabaseUser(session.user));
+          else setUser(null);
+          setAuthReady(true);
+        })
+      : null;
+    return () => {
+      active = false;
+      listener?.data?.subscription?.unsubscribe?.();
+      listener?.subscription?.unsubscribe?.();
+    };
   }, []);
 
   useEffect(() => {
