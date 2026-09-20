@@ -1,126 +1,150 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
-import { getSupabaseUser, isSupabaseConfigured, supabase } from '../lib/supabase.js';
-
-const inputStyle = { width: '100%', padding: '12px 14px', border: '1px solid #d7dee8', borderRadius: 10, fontSize: 14, boxSizing: 'border-box' };
-const buttonStyle = { width: '100%', padding: 13, border: 0, borderRadius: 10, color: '#fff', fontWeight: 700, fontSize: 15, cursor: 'pointer' };
-
 export default function Login() {
-  const navigate = useNavigate();
-  const { login } = useAuth();
-  const [mode, setMode] = useState('signin');
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('Teacher');
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
-
-  useEffect(() => {
-    if (!supabase) return undefined;
-    const { data: listener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setMode('recovery');
-        setMessage({ type: 'success', text: 'Choose a new password below. This will replace your old password.' });
-      }
-    });
-    return () => listener.subscription.unsubscribe();
-  }, []);
-
-  const submit = async (event) => {
-    event.preventDefault();
-    setMessage({ type: '', text: '' });
-    if (!supabase || !isSupabaseConfigured) {
-      setMessage({ type: 'error', text: 'Authentication is not configured. Add the Supabase URL and publishable key.' });
-      return;
-    }
-    const normalizedEmail = email.trim().toLowerCase();
-    const normalizedUsername = username.trim();
-    if (mode === 'signup' && normalizedUsername.length < 2) {
-      setMessage({ type: 'error', text: 'Enter a username with at least 2 characters.' });
-      return;
-    }
-    if ((mode === 'signup' || mode === 'recovery') && password.length < 8) {
-      setMessage({ type: 'error', text: 'Use a password with at least 8 characters.' });
-      return;
-    }
-    setLoading(true);
-    try {
-      if (mode === 'recovery') {
-        const result = await supabase.auth.updateUser({ password });
-        if (result.error) throw result.error;
-        setPassword('');
-        setMode('signin');
-        setMessage({ type: 'success', text: 'Your password was changed. You can now sign in with the new password.' });
-      } else if (mode === 'signup') {
-        const result = await supabase.auth.signUp({
-          email: normalizedEmail, password,
-          options: { emailRedirectTo: import.meta.env.VITE_DEV_SUPABASE_REDIRECT_URL || import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`, data: { username: normalizedUsername, role } },
-        });
-        if (result.error) throw result.error;
-        if (result.data.session && result.data.user) { login(getSupabaseUser(result.data.user)); navigate('/'); return; }
-        setMessage({ type: 'success', text: 'Account created. Check your email to confirm it, then sign in.' });
-        setMode('signin');
-      } else {
-        const result = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
-        if (result.error || !result.data.user) throw result.error || new Error('Invalid credentials');
-        login(getSupabaseUser(result.data.user));
-        navigate('/');
-      }
-    } catch (error) {
-      const text = String(error?.message || '').toLowerCase();
-      let friendly = mode === 'signup' ? 'Unable to create the account. Check your details and try again.' : 'Invalid email or password.';
-      if (/confirm|not confirmed/.test(text)) friendly = 'Please confirm your email before signing in.';
-      if (/rate limit|too many|429/.test(text)) friendly = 'Too many attempts. Wait a moment and try again.';
-      if (/already registered|already exists/.test(text)) friendly = 'This email is already registered. Sign in instead.';
-      setMessage({ type: 'error', text: friendly });
-    } finally { setLoading(false); }
-  };
-
-  const requestPasswordReset = async () => {
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail) {
-      setMessage({ type: 'error', text: 'Enter your email address first, then select Forgot password.' });
-      return;
-    }
-    setLoading(true);
-    setMessage({ type: '', text: '' });
-    try {
-      const result = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo: `${window.location.origin}/login`,
-      });
-      if (result.error) throw result.error;
-      setMessage({ type: 'success', text: 'Password reset email sent. Open the email, select Reset password, then choose a new password here. Check spam or junk if you do not see it.' });
-    } catch (error) {
-      const text = String(error?.message || '').toLowerCase();
-      setMessage({ type: 'error', text: /rate limit|too many|429/.test(text) ? 'Too many reset requests. Wait a moment and try again.' : 'We could not send the reset email. Check the email address and try again.' });
-    } finally { setLoading(false); }
-  };
-
-  const github = async () => {
-    if (!supabase) return setMessage({ type: 'error', text: 'GitHub sign-in is not configured.' });
-    setLoading(true);
-    const result = await supabase.auth.signInWithOAuth({ provider: 'github', options: { redirectTo: import.meta.env.VITE_DEV_SUPABASE_REDIRECT_URL || import.meta.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback` } });
-    if (result.error) { setLoading(false); setMessage({ type: 'error', text: 'Unable to start GitHub sign-in.' }); }
-  };
-
-  return <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, background: 'linear-gradient(135deg,#eef4ff,#f8fafc)', fontFamily: 'Arial,sans-serif' }}>
-    <section style={{ width: '100%', maxWidth: 430, background: '#fff', borderRadius: 18, boxShadow: '0 18px 55px rgba(35,55,90,.14)', overflow: 'hidden' }}>
-      <header style={{ padding: '30px 28px', textAlign: 'center', color: '#fff', background: '#155eef' }}><img src="/ssewasswa-comforts-school-erp-mark.png" alt="Ssewasswa Comforts School ERP" style={{ width: 74, height: 74, objectFit: 'contain' }} /><h1 style={{ fontSize: 20, margin: '12px 0 5px' }}>SSEWASSWA COMFORTS SCHOOL ERP</h1><p style={{ margin: 0, opacity: .85, fontSize: 13 }}>Secure school management access</p></header>
-      <div style={{ padding: 28 }}>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}><button type="button" onClick={() => { setMode('signin'); setMessage({ type: '', text: '' }); }} style={{ ...buttonStyle, background: mode === 'signin' ? '#155eef' : '#eef2f7', color: mode === 'signin' ? '#fff' : '#526070' }}>Sign in</button><button type="button" onClick={() => { setMode('signup'); setMessage({ type: '', text: '' }); }} style={{ ...buttonStyle, background: mode === 'signup' ? '#155eef' : '#eef2f7', color: mode === 'signup' ? '#fff' : '#526070' }}>Create account</button></div>
-        {message.text && <div role="alert" style={{ padding: 12, borderRadius: 9, marginBottom: 18, color: message.type === 'success' ? '#126b3a' : '#b42318', background: message.type === 'success' ? '#ecfdf3' : '#fff1f0', fontSize: 13 }}>{message.text}</div>}
-        <form onSubmit={submit}>
-          {mode === 'signup' && <><label style={{ display: 'block', fontSize: 13, fontWeight: 700, marginBottom: 6 }}>Username<input style={{ ...inputStyle, marginTop: 6 }} value={username} onChange={e => setUsername(e.target.value)} required /></label><label style={{ display: 'block', fontSize: 13, fontWeight: 700, margin: '15px 0 6px' }}>Role<select style={{ ...inputStyle, marginTop: 6 }} value={role} onChange={e => setRole(e.target.value)}><option>Teacher</option><option>Administrator</option><option>Accountant</option><option>Staff</option></select></label></>}
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 700, margin: '15px 0 6px' }}>Email address<input type="email" style={{ ...inputStyle, marginTop: 6 }} value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" required /></label>
-          {mode !== 'recovery' && <label style={{ display: 'block', fontSize: 13, fontWeight: 700, margin: '15px 0 6px' }}>Password<input type="password" style={{ ...inputStyle, marginTop: 6 }} value={password} onChange={e => setPassword(e.target.value)} autoComplete={mode === 'signup' ? 'new-password' : mode === 'recovery' ? 'new-password' : 'current-password'} required /></label>}
-          {mode === 'recovery' && <label style={{ display: 'block', fontSize: 13, fontWeight: 700, margin: '15px 0 6px' }}>New password<input type="password" style={{ ...inputStyle, marginTop: 6 }} value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" required /></label>}
-          <button type="submit" disabled={loading} style={{ ...buttonStyle, marginTop: 22, background: loading ? '#9ab4e8' : '#155eef' }}>{loading ? 'Please wait...' : mode === 'signup' ? 'Create account' : mode === 'recovery' ? 'Save new password' : 'Sign in'}</button>
-        </form>
-        {mode === 'signin' && <><button type="button" onClick={requestPasswordReset} disabled={loading} style={{ width: '100%', border: 0, background: 'transparent', color: '#155eef', cursor: 'pointer', fontWeight: 700, fontSize: 13, marginTop: 14 }}>Forgot password?</button><div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#8793a3', fontSize: 12, margin: '22px 0' }}><hr style={{ flex: 1, border: 0, borderTop: '1px solid #e5e9ef' }} />OR<hr style={{ flex: 1, border: 0, borderTop: '1px solid #e5e9ef' }} /></div><button type="button" onClick={github} disabled={loading} style={{ ...buttonStyle, background: '#24292f' }}>Continue with GitHub</button></>}
-        {mode === 'recovery' && <button type="button" onClick={() => {         setMode('signin'); setMessage({ type: '', text: '' }); }} style={{ width: '100%', border: 0, background: 'transparent', color: '#526070', cursor: 'pointer', fontWeight: 700, fontSize: 13, marginTop: 14 }}>Back to sign in</button>}
-      </div>
-    </section>
-  </main>;
+var navigate = useNavigate();
+var auth = useAuth();
+var loginFn = (auth && auth.login) ? auth.login : function() { /* no-op */ };
+var [tab, setTab] = useState('signin');
+var [username, setUsername] = useState('');
+var [password, setPassword] = useState('');
+var [email, setEmail] = useState('');
+var [code, setCode] = useState('');
+var [role, setRole] = useState('Teacher');
+var [showPass, setShowPass] = useState(false);
+var [loading, setLoading] = useState(false);
+var [error, setError] = useState('');
+var [successMsg, setSuccessMsg] = useState('');
+var [sentCode, setSentCode] = useState('');
+var [forgotMode, setForgotMode] = useState(false);
+var [secQuestion, setSecQuestion] = useState('');
+var [recUserId, setRecUserId] = useState(null);
+var [recAnswer, setRecAnswer] = useState('');
+var [newPass, setNewPass] = useState('');
+var handleSignIn = async function(e) {
+e.preventDefault(); setError(''); setSuccessMsg(''); setLoading(true);
+try {
+var res = await window.electronAPI.authLogin({ username: username, password: password });
+setLoading(false);
+if (res && res.success && res.user) { loginFn(res.user); navigate('/'); }
+else { setError((res && res.error) || 'Invalid credentials'); }
+} catch (err) { setLoading(false); setError('Error: ' + ((err && err.message) ? err.message : 'Unknown')); }
+};
+var handleSendCode = function() {
+if (!email || email.indexOf('@') < 0) { setError('Enter a valid email first'); return; }
+var c = String(Math.floor(100000 + Math.random() * 900000));
+setSentCode(c); setError(''); setSuccessMsg('Confirmation code sent: ' + c + ' (check your email)');
+};
+var handleRegister = async function(e) {
+e.preventDefault(); setError(''); setSuccessMsg('');
+if (code !== sentCode) { setError('Invalid confirmation code'); return; }
+if (password.length < 8) { setError('Password must be 8+ chars'); return; }
+if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) { setError('Password needs letters AND numbers'); return; }
+setLoading(true);
+try {
+var res = await window.electronAPI.addUser({ username: username, password: password, role: role });
+setLoading(false);
+if (res && res.success) { setSuccessMsg('Account created! Switch to Sign In tab.'); setTab('signin'); }
+else { setError((res && res.error) || 'Registration failed'); }
+} catch (err) { setLoading(false); setError('Error: ' + ((err && err.message) ? err.message : 'Unknown')); }
+};
+var handleStudentLogin = async function(e) {
+e.preventDefault(); setError(''); setSuccessMsg(''); setLoading(true);
+try {
+var res = await window.electronAPI.queryDatabase("SELECT id, first_name, last_name, paycode FROM students WHERE paycode = ? AND status = 'Active'", [username]);
+setLoading(false);
+if (res && res.success && res.data && res.data.length > 0) {
+var s = res.data[0];
+loginFn({ id: s.id, username: ((s.first_name || '') + ' ' + (s.last_name || '')).trim(), role: 'Student' });
+navigate('/');
+} else { setError('Invalid Paycode'); }
+} catch (err) { setLoading(false); setError('Error: ' + ((err && err.message) ? err.message : 'Unknown')); }
+};
+var handleGetQuestion = async function(e) {
+e.preventDefault(); e.stopPropagation(); setError('');
+if (!username.trim()) { setError('Enter username first'); return; }
+try {
+var res = await window.electronAPI.authGetSecurityQuestion(username);
+if (res && res.success && res.question) { setSecQuestion(res.question); setRecUserId(res.userId); }
+else { setError((res && res.error) || 'User not found'); }
+} catch (err) { setError('Error: ' + ((err && err.message) ? err.message : 'Unknown')); }
+};
+var handleResetPass = async function(e) {
+e.preventDefault(); e.stopPropagation(); setError('');
+if (!recAnswer.trim()) { setError('Enter your answer'); return; }
+if (newPass.length < 8) { setError('Password must be 8+ chars'); return; }
+try {
+var res = await window.electronAPI.authResetPasswordViaQuestion({ userId: recUserId, answer: recAnswer, newPassword: newPass });
+if (res && res.success) { setSuccessMsg('Password reset! Switch to Sign In.'); setForgotMode(false); setSecQuestion(''); setRecUserId(null); setRecAnswer(''); setNewPass(''); setPassword(''); }
+else { setError((res && res.error) || 'Reset failed'); }
+} catch (err) { setError('Error: ' + ((err && err.message) ? err.message : 'Unknown')); }
+};
+var ls = { display: 'block', fontSize: '13px', fontWeight: '600', color: '#444', marginBottom: '6px' };
+var is = { width: '100%', padding: '12px', border: '1px solid #dadce0', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box', outline: 'none' };
+return (
+<div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: "'Segoe UI', sans-serif", padding: '20px' }}>
+<div style={{ background: 'white', width: '100%', maxWidth: '420px', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+<div style={{ background: '#1a73e8', padding: '30px', textAlign: 'center', color: 'white' }}>
+<svg width="90" height="100" viewBox="0 0 120 140" fill="none" style={{ marginBottom: '10px', filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.2))' }}>
+<path d="M60 10 L100 30 V75 C100 105 60 130 60 130 C60 130 20 105 20 75 V30 L60 10Z" fill="#ffffff" stroke="#ffffff" strokeWidth="3" />
+<path d="M60 20 L90 36 V73 C90 97 60 118 60 118 C60 118 30 97 30 73 V36 L60 20Z" fill="#1a73e8" opacity="0.9" />
+<circle cx="60" cy="58" r="14" fill="#FFC107" stroke="#FFA000" strokeWidth="1.5" />
+<path d="M46 66 L46 88 C46 88 52 85 60 88 C68 85 74 88 74 88 L74 66" fill="white" stroke="#0d47a1" strokeWidth="1.5" strokeLinejoin="round" />
+</svg>
+<div style={{ fontSize: '20px', fontWeight: '800' }}>SSEWASSWA ERP</div>
+<div style={{ fontSize: '12px', opacity: 0.9, marginTop: '4px' }}>School Management System</div>
+</div>
+<div style={{ padding: '30px' }}>
+{error && (<div style={{ background: '#ffebee', color: '#c62828', padding: '12px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', border: '1px solid #ef9a9a' }}>{error}</div>)}
+{successMsg && !error && (<div style={{ background: '#e8f5e9', color: '#2e7d32', padding: '12px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', border: '1px solid #a5d6a7' }}>{successMsg}</div>)}
+{forgotMode ? (
+<div>
+<h2 style={{ margin: '0 0 20px 0', color: '#333', fontSize: '20px' }}>Reset Password</h2>
+<form onSubmit={secQuestion ? handleResetPass : handleGetQuestion}>
+<div style={{ marginBottom: '15px' }}><label style={ls}>Username or Email</label><input style={is} type="text" value={username} onChange={function(e) { setUsername(e.target.value); }} disabled={!!secQuestion} required /></div>
+{secQuestion && (<div><div style={{ background: '#f1f3f4', padding: '12px', borderRadius: '8px', marginBottom: '15px', fontSize: '14px' }}>{secQuestion}</div><div style={{ marginBottom: '15px' }}><label style={ls}>Your Answer</label><input style={is} type="text" value={recAnswer} onChange={function(e) { setRecAnswer(e.target.value); }} required /></div><div style={{ marginBottom: '15px' }}><label style={ls}>New Password</label><input style={is} type="password" value={newPass} onChange={function(e) { setNewPass(e.target.value); }} placeholder="Min 8 chars, letters + numbers" required /></div></div>)}
+<button type="submit" style={{ width: '100%', padding: '12px', background: '#1a73e8', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>{secQuestion ? 'Reset Password' : 'Get Security Question'}</button>
+<button type="button" onClick={function() { setForgotMode(false); setSecQuestion(''); setError(''); setSuccessMsg(''); }} style={{ background: 'none', border: 'none', color: '#5f6368', cursor: 'pointer', fontSize: '13px', marginTop: '15px', width: '100%' }}>Back to Login</button>
+</form>
+</div>
+) : (
+<div>
+<div style={{ display: 'flex', borderBottom: '2px solid #e0e0e0', marginBottom: '20px' }}>
+<button onClick={function() { setTab('signin'); setError(''); setSuccessMsg(''); }} style={{ flex: 1, padding: '10px', border: 'none', background: tab === 'signin' ? '#1a73e8' : 'transparent', color: tab === 'signin' ? 'white' : '#666', cursor: 'pointer', fontWeight: '600', borderBottom: tab === 'signin' ? '2px solid #1a73e8' : '2px solid transparent' }}>Sign In</button>
+<button onClick={function() { setTab('register'); setError(''); setSuccessMsg(''); }} style={{ flex: 1, padding: '10px', border: 'none', background: tab === 'register' ? '#1a73e8' : 'transparent', color: tab === 'register' ? 'white' : '#666', cursor: 'pointer', fontWeight: '600', borderBottom: tab === 'register' ? '2px solid #1a73e8' : '2px solid transparent' }}>Register</button>
+<button onClick={function() { setTab('student'); setError(''); setSuccessMsg(''); }} style={{ flex: 1, padding: '10px', border: 'none', background: tab === 'student' ? '#0d904f' : 'transparent', color: tab === 'student' ? 'white' : '#666', cursor: 'pointer', fontWeight: '600', borderBottom: tab === 'student' ? '2px solid #0d904f' : '2px solid transparent' }}>Student</button>
+</div>
+{tab === 'signin' && (
+<form onSubmit={handleSignIn}>
+<div style={{ marginBottom: '15px' }}><label style={ls}>Username or Email</label><input style={is} type="text" value={username} onChange={function(e) { setUsername(e.target.value); }} placeholder="Enter username or email" required autoFocus /></div>
+<div style={{ marginBottom: '15px' }}><label style={ls}>Password</label><div style={{ position: 'relative' }}><input style={{ ...is, paddingRight: '60px' }} type={showPass ? 'text' : 'password'} value={password} onChange={function(e) { setPassword(e.target.value); }} placeholder="Enter password" required /><button type="button" onClick={function() { setShowPass(!showPass); }} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#1a73e8', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>{showPass ? 'Hide' : 'Show'}</button></div></div>
+<button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: loading ? '#9aa0a6' : '#1a73e8', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', boxShadow: '0 4px 6px rgba(26, 115, 232, 0.3)' }}>{loading ? 'Signing in...' : 'Sign In'}</button>
+<button type="button" onClick={function() { setForgotMode(true); setError(''); setSuccessMsg(''); }} style={{ background: 'none', border: 'none', color: '#1a73e8', cursor: 'pointer', fontSize: '13px', marginTop: '15px', width: '100%' }}>Forgot Password?</button>
+<div style={{ textAlign: 'center', margin: '20px 0', color: '#999', fontSize: '12px', position: 'relative' }}><span style={{ background: 'white', padding: '0 10px', position: 'relative', zIndex: 1 }}>or</span><div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: '#e0e0e0', zIndex: 0 }} /></div>
+<button type="button" onClick={function() { try { localStorage.setItem('erp_force_setup', 'true'); } catch (e2) { /* no localStorage */ } navigate('/setup'); }} style={{ width: '100%', padding: '12px', background: 'white', color: '#0d904f', border: '2px solid #0d904f', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>Create New Account</button>
+</form>
+)}
+{tab === 'register' && (
+<form onSubmit={handleRegister}>
+<div style={{ marginBottom: '15px' }}><label style={ls}>Email Address</label><div style={{ display: 'flex', gap: '5px' }}><input style={is} type="email" value={email} onChange={function(e) { setEmail(e.target.value); }} placeholder="your@email.com" required /><button type="button" onClick={handleSendCode} style={{ width: '120px', padding: '0 10px', background: '#e8f0fe', color: '#1a73e8', border: '1px solid #1a73e8', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>Send Code</button></div></div>
+<div style={{ marginBottom: '15px' }}><label style={ls}>Confirmation Code</label><input style={is} type="text" value={code} onChange={function(e) { setCode(e.target.value); }} placeholder="6-digit code" required /></div>
+<div style={{ marginBottom: '15px' }}><label style={ls}>Username</label><input style={is} type="text" value={username} onChange={function(e) { setUsername(e.target.value); }} required /></div>
+<div style={{ marginBottom: '15px' }}><label style={ls}>Password</label><input style={is} type="password" value={password} onChange={function(e) { setPassword(e.target.value); }} placeholder="Min 8 chars, letters + numbers" required /></div>
+<div style={{ marginBottom: '15px' }}><label style={ls}>Role</label><select style={is} value={role} onChange={function(e) { setRole(e.target.value); }}><option>Teacher</option><option>Admin</option><option>Bursar</option><option>Staff</option></select></div>
+<button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: loading ? '#9aa0a6' : '#1a73e8', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer' }}>{loading ? 'Creating...' : 'Create Account'}</button>
+</form>
+)}
+{tab === 'student' && (
+<form onSubmit={handleStudentLogin}>
+<div style={{ background: '#e8f5e9', padding: '15px', borderRadius: '8px', marginBottom: '15px', fontSize: '13px', color: '#0d904f' }}>Enter your unique Paycode to view your fees and payment status.</div>
+<div style={{ marginBottom: '15px' }}><label style={ls}>Student Paycode</label><input style={is} type="text" value={username} onChange={function(e) { setUsername(e.target.value); }} placeholder="e.g. P5X9A1" required /></div>
+<button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: loading ? '#9aa0a6' : '#0d904f', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer' }}>{loading ? 'Checking...' : 'View Portal'}</button>
+</form>
+)}
+</div>
+)}
+</div>
+</div>
+</div>
+);
 }
