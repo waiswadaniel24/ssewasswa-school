@@ -6,7 +6,7 @@ import { createBrowserRouter, RouterProvider, Navigate, useNavigate } from 'reac
 import { useAuth } from '../context/AuthContext.jsx';
 import { canAccess } from '../config/accessControl.js';
 import { useLocation } from 'react-router-dom';
-
+import ResetPassword from './pages/ResetPassword.jsx';
 // Non-lazy imports (needed immediately before auth is ready)
 import SystemSetup from '../pages/SystemSetup.jsx';
 import Login from '../pages/Login.jsx';
@@ -359,7 +359,7 @@ export default function AppRouter({ isInitialized, isLocked }) {
                 // Administration
                 { path: 'users', element: <ProtectedRoute isLocked={isLocked}><Users /></ProtectedRoute> },
                 { path: 'settings', element: <ProtectedRoute isLocked={isLocked}><Settings /></ProtectedRoute> },
- { path: 'network-setup', element: <ProtectedRoute isLocked={isLocked}><NetworkSetup /></ProtectedRoute> },
+                { path: 'network-setup', element: <ProtectedRoute isLocked={isLocked}><NetworkSetup /></ProtectedRoute> },
                 { path: 'manuals', element: <ProtectedRoute isLocked={isLocked}><Manuals /></ProtectedRoute> },
                 { path: 'school-management', element: <ProtectedRoute isLocked={isLocked}><SchoolManagement /></ProtectedRoute> },
                 { path: 'about', element: <ProtectedRoute isLocked={isLocked}><About /></ProtectedRoute> },
