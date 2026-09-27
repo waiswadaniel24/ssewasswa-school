@@ -1,0 +1,14 @@
+# Ssewasswa School provider configuration (LOCAL — never committed)
+VITE_BACKEND_PROVIDER=auto
+
+# Supabase (primary)
+VITE_SUPABASE_URL=https://cdssgsdxpzaiobwtvhle.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_JVkIsC1GvV9vv-lfkL9N8w_9rrEihiJ
+
+# Neon fallback (leave blank for now)
+VITE_NEON_URL=
+VITE_NEON_AUTH_URL=
+VITE_NEON_DATA_API_URL=
+
+# Cloudflare R2 (leave blank for now)
+VITE_CLOUDFLARE_STORAGE_URL=
