@@ -23,7 +23,7 @@ const activeClient = backendPreference === 'neon'
   ? (neonClient || supabaseClient)
   : (supabaseClient || neonClient);
 
-export const activeBackend = activeClient === neonClient ? 'neon' : activeClient === supabaseClient ? 'supabase' : 'none';
+export const activeBackend = (activeClient && activeClient === neonClient) ? 'neon' : (activeClient && activeClient === supabaseClient) ? 'supabase' : 'none';
 export const isBackendConfigured = Boolean(activeClient);
 // Keep the existing export name so current data helpers remain compatible with Neon.
 export const supabase = activeClient;

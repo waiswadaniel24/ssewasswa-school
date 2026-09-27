@@ -9,8 +9,8 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
 // --- CONFIGURE YOUR GMAIL HERE ---
-const DEV_EMAIL = 'ssewasswacomfortzone@gmail.com'; // Your Gmail
-const DEV_PASS = 'your_gmail_app_password';         // Your Gmail App Password
+const DEV_EMAIL = 'waiswadaniel24@gmail.com'; // Your Gmail
+const DEV_PASS = 'mhlo ykfj gmyt zhtl';         // Your Gmail App Password
 // ---------------------------------
 
 async function main() {
@@ -22,11 +22,10 @@ async function main() {
         console.log('Usage: node generate-key.js <hwid> <PREM|ORD> <email>');
         process.exit(1);
     }
-
-    if (tier !== 'PREM' && tier !== 'ORD') {
-        console.log('Tier must be PREM or ORD');
-        process.exit(1);
-    }
+if (tier !== 'PREM' && tier !== 'ORD' && tier !== 'DEV') {
+    console.log('Tier must be PREM, ORD, or DEV');
+    process.exit(1);
+}
 
     // Generate Key
     const hwidHash = crypto.createHash('sha256').update(hwid).digest('hex').substring(0, 16);

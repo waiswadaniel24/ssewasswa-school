@@ -554,13 +554,6 @@ ipcMain.handle('emisCompileReport', async (e, yearId, term) => {
   } catch (err) { return { success: false, error: err.message }; }
 });
 
-ipcMain.handle('getLicenseTier', async () => {
-  try {
-    var r = db.exec('SELECT value FROM system_settings WHERE key = "license_tier"');
-    if (r.length > 0 && r[0].values.length > 0) return { success: true, tier: r[0].values[0][0] };
-    return { success: true, tier: 'none' };
-  } catch (e) { return { success: true, tier: 'none' }; }
-});
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
@@ -631,21 +624,46 @@ ipcMain.handle('activateLicense', async (e, d) => {
     }
 });
 
+// ═══ MASTER KEYS (developer + beta testers) — not HWID-bound ═══
+const MASTER_KEYS = {
+    'SSEWASSWA-DEV-MASTER-0000-0000-DEVE1OPER4EVER': { tier: 'developer', expires: '2099-12-31', note: 'Developer master - never expires' },
+    'SSEWASSWA-PREM-BETA-0001-0001-BE1ATESTER4EVER1': { tier: 'premium', expires: '2027-12-31', note: 'Beta tester 1 - 1 year Premium' },
+    'SSEWASSWA-ORD-BETA-0002-0002-BE2ATESTER4EVER2': { tier: 'ordinary', expires: '2027-12-31', note: 'Beta tester 2 - 1 year Ordinary' }
+};
+
 ipcMain.handle('validateLicenseKey', async (e, licenseData) => {
     try {
         if (!licenseData || !licenseData.licenseKey) return { valid: false, error: 'No license key provided' };
-        var hwid = generateHWID();
-        var key = licenseData.licenseKey.trim().toUpperCase();
-        var parts = key.split('-');
-        if (parts.length < 5 || parts[0] !== 'SSEWASSWA') return { valid: false, error: 'Invalid license format' };
+        const hwid = generateHWID();
+        const key = licenseData.licenseKey.trim().toUpperCase();
 
-        var tier = '';
+        // ─── STEP 1: Check master keys first (no HWID binding) ───
+        if (MASTER_KEYS[key]) {
+            const master = MASTER_KEYS[key];
+            const expiry = new Date(master.expires);
+            const now = new Date();
+            if (expiry < now) return { valid: false, error: 'Master key expired' };
+
+            const tier = master.tier; // 'developer', 'premium', or 'ordinary'
+            db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_key', ?)", [key]);
+            db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_hwid', ?)", [hwid]);
+            db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_tier', ?)", [tier]);
+            saveDb();
+            return { valid: true, tier: tier, message: 'Master key activated: ' + master.note };
+        }
+
+        // ─── STEP 2: Check HWID-bound customer keys ───
+        const parts = key.split('-');
+        if (parts.length < 5 || parts[0] !== 'SSEWASSWA') return { valid: false, error: 'Invalid license format (must start with SSEWASSWA-...)' };
+
+        let tier = '';
         if (parts[1] === 'PREM') tier = 'premium';
         else if (parts[1] === 'ORD') tier = 'ordinary';
-        else return { valid: false, error: 'Invalid license tier' };
+        else if (parts[1] === 'DEV') tier = 'developer';
+        else return { valid: false, error: 'Invalid license tier (must be PREM, ORD, or DEV)' };
 
-        var licHwidHash = parts[4].substring(0, 16);
-        var curHwidHash = crypto.createHash('sha256').update(hwid).digest('hex').substring(0, 16);
+        const licHwidHash = parts[4].substring(0, 16);
+        const curHwidHash = crypto.createHash('sha256').update(hwid).digest('hex').substring(0, 16);
         if (licHwidHash !== curHwidHash) return { valid: false, error: 'License not bound to this computer' };
 
         db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_key', ?)", [key]);
@@ -653,22 +671,31 @@ ipcMain.handle('validateLicenseKey', async (e, licenseData) => {
         db.run("INSERT OR REPLACE INTO system_settings (key, value) VALUES ('license_tier', ?)", [tier]);
         saveDb();
         return { valid: true, tier: tier, message: 'License activated successfully' };
-    } catch (err) { return { valid: false, error: err.message }; }
+    } catch (err) {
+        return { valid: false, error: err.message };
+    }
 });
 
-ipcMain.handle('generateLicenseForHwid', async (e, hwid) => {
+// Generate a HWID-bound key for a specific customer
+// Usage from renderer: window.electronAPI.generateLicenseForHwid(hwid, tier)
+// OR from CLI: node generate-key.js <hwid> <PREM|ORD> <email>
+ipcMain.handle('generateLicenseForHwid', async (e, hwid, tierCode) => {
     try {
         const targetHwid = hwid || generateHWID();
         const hwidHash = crypto.createHash('sha256').update(targetHwid).digest('hex').substring(0, 16);
+        const tier = (tierCode || 'ORD').toUpperCase();
+        if (tier !== 'PREM' && tier !== 'ORD' && tier !== 'DEV') {
+            return { success: false, error: 'Tier must be PREM, ORD, or DEV' };
+        }
         const seg1 = crypto.randomBytes(2).toString('hex').toUpperCase();
         const seg2 = crypto.randomBytes(2).toString('hex').toUpperCase();
-        const seg3 = crypto.randomBytes(2).toString('hex').toUpperCase();
-        const licenseKey = `SSEWASSWA-${seg1}-${seg2}-${seg3}-${hwidHash}${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
+        const licenseKey = `SSEWASSWA-${tier}-${seg1}-${seg2}-${hwidHash}`;
         return { success: true, licenseKey: licenseKey, hwid: targetHwid };
     } catch (err) {
         return { success: false, error: err.message };
     }
 });
+
 
 // ─── DATABASE QUERY (generic) ──────────────────────────────
 

@@ -6,12 +6,36 @@ import { createBrowserRouter, RouterProvider, Navigate, useNavigate } from 'reac
 import { useAuth } from '../context/AuthContext.jsx';
 import { canAccess } from '../config/accessControl.js';
 import { useLocation } from 'react-router-dom';
-import ResetPassword from './pages/ResetPassword.jsx';
+
 // Non-lazy imports (needed immediately before auth is ready)
 import SystemSetup from '../pages/SystemSetup.jsx';
 import Login from '../pages/Login.jsx';
 import Activation from '../pages/Activation.jsx';
 import ProductLanding from '../pages/ProductLanding.jsx';
+import SchoolSignup from '../pages/SchoolSignup.jsx';
+import ResetPassword from '../pages/ResetPassword.jsx';
+// ─── Loading fallback (defined FIRST so AuthCallback can use it) ──
+const LoadingFallback = () => (
+    <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '300px',
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+    }}>
+        <div style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid #e0e0e0',
+            borderTopColor: '#1a73e8',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite'
+        }} />
+        <p style={{ marginTop: '12px', color: '#5f6368', fontSize: '14px' }}>Loading module...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+);
 
 function AuthCallback() {
     const { user, authReady } = useAuth();
@@ -106,29 +130,6 @@ const Terms = React.lazy(() => import('../pages/Terms.jsx'));
 const Copyright = React.lazy(() => import('../pages/Copyright.jsx'));
 const SchoolManagement = React.lazy(() => import('../pages/SchoolManagement.jsx'));
 const DevDashboard = React.lazy(() => import('../pages/DevDashboard.jsx'));
-
-// ─── Loading fallback (uses inline styles, NOT Tailwind) ──
-const LoadingFallback = () => (
-    <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '300px',
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-    }}>
-        <div style={{
-            width: '40px',
-            height: '40px',
-            border: '4px solid #e0e0e0',
-            borderTopColor: '#1a73e8',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite'
-        }} />
-        <p style={{ marginTop: '12px', color: '#5f6368', fontSize: '14px' }}>Loading module...</p>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </div>
-);
 
 // ─── Error fallback for failed lazy imports ─────────────────
 const ErrorFallback = ({ error, resetError }) => (
@@ -270,13 +271,19 @@ export default function AppRouter({ isInitialized, isLocked }) {
         },
         {
             path: '/login',
-            // Existing users must always be able to reach sign-in, including
-            // browser/mobile deployments where the local Electron status API is unavailable.
             element: <PublicRoute><Login /></PublicRoute>
         },
         {
             path: '/activation',
             element: <PublicRoute><Activation /></PublicRoute>
+        },
+        {
+    path: '/school-signup',
+    element: <PublicRoute><SchoolSignup /></PublicRoute>
+},
+        {
+            path: '/reset-password',
+            element: <PublicRoute><ResetPassword /></PublicRoute>
         },
 
         // ─── Protected routes (auth + lock required) ──────
@@ -380,9 +387,3 @@ export default function AppRouter({ isInitialized, isLocked }) {
 
     return <RouterProvider router={router} />;
 }
-
-
-
-
-
-

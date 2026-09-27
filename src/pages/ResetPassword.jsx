@@ -30,7 +30,7 @@ export default function ResetPassword() {
                 {!done && (
                     <form onSubmit={handleUpdate}>
                         <div style={{ marginBottom: '15px' }}><label style={{ display: 'block', fontSize: '13px', fontWeight: '600', color: '#444', marginBottom: '6px' }}>New Password</label><input style={{ width: '100%', padding: '12px', border: '1px solid #dadce0', borderRadius: '8px', fontSize: '14px', boxSizing: 'border-box' }} type="password" value={pass} onChange={function (e) { setPass(e.target.value); }} placeholder="Min 8 chars, letters + numbers" required autoFocus /></div>
-                        <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: loading ? '#9aa0a6' : '#1a73e8', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>{loading ? 'Updating...' : 'Update Password'}</button>
+                        <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: loading ? '#9aa0a6' : '#1a73e8', color: 'white', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer' }}>{loading ? 'Updating...' : 'Update Password'}</button>
                     </form>
                 )}
             </div>

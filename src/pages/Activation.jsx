@@ -6,11 +6,28 @@ export default function Activation() {
   var [loading, setLoading] = useState(false);
   useEffect(function() {
     if (window.electronAPI && window.electronAPI.getHwid) {
-      window.electronAPI.getHwid().then(function(res) {
-        if (res && res.success) setHwid(res.hwid.substring(0, 32) + '...');
-      });
+        window.electronAPI.getHwid().then(function(res) {
+            console.log('[Activation] getHwid response:', res);
+            if (res && res.success && res.hwid) {
+                setHwid(res.hwid.substring(0, 32) + '...');
+            } else {
+                setHwid('Error: ' + ((res && res.error) ? res.error : 'Could not generate HWID'));
+            }
+        }).catch(function(err) {
+            console.error('[Activation] getHwid failed:', err);
+            setHwid('Error: ' + err.message);
+        });
+    } else {
+        // Web mode (no Electron) — generate a browser fingerprint
+        var fp = 'WEB-';
+        try {
+            fp += navigator.userAgent.replace(/[^a-zA-Z0-9]/g, '').substring(0, 20);
+            fp += '-' + (navigator.hardwareConcurrency || 'unk');
+            fp += '-' + (screen.width || '0') + 'x' + (screen.height || '0');
+        } catch (e) { fp += 'unknown-' + Date.now(); }
+        setHwid(fp);
     }
-  }, []);
+}, []);
   var handleActivate = async function(e) {
     e.preventDefault();
     setMsg('Validating...'); setLoading(true);
