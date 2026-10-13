@@ -13,7 +13,7 @@ const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg'
 const MAX_AUDIO_SIZE = 5 * 1024 * 1024; // 5MB for anthem audio
 
 export default function SchoolBranding() {
-    const sg, setMsg] = useState('');
+    const [msg, setMsg] = useState('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [logo, setLogo] = useState(null);
