@@ -96,6 +96,10 @@
         "from": "node_modules/sql.js/dist/",
         "to": "sql.js/"
       }
+    ],
+    "asarUnpack": [
+      "node_modules/sql.js/**/*",
+      "node_modules/@neondatabase/**/*"
     ]
   }
 }
