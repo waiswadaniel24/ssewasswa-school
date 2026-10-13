@@ -1,4 +1,24 @@
+# robots.txt for Ssewasswa Comforts School ERP V10
+# Primary domain: https://ssewasswa-school.pages.dev (Cloudflare Pages)
+# Mirror: https://ssewasswa-school.vercel.app (Vercel)
+
 User-agent: *
 Allow: /
 
+# Public pages that search engines can crawl:
+# / (homepage), /product-landing, /about, /manuals, /terms
+# Auth-protected routes (/dashboard, /students, /login, /staff, etc.)
+# are not listed here — they require authentication and Google should not index them.
+
+# Block search-result and API param URLs from indexing:
+Disallow: /*?token=
+Disallow: /*?access_token=
+Disallow: /*?refresh_token=
+Disallow: /*?code=
+Disallow: /api/
+
+# Sitemap on the SAME domain (Cloudflare Pages — primary)
+Sitemap: https://ssewasswa-school.pages.dev/sitemap.xml
+
+# Also reference the Vercel mirror sitemap (for cross-platform indexing)
 Sitemap: https://ssewasswa-school.vercel.app/sitemap.xml
