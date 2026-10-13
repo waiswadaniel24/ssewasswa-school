@@ -6,15 +6,48 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
-const UgandaPayments = require('./payments');
-const UploadHandler = require('./uploads');
-const UNEBConnector = require('./uneb-connector');
+// --- Crash logger: write any uncaught error to a file so we can diagnose ---
+const CRASH_LOG = require('path').join(require('electron').app.getPath('userData') || process.cwd(), 'ssewasswa-crash.log');
+function logError(context, err) {
+    const stamp = new Date().toISOString();
+    const line = `[${stamp}] [${context}] ${err && err.stack ? err.stack : err}\n`;
+    try { require('fs').appendFileSync(CRASH_LOG, line); } catch (_) {}
+    console.error(line);
+}
+process.on('uncaughtException', (err) => {
+    logError('uncaughtException', err);
+    try {
+        const { dialog } = require('electron');
+        dialog.showErrorBox('Ssewasswa School ERP — Startup Error',
+            'The app hit an unexpected error and may not work correctly.\n\n' +
+            'Error: ' + (err && err.message ? err.message : err) + '\n\n' +
+            'A crash log has been written to:\n' + CRASH_LOG + '\n\n' +
+            'Please send this log to support@ssewasswacomfortstechnologies.com');
+    } catch (_) {}
+});
+process.on('unhandledRejection', (reason) => logError('unhandledRejection', reason));
+
+// --- Safer requires: wrap external modules in try/catch so one missing module doesn't kill startup ---
+let UgandaPayments = null, UploadHandler = null, UNEBConnector = null;
+try { UgandaPayments = require('./payments'); } catch (e) { logError('require:./payments', e); }
+try { UploadHandler = require('./uploads'); } catch (e) { logError('require:./uploads', e); }
+try { UNEBConnector = require('./uneb-connector'); } catch (e) { logError('require:./uneb-connector', e); }
 
 let SQL, bcrypt, mainWindow, db, dbPath;
 let paymentHandler, uploadHandler;
 
-try { SQL = require('sql.js'); } catch (e) { console.error('sql.js missing:', e.message); }
-try { bcrypt = require('bcryptjs'); } catch (e) { console.error('bcryptjs missing:', e.message); }
+try { SQL = require('sql.js'); } catch (e) { logError('require:sql.js', e); }
+try { bcrypt = require('bcryptjs'); } catch (e) { logError('require:bcryptjs', e); }
+
+// --- sql.js locateFile: when packaged in asar, point to the unpacked WASM file ---
+const SQL_WASM_PATHS = [
+    // When asar-unpacked:
+    require('path').join(__dirname, '..', 'node_modules', 'sql.js', 'dist', 'sql-wasm.wasm'),
+    // When shipped via extraResources:
+    require('path').join(process.resourcesPath || '', 'sql.js', 'sql-wasm.wasm'),
+    // Dev mode fallback:
+    require('path').join(__dirname, '..', 'node_modules', 'sql.js', 'dist', 'sql-wasm.wasm'),
+];
 
 // ═══════════════════════════════════════════════════════════
 // DATABASE SAVE — encrypted at rest via Electron safeStorage
@@ -44,7 +77,17 @@ function saveDb() {
 async function initDatabase() {
     if (!SQL) { console.error('SQL module not loaded'); return false; }
     try {
-        const sqlModule = await SQL();
+        const sqlModule = await SQL({
+            locateFile: (file) => {
+                const tryPaths = SQL_WASM_PATHS.map(p => require('path').join(require('path').dirname(p), file));
+                // Try each path; return the first that exists
+                for (const p of tryPaths) {
+                    try { if (require('fs').existsSync(p)) return p; } catch (_) {}
+                }
+                // Fallback to default behavior (sql.js will try to fetch via URL)
+                return file;
+            }
+        });
         dbPath = path.join(app.getPath('userData'), 'school_v10_isolated.db');
 
         if (fs.existsSync(dbPath)) {
