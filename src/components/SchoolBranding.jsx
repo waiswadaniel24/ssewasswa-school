@@ -1,6 +1,6 @@
-﻿// FileName: src/components/SchoolBranding.jsx
+// FileName: src/components/SchoolBranding.jsx
 // Ssewasswa School ERP V10 - EMIS Uganda Compliant
-// Description: School branding settings — logo, badge, motto, slogan, scripture
+// Description: School branding settings — logo, badge, motto, slogan, scripture, anthem
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -8,21 +8,29 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB for logos (smaller than photos)
 
+// Allowed audio types for school anthem
+const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/x-m4a', 'audio/m4a'];
+const MAX_AUDIO_SIZE = 5 * 1024 * 1024; // 5MB for anthem audio
+
 export default function SchoolBranding() {
-    const [msg, setMsg] = useState('');
+    const sg, setMsg] = useState('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [logo, setLogo] = useState(null);
     const [badge, setBadge] = useState(null);
+    const [anthemAudio, setAnthemAudio] = useState(null); // base64 data URL for preview
+    const [anthemAudioName, setAnthemAudioName] = useState(''); // filename display
     const [form, setForm] = useState({
         motto: '',
         slogan: '',
-        scripture: ''
+        scripture: '',
+        anthemLyrics: ''
     });
-    const [uploading, setUploading] = useState(null); // 'logo' | 'badge' | null
+    const [uploading, setUploading] = useState(null); // 'logo' | 'badge' | 'anthem' | null
 
     const logoInputRef = useRef(null);
     const badgeInputRef = useRef(null);
+    const anthemInputRef = useRef(null);
     const mountedRef = useRef(true);
     const msgTimerRef = useRef(null);
 
@@ -46,7 +54,7 @@ export default function SchoolBranding() {
     // ─── Load branding settings from database ──────────────────
     const loadBranding = useCallback(async () => {
         if (!window.electronAPI) {
-            setForm({ motto: 'Knowledge, discipline, service', slogan: 'Serving learners and building futures', scripture: '' });
+            setForm({ motto: 'Knowledge, discipline, service', slogan: 'Serving learners and building futures', scripture: '', anthemLyrics: '' });
             setLogo('/ssewasswa-comforts-technologies-logo.png');
             setLoading(false);
             return;
@@ -54,7 +62,7 @@ export default function SchoolBranding() {
 
         try {
             const r = await window.electronAPI.queryDatabase(
-                "SELECT key, value FROM system_settings WHERE key IN ('school_motto','school_slogan','school_scripture','school_logo','school_badge')"
+                "SELECT key, value FROM system_settings WHERE key IN ('school_motto','school_slogan','school_scripture','school_logo','school_badge','school_anthem_lyrics','school_anthem_audio')"
             );
 
             if (!mountedRef.current) return;
@@ -75,7 +83,8 @@ export default function SchoolBranding() {
             setForm({
                 motto: settings.school_motto || '',
                 slogan: settings.school_slogan || '',
-                scripture: settings.school_scripture || ''
+                scripture: settings.school_scripture || '',
+                anthemLyrics: settings.school_anthem_lyrics || ''
             });
 
             // Load logo image
@@ -101,6 +110,11 @@ export default function SchoolBranding() {
                     console.error('SchoolBranding: badge load error:', e.message);
                 }
             }
+
+            // Load anthem audio filename (preview only — actual audio fetched on demand)
+            if (settings.school_anthem_audio) {
+                setAnthemAudioName(settings.school_anthem_audio);
+            }
         } catch (err) {
             console.error('SchoolBranding: load error:', err.message);
             if (mountedRef.current) {
@@ -119,13 +133,10 @@ export default function SchoolBranding() {
     const handleUpload = async (file, type) => {
         if (!file) return;
 
-        // Validate file type (strict — no SVG)
         if (!ALLOWED_TYPES.includes(file.type)) {
             showMessage('Please select a JPG, PNG, GIF, or WebP image.');
             return;
         }
-
-        // Validate file size
         if (file.size > MAX_SIZE) {
             showMessage('File size must be under 2MB for logos/badges.');
             return;
@@ -139,18 +150,13 @@ export default function SchoolBranding() {
             reader.onload = async (e) => {
                 try {
                     const base64Data = e.target.result;
-
-                    // Save to file system
                     const saveResult = await window.electronAPI.savePhoto({
                         base64: base64Data,
                         category: type,
                         id: 1
                     });
 
-                    if (!mountedRef.current) {
-                        resolve(false);
-                        return;
-                    }
+                    if (!mountedRef.current) { resolve(false); return; }
 
                     if (!saveResult || !saveResult.success) {
                         showMessage('Error saving file: ' + ((saveResult && saveResult.error) || 'Unknown error'));
@@ -158,16 +164,12 @@ export default function SchoolBranding() {
                         return;
                     }
 
-                    // Save filename to database
                     const dbResult = await window.electronAPI.queryDatabase(
                         'INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)',
                         ['school_' + type, saveResult.filename]
                     );
 
-                    if (!mountedRef.current) {
-                        resolve(false);
-                        return;
-                    }
+                    if (!mountedRef.current) { resolve(false); return; }
 
                     if (!dbResult || !dbResult.success) {
                         showMessage('Error saving to database');
@@ -175,7 +177,6 @@ export default function SchoolBranding() {
                         return;
                     }
 
-                    // Update preview
                     if (type === 'logo') {
                         setLogo(base64Data);
                         if (logoInputRef.current) logoInputRef.current.value = '';
@@ -209,10 +210,66 @@ export default function SchoolBranding() {
         });
     };
 
-    // ─── Save text fields (motto, slogan, scripture) ───────────
+    // ─── Handle anthem audio upload (.mp3, .wav, .m4a, .ogg) ────
+    const handleAnthemUpload = async (file) => {
+        if (!file) return;
+        if (!ALLOWED_AUDIO_TYPES.includes(file.type) && !file.name.match(/\.(mp3|wav|m4a|ogg)$/i)) {
+            showMessage('Please select an MP3, WAV, M4A, or OGG audio file.');
+            return;
+        }
+        if (file.size > MAX_AUDIO_SIZE) {
+            showMessage('Anthem audio must be under 5MB.');
+            return;
+        }
+
+        setUploading('anthem');
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const base64Data = e.target.result;
+                    const saveResult = await window.electronAPI.savePhoto({
+                        base64: base64Data,
+                        category: 'anthem',
+                        id: 1
+                    });
+                    if (!mountedRef.current) { resolve(false); return; }
+                    if (!saveResult || !saveResult.success) {
+                        showMessage('Error saving anthem: ' + ((saveResult && saveResult.error) || 'Unknown error'));
+                        resolve(false); return;
+                    }
+                    const dbResult = await window.electronAPI.queryDatabase(
+                        "INSERT OR REPLACE INTO system_settings (key, value) VALUES ('school_anthem_audio', ?)",
+                        [saveResult.filename]
+                    );
+                    if (!mountedRef.current) { resolve(false); return; }
+                    if (!dbResult || !dbResult.success) {
+                        showMessage('Error saving anthem to database');
+                        resolve(false); return;
+                    }
+                    setAnthemAudio(base64Data);
+                    setAnthemAudioName(saveResult.filename);
+                    if (anthemInputRef.current) anthemInputRef.current.value = '';
+                    showMessage('Anthem audio saved successfully!');
+                    resolve(true);
+                } catch (err) {
+                    if (mountedRef.current) showMessage('Error: ' + err.message);
+                    resolve(false);
+                } finally {
+                    if (mountedRef.current) setUploading(null);
+                }
+            };
+            reader.onerror = () => {
+                if (mountedRef.current) { showMessage('Failed to read audio file'); setUploading(null); }
+                resolve(false);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    // ─── Save text fields (motto, slogan, scripture, anthemLyrics) ───
     const handleSaveText = async () => {
         setSaving(true);
-
         try {
             const results = await Promise.all([
                 window.electronAPI.queryDatabase(
@@ -226,11 +283,13 @@ export default function SchoolBranding() {
                 window.electronAPI.queryDatabase(
                     "INSERT OR REPLACE INTO system_settings (key, value) VALUES ('school_scripture', ?)",
                     [form.scripture]
+                ),
+                window.electronAPI.queryDatabase(
+                    "INSERT OR REPLACE INTO system_settings (key, value) VALUES ('school_anthem_lyrics', ?)",
+                    [form.anthemLyrics]
                 )
             ]);
-
             if (!mountedRef.current) return;
-
             const allSuccess = results.every((r) => r && r.success);
             if (allSuccess) {
                 showMessage('Branding saved! Appears on all printed documents.');
@@ -240,120 +299,48 @@ export default function SchoolBranding() {
             }
         } catch (err) {
             console.error('SchoolBranding: save error:', err.message);
-            if (mountedRef.current) {
-                showMessage('Error saving: ' + err.message);
-            }
+            if (mountedRef.current) showMessage('Error saving: ' + err.message);
         } finally {
             if (mountedRef.current) setSaving(false);
         }
     };
 
-    // ─── Determine if message is an error ───────────────────────
-    const isError = msg && (
-        msg.includes('Error') ||
-        msg.includes('Failed') ||
-        msg.includes('under') ||
-        msg.includes('valid') ||
-        msg.includes('select')
-    );
+    const isError = msg && (msg.includes('Error') || msg.includes('Failed') || msg.includes('under') || msg.includes('valid') || msg.includes('select'));
 
-    // ─── Upload box renderer ────────────────────────────────────
     const renderUploadBox = (type, image, inputRef, label, icon) => (
         <div style={{ textAlign: 'center' }}>
-            <label style={{
-                cursor: uploading === type ? 'wait' : 'pointer',
-                display: 'inline-block'
-            }}>
+            <label style={{ cursor: uploading === type ? 'wait' : 'pointer', display: 'inline-block' }}>
                 <div style={{
-                    width: 120,
-                    height: 120,
-                    borderRadius: 12,
+                    width: 120, height: 120, borderRadius: 12,
                     border: `2px dashed ${uploading === type ? '#1a73e8' : '#dadce0'}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                    background: '#fafafa',
-                    opacity: uploading === type ? 0.6 : 1,
-                    position: 'relative',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    overflow: 'hidden', background: '#fafafa',
+                    opacity: uploading === type ? 0.6 : 1, position: 'relative',
                     transition: 'border-color 0.2s, opacity 0.2s'
                 }}
-                    onMouseEnter={(e) => {
-                        if (uploading !== type) e.currentTarget.style.borderColor = '#1a73e8';
-                    }}
-                    onMouseLeave={(e) => {
-                        if (uploading !== type) e.currentTarget.style.borderColor = '#dadce0';
-                    }}
+                    onMouseEnter={(e) => { if (uploading !== type) e.currentTarget.style.borderColor = '#1a73e8'; }}
+                    onMouseLeave={(e) => { if (uploading !== type) e.currentTarget.style.borderColor = '#dadce0'; }}
                 >
-                    {/* Loading overlay */}
                     {uploading === type && (
-                        <div style={{
-                            position: 'absolute',
-                            inset: 0,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: 'rgba(255,255,255,0.8)',
-                            zIndex: 1
-                        }}>
-                            <div style={{
-                                width: '32px',
-                                height: '32px',
-                                border: '3px solid #e0e0e0',
-                                borderTopColor: '#1a73e8',
-                                borderRadius: '50%',
-                                animation: 'spin 0.8s linear infinite'
-                            }} />
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.8)', zIndex: 1 }}>
+                            <div style={{ width: '32px', height: '32px', border: '3px solid #e0e0e0', borderTopColor: '#1a73e8', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                         </div>
                     )}
-
-                    {image ? (
-                        <img
-                            src={image}
-                            alt={label}
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'contain'
-                            }}
-                        />
-                    ) : (
-                        <span style={{ fontSize: '28px' }}>{icon}</span>
-                    )}
+                    {image ? <img src={image} alt={label} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: '28px' }}>{icon}</span>}
                 </div>
-                <input
-                    ref={inputRef}
-                    type="file"
-                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                    style={{ display: 'none' }}
-                    disabled={uploading === type}
-                    onChange={(e) => handleUpload(e.target.files[0], type)}
-                />
+                <input ref={inputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style={{ display: 'none' }} disabled={uploading === type} onChange={(e) => handleUpload(e.target.files[0], type)} />
             </label>
-            <p style={{ fontSize: '12px', color: '#666', marginTop: '6px', margin: '6px 0 0 0' }}>
-                {label}
-            </p>
-            <p style={{ fontSize: '10px', color: '#999', margin: '2px 0 0 0' }}>
-                Max 2MB • JPG, PNG, GIF, WebP
-            </p>
+            <p style={{ fontSize: '12px', color: '#666', marginTop: '6px', margin: '6px 0 0 0' }}>{label}</p>
+            <p style={{ fontSize: '10px', color: '#999', margin: '2px 0 0 0' }}>Max 2MB • JPG, PNG, GIF, WebP</p>
         </div>
     );
 
-    // ─── Loading state ──────────────────────────────────────────
     if (loading) {
         return (
             <div className="card">
                 <div className="card-body" style={{ textAlign: 'center', padding: '40px' }}>
-                    <div style={{
-                        width: '32px',
-                        height: '32px',
-                        border: '3px solid #e0e0e0',
-                        borderTopColor: '#1a73e8',
-                        borderRadius: '50%',
-                        animation: 'spin 0.8s linear infinite',
-                        margin: '0 auto 12px'
-                    }} />
+                    <div style={{ width: '32px', height: '32px', border: '3px solid #e0e0e0', borderTopColor: '#1a73e8', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
                     <p style={{ color: '#666', fontSize: '14px' }}>Loading branding settings...</p>
                     <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                 </div>
@@ -363,89 +350,53 @@ export default function SchoolBranding() {
 
     return (
         <div className="card">
-            <div className="card-header">School Branding (Logos, Motto, Scripture)</div>
+            <div className="card-header">School Branding (Logo, Badge, Motto, Anthem)</div>
             <div className="card-body">
-                {/* ─── Message ──────────────────────────────────── */}
                 {msg && (
-                    <div style={{
-                        color: isError ? '#d93025' : '#0d652d',
-                        marginBottom: '15px',
-                        fontSize: '13px',
-                        padding: '8px 12px',
-                        background: isError ? '#fce8e6' : '#e6f4ea',
-                        borderRadius: '6px',
-                        border: '1px solid ' + (isError ? '#f5c6cb' : '#c3e6cb'),
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                    }}>
-                        <span>{isError ? '⚠️' : '✅'}</span>
-                        {msg}
+                    <div style={{ color: isError ? '#d93025' : '#0d652d', marginBottom: '15px', fontSize: '13px', padding: '8px 12px', background: isError ? '#fce8e6' : '#e6f4ea', borderRadius: '6px', border: '1px solid ' + (isError ? '#f5c6cb' : '#c3e6cb'), display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>{isError ? '⚠️' : '✅'}</span>{msg}
                     </div>
                 )}
+                <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>These appear on all printed documents: report cards, letters, certificates, meeting minutes, ID cards.</p>
 
-                {/* ─── Description ─────────────────────────────── */}
-                <p style={{ fontSize: '13px', color: '#666', marginBottom: '20px' }}>
-                    These appear on all printed documents: report cards, letters,
-                    certificates, meeting minutes, ID cards.
-                </p>
-
-                {/* ─── Logo + Badge Upload ───────────────────────── */}
-                <div style={{
-                    display: 'flex',
-                    gap: '40px',
-                    justifyContent: 'center',
-                    marginBottom: '24px'
-                }}>
+                <div style={{ display: 'flex', gap: '40px', justifyContent: 'center', marginBottom: '24px' }}>
                     {renderUploadBox('logo', logo, logoInputRef, 'School Logo', '📷')}
                     {renderUploadBox('badge', badge, badgeInputRef, 'School Badge/Crest', '🏅')}
                 </div>
 
-                {/* ─── Text Fields ──────────────────────────────── */}
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '16px',
-                    maxWidth: '600px'
-                }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', maxWidth: '600px' }}>
                     <div className="form-group">
                         <label className="form-label">School Motto</label>
-                        <input
-                            className="form-input"
-                            value={form.motto}
-                            onChange={(e) => setForm({ ...form, motto: e.target.value })}
-                            placeholder="e.g. Education for Excellence"
-                        />
+                        <input className="form-input" value={form.motto} onChange={(e) => setForm({ ...form, motto: e.target.value })} placeholder="e.g. Education for Excellence" />
                     </div>
                     <div className="form-group">
                         <label className="form-label">School Slogan</label>
-                        <input
-                            className="form-input"
-                            value={form.slogan}
-                            onChange={(e) => setForm({ ...form, slogan: e.target.value })}
-                            placeholder="e.g. Nurturing Future Leaders"
-                        />
+                        <input className="form-input" value={form.slogan} onChange={(e) => setForm({ ...form, slogan: e.target.value })} placeholder="e.g. Nurturing Future Leaders" />
                     </div>
                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                        <label className="form-label">
-                            Scripture / Quote / Saying (appears on all documents)
-                        </label>
-                        <input
-                            className="form-input"
-                            value={form.scripture}
-                            onChange={(e) => setForm({ ...form, scripture: e.target.value })}
-                            placeholder='e.g. "Fear of the Lord is the beginning of wisdom" - Proverbs 9:10'
-                        />
+                        <label className="form-label">Scripture / Quote / Saying (appears on all documents)</label>
+                        <input className="form-input" value={form.scripture} onChange={(e) => setForm({ ...form, scripture: e.target.value })} placeholder='e.g. "Fear of the Lord is the beginning of wisdom" - Proverbs 9:10' />
+                    </div>
+                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                        <label className="form-label">School Anthem Lyrics</label>
+                        <textarea className="form-input" rows={5} value={form.anthemLyrics} onChange={(e) => setForm({ ...form, anthemLyrics: e.target.value })} placeholder="Paste the school anthem lyrics here. Appears on printed programmes, graduation booklets, and the About page." style={{ fontFamily: 'inherit', resize: 'vertical' }} />
                     </div>
                 </div>
 
-                {/* ─── Save Button ──────────────────────────────── */}
-                <button
-                    className="btn btn-primary"
-                    style={{ marginTop: '10px' }}
-                    onClick={handleSaveText}
-                    disabled={saving}
-                >
+                {/* ─── Anthem audio upload ─── */}
+                <div style={{ marginTop: '20px', padding: '16px', border: '1px dashed #c7d2dc', borderRadius: '10px', background: '#f8fafc' }}>
+                    <strong style={{ fontSize: '14px', color: '#444' }}>🎵 School Anthem Audio (optional)</strong>
+                    <p style={{ fontSize: '12px', color: '#888', margin: '4px 0 12px 0' }}>Upload an MP3, WAV, M4A, or OGG file (max 5MB). Played on the About page and at school events.</p>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <input ref={anthemInputRef} type="file" accept="audio/mpeg,audio/mp3,audio/wav,audio/ogg,audio/x-m4a,audio/m4a,.mp3,.wav,.m4a,.ogg" disabled={uploading === 'anthem'} onChange={(e) => handleAnthemUpload(e.target.files[0])} style={{ fontSize: '12px' }} />
+                        {anthemAudioName && <span style={{ fontSize: '12px', color: '#0d652d' }}>✓ {anthemAudioName}</span>}
+                        {anthemAudio && (
+                            <audio controls src={anthemAudio} style={{ width: '100%', maxWidth: '320px', height: '32px' }} />
+                        )}
+                    </div>
+                </div>
+
+                <button className="btn btn-primary" style={{ marginTop: '20px' }} onClick={handleSaveText} disabled={saving}>
                     {saving ? '⏳ Saving...' : '💾 Save Branding'}
                 </button>
             </div>
