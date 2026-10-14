@@ -13,6 +13,7 @@ import Login from '../pages/Login.jsx';
 import Activation from '../pages/Activation.jsx';
 import ProductLanding from '../pages/ProductLanding.jsx';
 import Welcome from '../pages/Welcome.jsx';
+import Admin from '../pages/Admin.jsx';
 import SchoolSignup from '../pages/SchoolSignup.jsx';
 import ResetPassword from '../pages/ResetPassword.jsx';
 // ─── Loading fallback (defined FIRST so AuthCallback can use it) ──
@@ -289,6 +290,10 @@ export default function AppRouter({ isInitialized, isLocked }) {
         {
             path: '/welcome',
             element: <PublicRoute><Welcome /></PublicRoute>
+        },
+        {
+            path: '/admin',
+            element: <DeveloperRoute><Admin /></DeveloperRoute>
         },
         {
             path: '/login',
