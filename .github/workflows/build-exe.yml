@@ -20,33 +20,43 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
-      - name: 📦 Install dependencies
-        run: npm ci
+      - name: 📦 Install dependencies (lenient mode — handles peer dep conflicts)
+        run: npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: 🔨 Build Vite frontend
         run: npm run build
+        env:
+          NODE_ENV: production
 
-      - name: 🖥️ Package Electron app for Windows
+      - name: 🖥️ Package Electron app for Windows (NSIS installer)
         run: npm run package
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Skip code signing for now (would need paid cert)
+          # Skip code signing (would need paid cert)
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          # Speed up build by skipping some optional features
+          ELECTRON_BUILDER_OFFLINE: 'true'
 
       - name: 📤 Upload installer (.exe) as artifact
         uses: actions/upload-artifact@v4
         with:
           name: Ssewasswa-School-ERP-Windows-Installer
           path: |
-            release/Ssewasswa School ERP V10 Setup.exe
-            release/*.exe
+            release/
+            release/**/*
           retention-days: 90
           if-no-files-found: warn
 
       - name: 📋 List build artifacts
         if: always()
+        shell: pwsh
         run: |
-          echo "Build artifacts in release/ folder:"
-          dir release\\ /s /b 2>nul || true
+          Write-Host "Build artifacts in release/ folder:"
+          if (Test-Path release) {
+            Get-ChildItem -Path release -Recurse -File | ForEach-Object {
+              Write-Host "  $($_.FullName) — $($_.Length) bytes"
+            }
+          } else {
+            Write-Host "  (release/ folder does not exist — build might have failed)"
+          }
