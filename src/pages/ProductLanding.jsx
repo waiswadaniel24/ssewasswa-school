@@ -98,7 +98,7 @@ const CONTACTS = [
   { label: 'WhatsApp / MTN', value: '+256 752 971 118', href: 'https://wa.me/256752971118', person: 'Kusuya Grace' },
   { label: 'Call / Airtel', value: '+256 789 738 420', href: 'tel:+256789738420', person: 'Waiswa Moses' },
   { label: 'Email', value: 'support@ssewasswacomfortstechnologies.com', href: 'mailto:support@ssewasswacomfortstechnologies.com', person: 'Support Team' },
-;
+];
 
 // Download info for the desktop app installer
 const DOWNLOAD_INFO = {
