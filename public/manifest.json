@@ -1,0 +1,29 @@
+{
+  "name": "Ssewasswa Comforts School ERP V10",
+  "short_name": "Ssewasswa ERP",
+  "description": "Ugandan school management system \u2014 students, staff, academics, finance, EMIS reporting.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#071b2f",
+  "theme_color": "#1a73e8",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/ssewasswa-comforts-school-erp-mark.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/ssewasswa-comforts-school-erp-mark.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "education",
+    "business",
+    "productivity"
+  ]
+}
