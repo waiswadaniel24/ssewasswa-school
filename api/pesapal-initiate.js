@@ -1,6 +1,12 @@
 // /api/pesapal-initiate.js — Vercel serverless function
 // Initiates a Pesapal payment for a subscription. Returns the redirect URL.
 // Customer pays via Pesapal (card, mobile money, bank), then Pesapal calls /api/pesapal-webhook
+//
+// Pesapal v3 API endpoints (confirmed):
+//   Auth:           POST {PESAPAL_API_BASE}/api/Auth/RequestToken
+//   Submit order:   POST {PESAPAL_API_BASE}/api/Transactions/SubmitOrderRequest  ← the correct path!
+//   Production:     https://pay.pesapal.com/v3
+//   Sandbox:        https://cybqa.pesapal.com/pesapalv3
 
 const PESAPAL_API_BASE = process.env.PESAPAL_API_BASE || 'https://pay.pesapal.com/v3';
 
@@ -38,7 +44,7 @@ module.exports = async (req, res) => {
   }
   
   try {
-    // Step 1: Get OAuth token (Pesapal v3: POST /api/Auth/RequestToken)
+    // Step 1: Get OAuth token (POST /api/Auth/RequestToken)
     console.log('[Pesapal] Step 1: Get auth token from', PESAPAL_API_BASE);
     const tokenRes = await fetch(`${PESAPAL_API_BASE}/api/Auth/RequestToken`, {
       method: 'POST',
@@ -55,13 +61,13 @@ module.exports = async (req, res) => {
     if (!tokenData.token) throw new Error('No token in Pesapal response: ' + JSON.stringify(tokenData).substring(0, 200));
     console.log('[Pesapal] Got token, expires:', tokenData.expiryDate);
     
-    // Step 2: Submit order (Pesapal v3: POST /api/Transactions/SubmitOrder)
+    // Step 2: Submit order (POST /api/Transactions/SubmitOrderRequest) — the CORRECT endpoint!
     const callbackUrl = process.env.PESAPAL_CALLBACK_URL || 'https://ssewasswa-school.pages.dev/welcome';
     const ipnUrl = process.env.PESAPAL_IPN_URL || 'https://ssewasswa-school.vercel.app/api/pesapal-webhook';
     const orderId = `${hwid}-${Date.now()}`;
     
-    console.log('[Pesapal] Step 2: Submit order', orderId, 'amount:', amount);
-    const orderRes = await fetch(`${PESAPAL_API_BASE}/api/Transactions/SubmitOrder`, {
+    console.log('[Pesapal] Step 2: Submit order', orderId, 'amount:', amount, 'to:', PESAPAL_API_BASE + '/api/Transactions/SubmitOrderRequest');
+    const orderRes = await fetch(`${PESAPAL_API_BASE}/api/Transactions/SubmitOrderRequest`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${tokenData.token}`,
@@ -85,12 +91,13 @@ module.exports = async (req, res) => {
     
     if (!orderRes.ok) {
       const text = await orderRes.text();
-      throw new Error(`Submit failed: ${orderRes.status} - ${text.substring(0, 200)}`);
+      throw new Error(`Submit failed: ${orderRes.status} - ${text.substring(0, 300)}`);
     }
     
     const orderData = await orderRes.json();
-    console.log('[Pesapal] Order response:', JSON.stringify(orderData).substring(0, 300));
+    console.log('[Pesapal] Order response:', JSON.stringify(orderData).substring(0, 500));
     
+    // Pesapal returns: { order_tracking_id, redirect_url, status, message }
     if (orderData.redirect_url) {
       return res.status(200).json({
         status: 'pesapal',
@@ -99,7 +106,7 @@ module.exports = async (req, res) => {
         amount, tier: tierName
       });
     }
-    throw new Error('No redirect_url in Pesapal response: ' + JSON.stringify(orderData).substring(0, 300));
+    throw new Error('No redirect_url in Pesapal response: ' + JSON.stringify(orderData).substring(0, 500));
   } catch (err) {
     console.error('[Pesapal Initiate] Error:', err.message);
     return res.status(200).json({
