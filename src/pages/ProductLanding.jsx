@@ -479,6 +479,46 @@ export default function ProductLanding() {
       </section>
 
       {/* ─── FOOTER ─── */}
+      {/* ─── DOWNLOAD section ─── */}
+      <section style={{ background: '#f5f8fa', color: '#102a3c', padding: '64px 24px' }}>
+        <div style={{ maxWidth: 880, margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ color: '#16865e', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', fontSize: 12, marginBottom: 12 }}>Free download</div>
+          <h2 style={{ fontSize: 'clamp(28px, 5vw, 44px)', letterSpacing: '-.04em', margin: '0 0 16px' }}>Get the Ssewasswa School ERP desktop app</h2>
+          <p style={{ color: '#587080', fontSize: 17, lineHeight: 1.6, maxWidth: 700, margin: '0 auto 32px' }}>
+            Install on Windows 7+ (64-bit). The desktop app gives you full offline access, encrypted local database, hardware-bound license activation, and all 65+ ERP modules — including EMIS compliance and UNEB integration (Premium tier).
+          </p>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 24 }}>
+            <a href={DOWNLOAD_INFO.url} target="_blank" rel="noreferrer" style={{ background: '#1a73e8', color: '#fff', border: 0, borderRadius: 12, padding: '18px 32px', fontWeight: 800, fontSize: 17, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 10, boxShadow: '0 8px 24px rgba(26,115,232,0.3)' }}>
+              <span style={{ fontSize: 22 }}>⬇️</span>
+              <div style={{ textAlign: 'left' }}>
+                <div>Download for Windows</div>
+                <div style={{ fontSize: 12, opacity: 0.85 }}>{DOWNLOAD_INFO.fileSize} · {DOWNLOAD_INFO.version}</div>
+              </div>
+            </a>
+            <a href={DOWNLOAD_INFO.releaseNotes} target="_blank" rel="noreferrer" style={{ background: 'transparent', color: '#1a73e8', border: '1px solid #1a73e8', borderRadius: 12, padding: '18px 28px', fontWeight: 700, fontSize: 16, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+              View release notes
+            </a>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16, maxWidth: 880, margin: '40px auto 0' }}>
+            <div style={{ background: '#fff', border: '1px solid #dce7ed', borderRadius: 12, padding: 18, textAlign: 'left' }}>
+              <div style={{ color: '#16865e', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', marginBottom: 6 }}>✅ Step 1</div>
+              <strong>Download the .exe</strong>
+              <p style={{ fontSize: 13, color: '#587080', margin: '6px 0 0', lineHeight: 1.5 }}>{DOWNLOAD_INFO.fileSize} Windows installer.</p>
+            </div>
+            <div style={{ background: '#fff', border: '1px solid #dce7ed', borderRadius: 12, padding: 18, textAlign: 'left' }}>
+              <div style={{ color: '#16865e', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', marginBottom: 6 }}>📦 Step 2</div>
+              <strong>Install on Windows</strong>
+              <p style={{ fontSize: 13, color: '#587080', margin: '6px 0 0', lineHeight: 1.5 }}>"Ssewasswa School ERP V10 Setup.exe" — double-click to install.</p>
+            </div>
+            <div style={{ background: '#fff', border: '1px solid #dce7ed', borderRadius: 12, padding: 18, textAlign: 'left' }}>
+              <div style={{ color: '#16865e', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', marginBottom: 6 }}>🔑 Step 3</div>
+              <strong>Activate license</strong>
+              <p style={{ fontSize: 13, color: '#587080', margin: '6px 0 0', lineHeight: 1.5 }}>"Subscribe" above to get your key, then paste on Activation page.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <footer style={{ background: '#071b2f', color: '#8fb3c9', fontSize: 13, padding: '32px 24px' }}>
         <div style={{ maxWidth: 1180, margin: '0 auto', display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
           <div>
