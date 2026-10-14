@@ -188,10 +188,30 @@ class RouteErrorBoundary extends React.Component {
     }
 }
 
-// ─── Auth-protected layout (redirects to /login if no user) ──
+// ─── Auth-protected layout (shows ProductLanding for guests, Layout for users) ──
+// Unauthenticated visitors hitting '/' (the root URL) see the marketing/product-landing
+// page (with subscription tiers + benefits) instead of being immediately bounced to /login.
+// This is important for SEO — Google searchers who click the search result land on a
+// meaningful marketing page, not the bare login form.
 const ProtectedLayout = () => {
-    const { user } = useAuth();
-    if (!user) return <Navigate to="/login" replace />;
+    const { user, authReady } = useAuth();
+    // While auth state is still loading, show the loading fallback (don't redirect)
+    if (!authReady) {
+        return (
+            <Suspense fallback={<LoadingFallback />}>
+                <LoadingFallback />
+            </Suspense>
+        );
+    }
+    // Unauthenticated visitor → show the marketing landing page (public)
+    if (!user) {
+        return (
+            <Suspense fallback={<LoadingFallback />}>
+                <ProductLanding />
+            </Suspense>
+        );
+    }
+    // Authenticated user → render the full Layout (sidebar + main content)
     return (
         <Suspense fallback={<LoadingFallback />}>
             <Layout />
