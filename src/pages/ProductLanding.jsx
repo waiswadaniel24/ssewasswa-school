@@ -98,7 +98,17 @@ const CONTACTS = [
   { label: 'WhatsApp / MTN', value: '+256 752 971 118', href: 'https://wa.me/256752971118', person: 'Kusuya Grace' },
   { label: 'Call / Airtel', value: '+256 789 738 420', href: 'tel:+256789738420', person: 'Waiswa Moses' },
   { label: 'Email', value: 'support@ssewasswacomfortstechnologies.com', href: 'mailto:support@ssewasswacomfortstechnologies.com', person: 'Support Team' },
-];
+;
+
+// Download info for the desktop app installer
+const DOWNLOAD_INFO = {
+  url: "https://github.com/waiswadaniel24/ssewasswa-school/releases/download/v10.0.0/Ssewasswa-School-ERP-V10-Setup.exe",
+  releaseNotes: "https://github.com/waiswadaniel24/ssewasswa-school/releases/tag/v10.0.0",
+  version: "v10.0.0",
+  fileSize: "130 MB",
+  platform: "Windows 7+ (64-bit)"
+};
+
 
 export default function ProductLanding() {
   const navigate = useNavigate();
@@ -228,7 +238,10 @@ export default function ProductLanding() {
             <button onClick={() => { const el = document.getElementById('plans'); if (el) el.scrollIntoView({ behavior: 'smooth' }); }} style={{ background: '#61d3a5', color: '#062218', border: 0, borderRadius: 10, padding: '15px 28px', fontWeight: 800, fontSize: 16, cursor: 'pointer' }}>
               View subscription plans
             </button>
-            <button onClick={() => navigate('/login')} style={{ background: '#13334c', color: '#fff', border: '1px solid #315570', borderRadius: 10, padding: '15px 28px', fontWeight: 700, cursor: 'pointer' }}>
+            <a href={DOWNLOAD_INFO.url} target="_blank" rel="noreferrer" style={{ background: 'transparent', color: '#61d3a5', border: '1px solid #61d3a5', borderRadius: 10, padding: '15px 22px', fontWeight: 700, cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>⬇️</span> Download Desktop App <span style={{ fontSize: 11, opacity: 0.7 }}>(Windows, 130 MB)</span>
+          </a>
+          <button onClick={() => navigate('/login')} style={{ background: '#13334c', color: '#fff', border: '1px solid #315570', borderRadius: 10, padding: '15px 28px', fontWeight: 700, cursor: 'pointer' }}>
               Already have an account?
             </button>
           </div>
