@@ -1,27 +1,58 @@
 // /api/pesapal-webhook.js — Vercel serverless function
 // Receives Pesapal IPN (Instant Payment Notification) when a payment completes.
 // Generates a license key + emails it to the customer.
+//
+// Pesapal does a GET verification when registering the IPN URL, so we return 200 OK for any method.
+// The actual license generation only happens for POST requests with status=COMPLETED.
 
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY
-);
+let supabase = null;
+try {
+  supabase = createClient(
+    process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY
+  );
+} catch (e) {
+  console.log('[Pesapal Webhook] Supabase client init failed:', e.message);
+}
 
 module.exports = async (req, res) => {
   // CORS — allow Pesapal + our own frontend
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Pesapal-Token');
   
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
   
+  // Handle GET — Pesapal does this to verify the IPN URL is reachable
+  // Return 200 OK with simple acknowledgment (no license generation)
+  if (req.method === 'GET') {
+    console.log('[Pesapal Webhook] GET verification from:', req.headers.get?.('user-agent') || 'unknown');
+    return res.status(200).json({
+      status: 'ok',
+      message: 'Pesapal IPN endpoint is active',
+      url: 'https://ssewasswa-school.vercel.app/api/pesapal-webhook',
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  // Handle HEAD (some verifications use HEAD instead of GET)
+  if (req.method === 'HEAD') {
+    return res.status(200).end();
+  }
+  
+  // Reject all other methods
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
+  
+  // Process the actual IPN notification (POST request)
   const n = req.body || {};
-  console.log('[Pesapal Webhook] Received:', JSON.stringify(n));
+  console.log('[Pesapal Webhook] Received POST:', JSON.stringify(n).substring(0, 500));
   
   // Pesapal sends status changes; we only act on COMPLETED
   if (n.status !== 'COMPLETED' && n.payment_status !== 'COMPLETED') {
@@ -60,9 +91,10 @@ module.exports = async (req, res) => {
           created_at: new Date().toISOString()
         }], { onConflict: 'hwid' });
       if (error) console.log('[Pesapal Webhook] Supabase insert error:', error.message);
+      else console.log('[Pesapal Webhook] License saved to Supabase');
     }
   } catch (e) {
-    console.log('[Pesapal Webhook] Supabase not configured:', e.message);
+    console.log('[Pesapal Webhook] Supabase save failed:', e.message);
   }
   
   // Email the license key to the customer
@@ -99,6 +131,8 @@ module.exports = async (req, res) => {
         `
       });
       console.log('[Pesapal Webhook] License key emailed to', userEmail);
+    } else {
+      console.log('[Pesapal Webhook] Email not sent (DEV_EMAIL or GMAIL_APP_PASS not set)');
     }
   } catch (e) {
     console.log('[Pesapal Webhook] Email send failed:', e.message);
