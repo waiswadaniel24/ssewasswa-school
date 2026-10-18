@@ -261,7 +261,10 @@ export default function Login() {
             <button type="button" onClick={function () { try { localStorage.setItem('erp_force_setup', 'true'); } catch (e2) { /* no localStorage */ } navigate('/setup'); }} style={{ width: '100%', padding: '12px', background: 'white', color: '#0d904f', border: '2px solid #0d904f', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer' }}>Create New Account (Setup)</button>
         )}
         {!hasElectron && hasSupabase && (
-            <button type="button" onClick={function () { navigate('/school-signup'); }} style={{ width: '100%', padding: '12px', background: 'white', color: '#0d904f', border: '2px solid #0d904f', borderRadius: '8px', fontSize: '15px', fontWeight: '600', cursor: 'pointer', marginTop: '10px' }}>Register Your School</button>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              <button type="button" onClick={function () { navigate('/school-signup'); }} style={{ flex: 1, padding: '12px', background: 'white', color: '#0d904f', border: '2px solid #0d904f', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Register School</button>
+              <button type="button" onClick={function () { navigate('/setup'); }} style={{ flex: 1, padding: '12px', background: 'white', color: '#1a73e8', border: '2px solid #1a73e8', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Setup School Details</button>
+            </div>
         )}
     </form>
 )}
