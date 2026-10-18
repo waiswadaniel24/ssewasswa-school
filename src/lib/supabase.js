@@ -31,6 +31,7 @@ export const supabase = activeClient;
 const DEVELOPER_SUPABASE_USER_ID = '8693c628-8688-410c-816a-c6365bc93337';
 const DEVELOPER_GITHUB_ID = '279316239';
 const DEVELOPER_GITHUB_USERNAME = 'waiswadaniel24';
+const DEVELOPER_EMAIL = 'waiswadaniel24@gmail.com'; // Recognize developer by email on web (Supabase auth)
 
 export function getSupabaseUser(user) {
   if (!user) return null;
@@ -41,7 +42,7 @@ export function getSupabaseUser(user) {
   const githubId = String(identityData.provider_id || identityData.sub || metadata.provider_id || '');
   const isGitHubUser = githubIdentity?.provider === 'github' || metadata.provider === 'github' || metadata.providers?.includes?.('github');
   const appRole = user.app_metadata?.role;
-  const isDeveloper = user.id === DEVELOPER_SUPABASE_USER_ID || (isGitHubUser && (githubId === DEVELOPER_GITHUB_ID || githubUsername === DEVELOPER_GITHUB_USERNAME || appRole === 'developer'));
+  const isDeveloper = user.id === DEVELOPER_SUPABASE_USER_ID || user.email === DEVELOPER_EMAIL || user.email?.toLowerCase() === DEVELOPER_EMAIL || (isGitHubUser && (githubId === DEVELOPER_GITHUB_ID || githubUsername === DEVELOPER_GITHUB_USERNAME || appRole === 'developer'));
 
   return {
     id: user.id,
