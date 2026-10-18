@@ -250,7 +250,54 @@ export default function ProductLanding() {
       </section>
 
       {/* ─── PLANS section ─── */}
-      <section id="plans" style={{ background: '#f5f8fa', color: '#102a3c', padding: '64px 24px' }}>
+      <section {/* ─── VISION & GOALS section ─── */}
+      <section style={{ background: '#071b2f', color: '#f7fbff', padding: '64px 24px' }}>
+        <div style={{ maxWidth: 980, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <div style={{ color: '#61d3a5', fontWeight: 700, letterSpacing: '.12em', fontSize: 12, textTransform: 'uppercase', marginBottom: 16 }}>Our Vision & Mission</div>
+            <h2 style={{ fontSize: 'clamp(30px, 5vw, 46px)', letterSpacing: '-.04em', margin: '0 0 20px' }}>
+              Empowering Ugandan education with technology that serves.
+            </h2>
+            <p style={{ color: '#b5c9d7', fontSize: 19, lineHeight: 1.7, maxWidth: 760, margin: '0 auto' }}>
+              We build technology that serves Ugandan education — simple enough for a village headteacher,
+              powerful enough for a city secondary school, affordable enough for every school.
+            </p>
+          </div>
+
+          {/* Vision statement */}
+          <div style={{ background: 'rgba(97,211,165,0.08)', border: '1px solid #2a6b50', borderRadius: 16, padding: 32, marginBottom: 40, textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>🎯</div>
+            <h3 style={{ color: '#61d3a5', fontSize: 18, textTransform: 'uppercase', letterSpacing: '.1em', marginBottom: 12 }}>Our Vision</h3>
+            <p style={{ fontSize: 20, lineHeight: 1.6, color: '#f7fbff', maxWidth: 700, margin: '0 auto' }}>
+              To be Uganda's most trusted school management platform — empowering every school,
+              from village nursery to urban university, with affordable digital tools that work
+              even without internet.
+            </p>
+          </div>
+
+          {/* Goals grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+            {[
+              { icon: '📄', title: 'Digitize ALL Records', desc: 'No more paper registers, no more lost files. Every student, staff, fee, exam — stored digitally and encrypted.' },
+              { icon: '🏛️', title: 'Effortless EMIS Compliance', desc: 'Automatic EMIS reports for the Ministry of Education. Stay compliant without extra paperwork.' },
+              { icon: '💰', title: '100% Fee Transparency', desc: 'Every shilling tracked, every receipt digital. Parents see exactly what they owe and what they paid.' },
+              { icon: '🎓', title: 'Direct UNEB Registration', desc: 'Register exam candidates from the classroom to UNEB in one click. No more manual forms.' },
+              { icon: '🌍', title: 'Bridge Urban-Rural Gap', desc: 'Works offline on any computer — even in villages without internet. Syncs when connection returns.' },
+              { icon: '🔒', title: 'Data Privacy First', desc: 'Encrypted local database. Your school data never leaves your computer without your permission.' },
+              { icon: '📊', title: 'Real-Time Dashboards', desc: 'Make decisions with data, not guesswork. Live stats on enrollment, fees, attendance, performance.' },
+              { icon: '💸', title: 'Affordable for All', desc: 'UGX 150k/year — less than one teacher's monthly salary. Quality ERP for every Ugandan school.' },
+            ].map((goal) => (
+              <div key={goal.title} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #2c4a64', borderRadius: 14, padding: 22 }}>
+                <div style={{ fontSize: 28, marginBottom: 10 }}>{goal.icon}</div>
+                <h4 style={{ margin: '0 0 8px', fontSize: 16, color: '#61d3a5' }}>{goal.title}</h4>
+                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: '#9ab4c5' }}>{goal.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      id="plans" style={{ background: '#f5f8fa', color: '#102a3c', padding: '64px 24px' }}>
         <div style={{ maxWidth: 1180, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
             <div style={{ color: '#16865e', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', fontSize: 12 }}>Subscription Plans</div>
