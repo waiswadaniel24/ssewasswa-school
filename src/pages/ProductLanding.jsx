@@ -96,8 +96,8 @@ const PAYMENT_METHODS = [
 ];
 
 const CONTACTS = [
-  { label: 'WhatsApp / MTN', value: '+256 752 971 118', href: 'https://wa.me/256752971118', person: 'Kusuya Grace' },
-  { label: 'Call / Airtel', value: '+256 789 738 420', href: 'tel:+256789738420', person: 'Waiswa Moses' },
+  { label: 'WhatsApp / MTN', value: '+256 789 736 737', href: 'https://wa.me/256789736737', person: 'Ssewasswa Comforts Tech' },
+  { label: 'Call / Airtel', value: '+256 752 971 118', href: 'tel:+256752971118', person: 'Ssewasswa Comforts Tech' },
   { label: 'Email', value: 'support@ssewasswacomfortstechnologies.com', href: 'mailto:support@ssewasswacomfortstechnologies.com', person: 'Support Team' },
 ];
 
@@ -159,6 +159,18 @@ export default function ProductLanding() {
   const handleSubscribe = (plan) => {
     setSelectedPlan(plan);
     setPaymentStep('methods');
+    // Generate unique payment reference code for auto-matching
+    try {
+      const refRes = await fetch('/api/create-reference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier: plan.tier, email: '', customer_name: '' })
+      });
+      const refData = await refRes.json();
+      if (refData.success) {
+        setPaymentRef(refData.reference);
+      }
+    } catch (e) { /* reference generation failed — customer can still pay manually */ }
     setError('');
     setManualInstructions(null);
     setPesapalRedirect(null);
@@ -574,8 +586,8 @@ export default function ProductLanding() {
             School ERP V10 — Uganda
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div>+256 752 971 118 (Kusuya Grace)</div>
-            <div>+256 789 738 420 (Waiswa Moses)</div>
+            <div>+256 789 736 737 (MTN)</div>
+            <div>+256 752 971 118 (Airtel)</div>
             <div>support@ssewasswacomfortstechnologies.com</div>
           </div>
         </div>
