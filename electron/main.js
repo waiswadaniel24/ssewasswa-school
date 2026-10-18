@@ -2,6 +2,137 @@
 // Ssewasswa School ERP V10 - EMIS Uganda Compliant
 
 const { app, BrowserWindow, ipcMain, dialog, powerMonitor, safeStorage, shell } = require('electron');
+
+// ═══ AUTO-UPDATE (electron-updater) ═════════════════════════════
+// Checks GitHub Releases for new versions on app start.
+// If newer version exists, shows notification + lets user update
+// without reinstalling (like WhatsApp, Telegram, etc.)
+let autoUpdater = null;
+let updateInfo = null;
+let updateAvailable = false;
+let downloadProgress = 0;
+try {
+  autoUpdater = require('electron-updater').autoUpdater;
+  if (autoUpdater) {
+    autoUpdater.autoDownload = false; // Don't auto-download — let user decide
+    autoUpdater.autoInstallOnAppQuit = true; // Install on next app quit
+    autoUpdater.allowDowngrade = false;
+
+    autoUpdater.on('update-available', (info) => {
+      console.log('[Auto-Update] Update available:', info.version);
+      updateInfo = info;
+      updateAvailable = true;
+      // Notify all renderer windows about the update
+      BrowserWindow.getAllWindows().forEach((win) => {
+        win.webContents.send('update-available', info);
+      });
+      // Show a desktop notification
+      if (Notification.permissionGranted || process.platform === 'win32') {
+        try {
+          const notif = new Notification({
+            title: 'Ssewasswa School ERP — Update Available',
+            body: `Version ${info.version} is ready. Click to update.`,
+            silent: false
+          });
+          notif.on('click', () => {
+            BrowserWindow.getAllWindows().forEach((w) => w.webContents.send('update-show-dialog'));
+          });
+          notif.show();
+        } catch (e) { /* notification might fail — ignore */ }
+      }
+    });
+
+    autoUpdater.on('update-not-available', () => {
+      console.log('[Auto-Update] App is up to date');
+      BrowserWindow.getAllWindows().forEach((win) => {
+        win.webContents.send('update-not-available');
+      });
+    });
+
+    autoUpdater.on('download-progress', (progress) => {
+      downloadProgress = progress.percent || 0;
+      console.log(`[Auto-Update] Downloading: ${downloadProgress.toFixed(1)}%`);
+      BrowserWindow.getAllWindows().forEach((win) => {
+        win.webContents.send('update-download-progress', {
+          percent: downloadProgress,
+          transferred: progress.transferred,
+          total: progress.total
+        });
+      });
+    });
+
+    autoUpdater.on('update-downloaded', () => {
+      console.log('[Auto-Update] Update downloaded — ready to install');
+      BrowserWindow.getAllWindows().forEach((win) => {
+        win.webContents.send('update-downloaded');
+      });
+    });
+
+    autoUpdater.on('error', (err) => {
+      console.error('[Auto-Update] Error:', err.message);
+      BrowserWindow.getAllWindows().forEach((win) => {
+        win.webContents.send('update-error', { message: err.message });
+      });
+    });
+
+    // Check for updates 5 seconds after app ready (delayed to not slow startup)
+    app.whenReady().then(() => {
+      setTimeout(() => {
+        try {
+          autoUpdater.checkForUpdates().catch((e) => {
+            console.log('[Auto-Update] Check failed (probably no internet):', e.message);
+          });
+        } catch (e) {
+          console.log('[Auto-Update] checkForUpdates failed:', e.message);
+        }
+      }, 5000);
+    });
+  }
+} catch (e) {
+  console.log('[Auto-Update] electron-updater not available (likely dev mode):', e.message);
+}
+
+// IPC handlers for update-related actions
+ipcMain.handle('check-for-updates', async () => {
+  if (!autoUpdater) return { success: false, error: 'Auto-updater not available' };
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    return { success: true, updateAvailable: !!result?.updateInfo, updateInfo: result?.updateInfo };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('download-update', async () => {
+  if (!autoUpdater) return { success: false, error: 'Auto-updater not available' };
+  try {
+    await autoUpdater.downloadUpdate();
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('install-update', async () => {
+  if (!autoUpdater) return { success: false, error: 'Auto-updater not available' };
+  try {
+    autoUpdater.quitAndInstall();
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('get-update-status', async () => {
+  return {
+    autoUpdaterAvailable: !!autoUpdater,
+    updateAvailable,
+    updateInfo,
+    downloadProgress
+  };
+});
+
+
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
