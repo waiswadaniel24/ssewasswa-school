@@ -7,8 +7,25 @@ function readLocal(key, fallback) {
   try { return localStorage.getItem(key) || fallback; } catch { return fallback; }
 }
 
+function readUserFromStorage() {
+  // Critical: restore user from localStorage on initial load.
+  // This is REQUIRED for the desktop app (no Supabase configured) so that
+  // the user persists across page reloads (login → navigate → page reload).
+  // Without this, every page reload loses the user state → broken login flow.
+  try {
+    const stored = localStorage.getItem('erp_user');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && typeof parsed === 'object') return parsed;
+    }
+  } catch { /* storage unavailable or corrupt — fall through to null */ }
+  return null;
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  // LAZY INITIAL STATE: read user from localStorage on first mount.
+  // This is what makes login → page reload → still logged in work.
+  const [user, setUser] = useState(readUserFromStorage);
   const [authReady, setAuthReady] = useState(!supabase);
   const [schoolLevel, setSchoolLevel] = useState(() => readLocal('erp_school_level', 'Primary'));
   const [currentSchoolId, setCurrentSchoolId] = useState(() => Number(readLocal('erp_school_id', '1')) || 1);
@@ -24,13 +41,26 @@ export function AuthProvider({ children }) {
     };
     setUser(normalized);
     try { localStorage.setItem('erp_user', JSON.stringify(normalized)); } catch { /* storage unavailable */ }
-    if (normalized.isDeveloper && window.location.pathname !== '/dev') window.location.replace('/dev');
+    // For developer users, redirect to /dev (but DON'T force a page reload
+    // — React Router navigation is enough; user state is preserved via localStorage).
+    if (normalized.isDeveloper && window.location.pathname !== '/dev') {
+      // Use history.replaceState for a soft redirect (preserves React state)
+      // OR use a small delay to let React Router handle it
+      setTimeout(() => { 
+        try { window.history.replaceState({}, '', '/dev'); } catch {}
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }, 50);
+    }
   };
 
   const logout = async () => {
-    if (supabase) await supabase.auth.signOut();
+    // Sign out of Supabase (no-op in desktop mode where supabase is null)
+    if (supabase) {
+      try { await supabase.auth.signOut(); } catch { /* ignore */ }
+    }
     setUser(null);
     try { localStorage.removeItem('erp_user'); } catch { /* storage unavailable */ }
+    // Redirect to /login (the page reload is OK because logout explicitly clears state)
     window.location.assign('/login');
   };
 
@@ -40,8 +70,16 @@ export function AuthProvider({ children }) {
     window.location.reload();
   };
 
+  // ─── Supabase session listener (only when Supabase is configured) ───
+  // In desktop mode (no Supabase), we rely on localStorage for session persistence
+  // (see readUserFromStorage above). This useEffect is a no-op in desktop mode.
   useEffect(() => {
-    if (!supabase) return undefined;
+    if (!supabase) {
+      // Desktop mode — no Supabase session to manage. User state already
+      // restored from localStorage via the lazy initial useState above.
+      setAuthReady(true);
+      return undefined;
+    }
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
