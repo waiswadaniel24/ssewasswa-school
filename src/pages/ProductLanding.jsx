@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import AIChatbot from '../components/AIChatbot.jsx';
 
 const PLANS = [
   {
@@ -532,6 +533,7 @@ export default function ProductLanding() {
           </div>
         </div>
       </footer>
+          <AIChatbot />
     </main>
   );
 }
