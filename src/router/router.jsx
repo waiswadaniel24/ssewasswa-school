@@ -229,16 +229,8 @@ const Lock = ({ isLocked, children }) => {
 
 // ─── Protected route (auth + lock + lazy + error boundary) ──
 const ProtectedRoute = ({ isLocked, children, pageName }) => {
-    // On web (no Electron), show "Desktop App Required" message.
-    // Use MULTIPLE checks to detect Electron — even if preload fails, userAgent + process will catch it.
-    const isElectron = typeof window !== 'undefined' && (
-        !!window.electronAPI ||
-        (typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('electron')) ||
-        (window.process && window.process.versions && window.process.versions.electron)
-    );
-    if (!isElectron) {
-        return <DesktopRequired pageName={pageName} />;
-    }
+    // Note: On web (no Electron), ERP pages will show their own loading/empty state
+    // (most pages check for window.electronAPI and handle it gracefully)
     const { user, authReady, schoolLevel } = useAuth();
     const location = useLocation();
     if (!authReady) return <LoadingFallback />;
