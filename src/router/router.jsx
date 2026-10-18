@@ -15,6 +15,14 @@ import ProductLanding from '../pages/ProductLanding.jsx';
 import Welcome from '../pages/Welcome.jsx';
 import Admin from '../pages/Admin.jsx';
 import QuickLicense from '../pages/QuickLicense.jsx';
+import SAASPortal from '../pages/SAASPortal.jsx';
+import HMISLanding from '../pages/HMISLanding.jsx';
+import HMISDashboard from '../pages/hmis/Dashboard.jsx';
+import HMISPatients from '../pages/hmis/Patients.jsx';
+import HMISOPD from '../pages/hmis/OPD.jsx';
+import HMISLab from '../pages/hmis/Lab.jsx';
+import HMISPharmacy from '../pages/hmis/Pharmacy.jsx';
+import HMISBilling from '../pages/hmis/Billing.jsx';
 import SchoolSignup from '../pages/SchoolSignup.jsx';
 import ResetPassword from '../pages/ResetPassword.jsx';
 // ─── Loading fallback (defined FIRST so AuthCallback can use it) ──
@@ -319,9 +327,32 @@ export default function AppRouter({ isInitialized, isLocked }) {
             element: <PublicRoute><ResetPassword /></PublicRoute>
         },
 
-        // ─── Protected routes (auth + lock required) ──────
+        // ─── SaaS Portal (public homepage with product selector) ───
         {
             path: '/',
+            element: <PublicRoute><SAASPortal /></PublicRoute>
+        },
+        // ─── HMIS Landing (public) ───
+        {
+            path: '/hmis-landing',
+            element: <PublicRoute><HMISLanding /></PublicRoute>
+        },
+        // ─── HMIS App (protected) ───
+        {
+            path: '/hmis',
+            element: <ProtectedLayout />,
+            children: [
+                { index: true, element: <ProtectedRoute isLocked={isLocked}><HMISDashboard /></ProtectedRoute> },
+                { path: 'patients', element: <ProtectedRoute isLocked={isLocked}><HMISPatients /></ProtectedRoute> },
+                { path: 'opd', element: <ProtectedRoute isLocked={isLocked}><HMISOPD /></ProtectedRoute> },
+                { path: 'lab', element: <ProtectedRoute isLocked={isLocked}><HMISLab /></ProtectedRoute> },
+                { path: 'pharmacy', element: <ProtectedRoute isLocked={isLocked}><HMISPharmacy /></ProtectedRoute> },
+                { path: 'billing', element: <ProtectedRoute isLocked={isLocked}><HMISBilling /></ProtectedRoute> },
+            ]
+        },
+        // ─── School ERP (protected) ───
+        {
+            path: '/app',
             element: <ProtectedLayout />,
             children: [
                 // Dashboard
