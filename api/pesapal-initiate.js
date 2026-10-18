@@ -34,10 +34,10 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       status: 'manual',
       amount, tier: tierName,
-      instructions: 'Pay via MTN MoMo to 0752 971 118 (Kusuya Grace) OR Airtel Money to 0789 738 420 (Waiswa Moses). Send payment screenshot + your HWID to WhatsApp +256 752 971 118 to receive your license key.',
+      instructions: 'Pay via MTN MoMo to 0752 971 118 (Ssewasswa Comforts Tech) OR Airtel Money to 0789 738 420 (Ssewasswa Comforts Tech). Send payment screenshot + your HWID to WhatsApp +256 752 971 118 to receive your license key.',
       momo_numbers: [
-        { name: 'Kusuya Grace', number: '0752971118', network: 'MTN' },
-        { name: 'Waiswa Moses', number: '0789738420', network: 'Airtel' }
+        { name: 'Ssewasswa Comforts Tech', number: '0789736737', network: 'MTN' },
+        { name: 'Ssewasswa Comforts Tech', number: '0752971118', network: 'Airtel' }
       ],
       whatsapp: 'https://wa.me/256752971118'
     });
@@ -112,10 +112,10 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       status: 'manual',
       amount, tier: tierName,
-      instructions: 'Pesapal unavailable. Pay via MTN MoMo to 0752 971 118 (Kusuya Grace) OR Airtel to 0789 738 420 (Waiswa Moses).',
+      instructions: 'Pesapal unavailable. Pay via MTN MoMo to 0752 971 118 (Ssewasswa Comforts Tech) OR Airtel to 0789 738 420 (Ssewasswa Comforts Tech).',
       momo_numbers: [
-        { name: 'Kusuya Grace', number: '0752971118', network: 'MTN' },
-        { name: 'Waiswa Moses', number: '0789738420', network: 'Airtel' }
+        { name: 'Ssewasswa Comforts Tech', number: '0789736737', network: 'MTN' },
+        { name: 'Ssewasswa Comforts Tech', number: '0752971118', network: 'Airtel' }
       ],
       whatsapp: 'https://wa.me/256752971118',
       error: err.message
