@@ -7,6 +7,7 @@ import Sidebar from './Sidebar.jsx';
 import StatusBar from './StatusBar.jsx';
 import { Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import UpdateNotifier from '../components/UpdateNotifier.jsx';
 
 export default function Layout() {
   const { logout } = useAuth();
@@ -140,7 +141,8 @@ export default function Layout() {
           backgroundColor: isDark ? '#1e1e1e' : '#f4f6f9'
         }}>
           <Outlet />
-        </main>
+              <UpdateNotifier />
+    </main>
       </div>
 
       {/* ─── Bottom Status Bar ────────────────────────── */}
