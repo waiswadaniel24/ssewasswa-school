@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '../lib/supabase.js';
 import { useNavigate } from 'react-router-dom';
 var UGANDA_DISTRICTS = ['Kampala','Wakiso','Mukono','Mpigi','Masaka','Mityana','Mubende','Buikwe','Bukomansimbi','Butambala','Buvuma','Gomba','Kalangala','Kalungu','Kayunga','Kiboga','Kyankwanzi','Lwengo','Lyantonde','Nakaseke','Nakasongola','Rakai','Ssembabule','Jinja','Mbale','Soroti','Tororo','Iganga','Kamuli','Kumi','Busia','Bugiri','Budaka','Bududa','Bukedea','Bulambuli','Butaleja','Butebo','Kaberamaido','Kaliro','Kapchorwa','Katakwi','Kibuku','Namayingo','Namutumba','Ngora','Pallisa','Serere','Sironko','Mbarara','Kasese','Kabale','Hoima','Masindi','Kisoro','Rukungiri','Ntungamo','Bushenyi','Ibanda','Isingiro','Kabarole','Kamwenge','Kanungu','Kyenjojo','Kiruhura','Kibaale','Kyegegwa','Mitooma','Ntoroko','Rubirizi','Sheema','Gulu','Lira','Kitgum','Pader','Apac','Amolatar','Amuru','Nwoya','Otuke','Oyam','Alebtong','Abim','Agago','Amudat','Lamwo','Napak','Nakapiripirit','Kaabong','Kotido','Arua','Nebbi','Adjumani','Moyo','Yumbe','Koboko','Maracha','Zombo','Other'];
 export default function SystemSetup() {
@@ -27,7 +28,45 @@ setLoading(true);
 try {
 var schoolCategory = formData.boardingStatus + '_' + formData.genderType;
 var payload = {}; for (var k in formData) payload[k] = formData[k]; payload.schoolCategory = schoolCategory;
-if (!window.electronAPI || typeof window.electronAPI.authSetup !== 'function') {
+// ─── WEB MODE (Supabase) — save school details to cloud ───
+            if (!hasElectron && typeof supabase !== 'undefined' && supabase) {
+                try {
+                    // Save school to erp_schools table
+                    var schoolRes = await supabase.from('erp_schools').upsert([{
+                        school_name: payload.schoolName,
+                        school_level: payload.schoolLevel,
+                        settings: payload,
+                        is_active: true
+                    }]).select();
+                    
+                    if (schoolRes.error) throw schoolRes.error;
+                    
+                    // Save system settings
+                    await supabase.from('erp_system_settings').upsert([
+                        { key: 'school_level', value: payload.schoolLevel },
+                        { key: 'is_initialized', value: 'true' },
+                        { key: 'school_name', value: payload.schoolName }
+                    ]);
+                    
+                    // Update localStorage
+                    try {
+                        localStorage.setItem('erp_school_level', payload.schoolLevel);
+                        localStorage.setItem('erp_school_name', payload.schoolName);
+                        localStorage.setItem('erp_is_initialized', 'true');
+                    } catch (e) {}
+                    
+                    setLoading(false);
+                    setSuccess('School setup complete! Redirecting to login...');
+                    setTimeout(function() { window.location.href = '/login'; }, 2000);
+                    return;
+                } catch (err) {
+                    setLoading(false);
+                    setError('Setup error: ' + (err.message || 'Unknown error'));
+                    return;
+                }
+            }
+            
+            if (!window.electronAPI || typeof window.electronAPI.authSetup !== 'function') {
 setError('Electron not available. Run with start.bat'); setLoading(false); return;
 }
 var res = await window.electronAPI.authSetup(payload);
