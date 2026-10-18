@@ -37,6 +37,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
   /** Check if the system has been initialized (at least one user exists) */
   checkInitialized: () => ipcRenderer.invoke('checkInitialized'),
 
+
+  // ─── Auto-update (electron-updater) ───
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  downloadUpdate: () => ipcRenderer.invoke('download-update'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+  getUpdateStatus: () => ipcRenderer.invoke('get-update-status'),
+  onUpdateAvailable: (callback) => {
+    ipcRenderer.on('update-available', (_, info) => callback(info));
+  },
+  onUpdateDownloaded: (callback) => {
+    ipcRenderer.on('update-downloaded', () => callback());
+  },
+  onUpdateDownloadProgress: (callback) => {
+    ipcRenderer.on('update-download-progress', (_, progress) => callback(progress));
+  },
+  onUpdateError: (callback) => {
+    ipcRenderer.on('update-error', (_, err) => callback(err));
+  },
+  onUpdateShowDialog: (callback) => {
+    ipcRenderer.on('update-show-dialog', () => callback());
+  },
+
   /** Get the hardware ID for license binding */
   getHwid: () => ipcRenderer.invoke('getHwid'),
 
