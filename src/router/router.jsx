@@ -327,10 +327,21 @@ export default function AppRouter({ isInitialized, isLocked }) {
             element: <PublicRoute><ResetPassword /></PublicRoute>
         },
 
-        // ─── SaaS Portal (public homepage with product selector) ───
+        // ─── Root route — SaaS Portal on web, redirect on desktop ───
         {
             path: '/',
-            element: <PublicRoute><SAASPortal /></PublicRoute>
+            element: (() => {
+                // On desktop (Electron), redirect to /app (school ERP) or /login
+                const isElectron = typeof window !== 'undefined' && (
+                    !!window.electronAPI ||
+                    (navigator.userAgent && navigator.userAgent.toLowerCase().includes('electron'))
+                );
+                if (isElectron) {
+                    return <Navigate to="/app" replace />;
+                }
+                // On web, show the SaaS Portal (product selector)
+                return <PublicRoute><SAASPortal /></PublicRoute>;
+            })()
         },
         // ─── HMIS Landing (public) ───
         {
