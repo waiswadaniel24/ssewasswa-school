@@ -131,7 +131,7 @@ export const SCHOOL_LEVELS = {
             'textbooks', 'reports', 'settings', 'users', 'manuals', 'generate-docs', 'about', 'signatures', 'deductions', 'purchases', 'meeting-minutes'
         ],
         academicLevels: ['Certificate', 'Diploma', 'Degree'],
-        examTypes: [],
+        examTypes: ['UBTEB'],
         showUNEB: false,
         showEMIS: false,
         showNursery: false,
@@ -149,7 +149,7 @@ export const SCHOOL_LEVELS = {
             'settings', 'users', 'manuals', 'generate-docs', 'about', 'signatures', 'deductions', 'purchases', 'meeting-minutes'
         ],
         academicLevels: ['Undergraduate', 'Postgraduate'],
-        examTypes: [],
+        examTypes: ['NCHE'],
         showUNEB: false,
         showEMIS: false,
         showNursery: false,
@@ -169,7 +169,7 @@ export const SCHOOL_LEVELS = {
             'signatures', 'deductions', 'purchases', 'meeting-minutes'
         ],
         academicLevels: ['Technical', 'Vocational', 'Certificate', 'Diploma'],
-        examTypes: ['Technical'],
+        examTypes: ['UBTEB'],
         showUNEB: false,
         showEMIS: true,
         showNursery: false,
@@ -190,7 +190,7 @@ export const SCHOOL_LEVELS = {
             'signatures', 'deductions', 'purchases', 'meeting-minutes'
         ],
         academicLevels: ['Certificate', 'Diploma', 'Advanced Diploma'],
-        examTypes: ['Health'],
+        examTypes: ['Nurses Council', 'AHPC'],
         showUNEB: false,
         showEMIS: true,
         showNursery: false,
@@ -210,7 +210,7 @@ export const SCHOOL_LEVELS = {
             'generate-docs', 'about', 'signatures', 'deductions', 'purchases', 'meeting-minutes'
         ],
         academicLevels: ['Certificate', 'Diploma', 'Bachelor', 'MBA'],
-        examTypes: ['Business'],
+        examTypes: ['UBTEB'],
         showUNEB: false,
         showEMIS: true,
         showNursery: false,
@@ -230,7 +230,7 @@ export const SCHOOL_LEVELS = {
             'generate-docs', 'about', 'signatures', 'deductions', 'purchases', 'meeting-minutes'
         ],
         academicLevels: ['Certificate', 'Diploma', 'Bachelor', 'Masters'],
-        examTypes: ['Arts'],
+        examTypes: ['UNEB', 'NCHE'],
         showUNEB: false,
         showEMIS: true,
         showNursery: false,
@@ -250,7 +250,7 @@ export const SCHOOL_LEVELS = {
             'generate-docs', 'about', 'signatures', 'deductions', 'purchases', 'meeting-minutes'
         ],
         academicLevels: ['Certificate', 'Diploma', 'Bachelor', 'Masters', 'PhD'],
-        examTypes: ['Sciences'],
+        examTypes: ['NCHE'],
         showUNEB: false,
         showEMIS: true,
         showNursery: false,
@@ -269,7 +269,7 @@ export const SCHOOL_LEVELS = {
             'generate-docs', 'about', 'signatures', 'deductions', 'purchases', 'meeting-minutes'
         ],
         academicLevels: ['Certificate', 'Diploma', 'Bachelor', 'Masters'],
-        examTypes: ['Theological'],
+        examTypes: ['NCHE'],
         showUNEB: false,
         showEMIS: false,
         showNursery: false,
@@ -308,7 +308,7 @@ export const SCHOOL_LEVELS = {
             'generate-docs', 'about', 'signatures', 'deductions', 'purchases', 'meeting-minutes'
         ],
         academicLevels: ['Certificate', 'Diploma', 'Degree'],
-        examTypes: ['Teacher'],
+        examTypes: ['Kyambogo', 'PTC'],
         showUNEB: false,
         showEMIS: true,
         showNursery: false,
