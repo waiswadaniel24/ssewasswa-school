@@ -2,6 +2,7 @@
 // Ssewasswa School ERP V10 - EMIS Uganda Compliant
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { getExamBoardsForLevel, getExamTypesForLevel } from '../config/examBoards.js';
 
 export default function EMISConfig() {
   const [config, setConfig] = useState({
