@@ -297,7 +297,7 @@ export default function ProductLanding() {
         </div>
       </section>
 
-      id="plans" style={{ background: '#f5f8fa', color: '#102a3c', padding: '64px 24px' }}>
+      <section id="plans" style={{ background: '#f5f8fa', color: '#102a3c', padding: '64px 24px' }}>
         <div style={{ maxWidth: 1180, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 40 }}>
             <div style={{ color: '#16865e', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', fontSize: 12 }}>Subscription Plans</div>
