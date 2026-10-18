@@ -250,7 +250,7 @@ export default function ProductLanding() {
       </section>
 
       {/* ─── PLANS section ─── */}
-      <section {/* ─── VISION & GOALS section ─── */}
+      {/* ─── VISION & GOALS section ─── */}
       <section style={{ background: '#071b2f', color: '#f7fbff', padding: '64px 24px' }}>
         <div style={{ maxWidth: 980, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 48 }}>
