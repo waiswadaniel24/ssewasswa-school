@@ -156,7 +156,7 @@ export default function ProductLanding() {
     if (user?.username) setCustomerName(user.username);
   }, [authReady, user, navigate]);
 
-  const handleSubscribe = (plan) => {
+  const handleSubscribe = async (plan) => {
     setSelectedPlan(plan);
     setPaymentStep('methods');
     // Generate unique payment reference code for auto-matching
