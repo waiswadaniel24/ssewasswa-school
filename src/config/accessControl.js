@@ -155,6 +155,47 @@ export const SCHOOL_LEVELS = {
         showNursery: false,
         showSecondary: false,
         showExtracurricular: false
+    },
+    'Technical': {
+        label: 'Technical/Vocational Institute',
+        modules: [
+            'dashboard', 'students', 'student/:id', 'staff', 'payroll', 'attendance',
+            'academics', 'timetable', 'calendar', 'exams', 'broad-sheet', 'report-cards',
+            'promotion', 'id-cards', 'finance', 'debts', 'school-finances', 'accounting',
+            'canteen', 'library', 'discipline', 'transport', 'requirements',
+            'kpi-dashboard', 'data-validation', 'data-export', 'infrastructure', 'wash',
+            'governance', 'health-nutrition', 'special-needs', 'dropouts', 'textbooks',
+            'reports', 'settings', 'users', 'manuals', 'generate-docs', 'about',
+            'signatures', 'deductions', 'purchases', 'meeting-minutes'
+        ],
+        academicLevels: ['Technical', 'Vocational', 'Certificate', 'Diploma'],
+        examTypes: ['Technical'],
+        showUNEB: false,
+        showEMIS: true,
+        showNursery: false,
+        showSecondary: false,
+        showExtracurricular: true
+    },
+    'Health': {
+        label: 'Health Training Institute',
+        modules: [
+            'dashboard', 'students', 'student/:id', 'staff', 'payroll', 'attendance',
+            'academics', 'timetable', 'calendar', 'exams', 'broad-sheet', 'report-cards',
+            'promotion', 'id-cards', 'finance', 'debts', 'school-finances', 'accounting',
+            'canteen', 'library', 'discipline', 'transport', 'requirements',
+            'health-nutrition', 'wash', 'infrastructure', 'special-needs',
+            'kpi-dashboard', 'data-validation', 'data-export',
+            'governance', 'dropouts', 'textbooks',
+            'reports', 'settings', 'users', 'manuals', 'generate-docs', 'about',
+            'signatures', 'deductions', 'purchases', 'meeting-minutes'
+        ],
+        academicLevels: ['Certificate', 'Diploma', 'Advanced Diploma'],
+        examTypes: ['Health'],
+        showUNEB: false,
+        showEMIS: true,
+        showNursery: false,
+        showSecondary: false,
+        showExtracurricular: false
     }
 };
 
