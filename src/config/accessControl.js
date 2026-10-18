@@ -196,6 +196,124 @@ export const SCHOOL_LEVELS = {
         showNursery: false,
         showSecondary: false,
         showExtracurricular: false
+    },
+    'Business': {
+        label: 'Business/Commerce Institute',
+        modules: [
+            'dashboard', 'students', 'student/:id', 'staff', 'payroll', 'attendance',
+            'academics', 'timetable', 'calendar', 'exams', 'broad-sheet', 'report-cards',
+            'promotion', 'id-cards', 'finance', 'debts', 'school-finances', 'accounting',
+            'canteen', 'library', 'discipline', 'transport', 'requirements',
+            'kpi-dashboard', 'data-validation', 'data-export', 'infrastructure', 'wash',
+            'governance', 'health-nutrition', 'special-needs', 'dropouts', 'textbooks',
+            'emis-report', 'emis-config', 'reports', 'settings', 'users', 'manuals',
+            'generate-docs', 'about', 'signatures', 'deductions', 'purchases', 'meeting-minutes'
+        ],
+        academicLevels: ['Certificate', 'Diploma', 'Bachelor', 'MBA'],
+        examTypes: ['Business'],
+        showUNEB: false,
+        showEMIS: true,
+        showNursery: false,
+        showSecondary: false,
+        showExtracurricular: false
+    },
+    'Arts': {
+        label: 'Arts & Humanities Institute',
+        modules: [
+            'dashboard', 'students', 'student/:id', 'staff', 'payroll', 'attendance',
+            'academics', 'timetable', 'calendar', 'exams', 'broad-sheet', 'report-cards',
+            'promotion', 'id-cards', 'finance', 'debts', 'school-finances', 'accounting',
+            'canteen', 'library', 'discipline', 'transport', 'requirements',
+            'kpi-dashboard', 'data-validation', 'data-export', 'infrastructure', 'wash',
+            'governance', 'health-nutrition', 'special-needs', 'dropouts', 'textbooks',
+            'emis-report', 'emis-config', 'reports', 'settings', 'users', 'manuals',
+            'generate-docs', 'about', 'signatures', 'deductions', 'purchases', 'meeting-minutes'
+        ],
+        academicLevels: ['Certificate', 'Diploma', 'Bachelor', 'Masters'],
+        examTypes: ['Arts'],
+        showUNEB: false,
+        showEMIS: true,
+        showNursery: false,
+        showSecondary: false,
+        showExtracurricular: true
+    },
+    'Sciences': {
+        label: 'Sciences & Technology Institute',
+        modules: [
+            'dashboard', 'students', 'student/:id', 'staff', 'payroll', 'attendance',
+            'academics', 'timetable', 'calendar', 'exams', 'broad-sheet', 'report-cards',
+            'promotion', 'id-cards', 'finance', 'debts', 'school-finances', 'accounting',
+            'canteen', 'library', 'discipline', 'transport', 'requirements',
+            'kpi-dashboard', 'data-validation', 'data-export', 'infrastructure', 'wash',
+            'governance', 'health-nutrition', 'special-needs', 'dropouts', 'textbooks',
+            'emis-report', 'emis-config', 'reports', 'settings', 'users', 'manuals',
+            'generate-docs', 'about', 'signatures', 'deductions', 'purchases', 'meeting-minutes'
+        ],
+        academicLevels: ['Certificate', 'Diploma', 'Bachelor', 'Masters', 'PhD'],
+        examTypes: ['Sciences'],
+        showUNEB: false,
+        showEMIS: true,
+        showNursery: false,
+        showSecondary: false,
+        showExtracurricular: true
+    },
+    'Theological': {
+        label: 'Theological Seminary',
+        modules: [
+            'dashboard', 'students', 'student/:id', 'staff', 'payroll', 'attendance',
+            'academics', 'timetable', 'calendar', 'exams', 'broad-sheet', 'report-cards',
+            'promotion', 'id-cards', 'finance', 'debts', 'school-finances', 'accounting',
+            'canteen', 'library', 'discipline', 'transport', 'requirements',
+            'governance', 'health-nutrition', 'special-needs', 'dropouts',
+            'data-export', 'reports', 'settings', 'users', 'manuals',
+            'generate-docs', 'about', 'signatures', 'deductions', 'purchases', 'meeting-minutes'
+        ],
+        academicLevels: ['Certificate', 'Diploma', 'Bachelor', 'Masters'],
+        examTypes: ['Theological'],
+        showUNEB: false,
+        showEMIS: false,
+        showNursery: false,
+        showSecondary: false,
+        showExtracurricular: false
+    },
+    'Vocational': {
+        label: 'Vocational Training Centre',
+        modules: [
+            'dashboard', 'students', 'student/:id', 'staff', 'payroll', 'attendance',
+            'academics', 'timetable', 'calendar', 'exams', 'report-cards',
+            'id-cards', 'finance', 'debts', 'accounting',
+            'canteen', 'library', 'transport', 'requirements',
+            'data-export', 'infrastructure', 'wash', 'health-nutrition',
+            'settings', 'users', 'manuals', 'generate-docs', 'about',
+            'signatures', 'purchases', 'meeting-minutes'
+        ],
+        academicLevels: ['Certificate', 'Trade', 'Apprenticeship'],
+        examTypes: ['Vocational'],
+        showUNEB: false,
+        showEMIS: true,
+        showNursery: false,
+        showSecondary: false,
+        showExtracurricular: true
+    },
+    'TeacherTraining': {
+        label: 'Teacher Training College (PTC/NTC)',
+        modules: [
+            'dashboard', 'students', 'student/:id', 'staff', 'payroll', 'attendance',
+            'academics', 'timetable', 'calendar', 'exams', 'broad-sheet', 'report-cards',
+            'promotion', 'id-cards', 'finance', 'debts', 'school-finances', 'accounting',
+            'canteen', 'library', 'discipline', 'transport', 'requirements',
+            'kpi-dashboard', 'data-validation', 'data-export', 'infrastructure', 'wash',
+            'governance', 'health-nutrition', 'special-needs', 'dropouts', 'textbooks',
+            'emis-report', 'emis-config', 'reports', 'settings', 'users', 'manuals',
+            'generate-docs', 'about', 'signatures', 'deductions', 'purchases', 'meeting-minutes'
+        ],
+        academicLevels: ['Certificate', 'Diploma', 'Degree'],
+        examTypes: ['Teacher'],
+        showUNEB: false,
+        showEMIS: true,
+        showNursery: false,
+        showSecondary: false,
+        showExtracurricular: false
     }
 };
 
