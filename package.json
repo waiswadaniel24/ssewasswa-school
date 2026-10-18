@@ -34,7 +34,8 @@
     "react-router-dom": "^6.20.1",
     "recharts": "^2.12.0",
     "sql.js": "^1.14.2",
-    "@neondatabase/neon-js": "^0.6.2-beta"
+    "@neondatabase/neon-js": "^0.6.2-beta",
+    "electron-updater": "^6.3.9"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "^5.0.5",
@@ -100,6 +101,12 @@
     "asarUnpack": [
       "node_modules/sql.js/**/*",
       "node_modules/@neondatabase/**/*"
-    ]
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "waiswadaniel24",
+      "repo": "ssewasswa-school",
+      "releaseType": "release"
+    }
   }
 }
