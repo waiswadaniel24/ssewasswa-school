@@ -14,6 +14,7 @@ import Activation from '../pages/Activation.jsx';
 import ProductLanding from '../pages/ProductLanding.jsx';
 import Welcome from '../pages/Welcome.jsx';
 import Admin from '../pages/Admin.jsx';
+import QuickLicense from '../pages/QuickLicense.jsx';
 import SchoolSignup from '../pages/SchoolSignup.jsx';
 import ResetPassword from '../pages/ResetPassword.jsx';
 // ─── Loading fallback (defined FIRST so AuthCallback can use it) ──
@@ -227,7 +228,11 @@ const Lock = ({ isLocked, children }) => {
 };
 
 // ─── Protected route (auth + lock + lazy + error boundary) ──
-const ProtectedRoute = ({ isLocked, children }) => {
+const ProtectedRoute = ({ isLocked, children, pageName }) => {
+    // On web (no Electron), ERP pages need the desktop app — show clear message instead of blank
+    if (typeof window !== 'undefined' && (!window.electronAPI || !window.electronAPI.queryDatabase)) {
+        return <DesktopRequired pageName={pageName} />;
+    }
     const { user, authReady, schoolLevel } = useAuth();
     const location = useLocation();
     if (!authReady) return <LoadingFallback />;
@@ -294,6 +299,10 @@ export default function AppRouter({ isInitialized, isLocked }) {
         {
             path: '/admin',
             element: <DeveloperRoute><Admin /></DeveloperRoute>
+        },
+        {
+            path: '/quick-license',
+            element: <DeveloperRoute><QuickLicense /></DeveloperRoute>
         },
         {
             path: '/login',
