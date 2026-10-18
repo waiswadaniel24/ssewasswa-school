@@ -285,7 +285,7 @@ export default function ProductLanding() {
               { icon: '🌍', title: 'Bridge Urban-Rural Gap', desc: 'Works offline on any computer — even in villages without internet. Syncs when connection returns.' },
               { icon: '🔒', title: 'Data Privacy First', desc: 'Encrypted local database. Your school data never leaves your computer without your permission.' },
               { icon: '📊', title: 'Real-Time Dashboards', desc: 'Make decisions with data, not guesswork. Live stats on enrollment, fees, attendance, performance.' },
-              { icon: '💸', title: 'Affordable for All', desc: 'UGX 150k/year — less than one teacher's monthly salary. Quality ERP for every Ugandan school.' },
+              { icon: '💸', title: 'Affordable for All', desc: 'UGX 150k/year — less than a teacher monthly salary. Quality ERP for every Ugandan school.' },
             ].map((goal) => (
               <div key={goal.title} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid #2c4a64', borderRadius: 14, padding: 22 }}>
                 <div style={{ fontSize: 28, marginBottom: 10 }}>{goal.icon}</div>
