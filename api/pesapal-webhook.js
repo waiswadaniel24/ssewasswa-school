@@ -123,8 +123,8 @@ module.exports = async (req, res) => {
           </ol>
           <p>Need help? Contact us:</p>
           <ul>
-            <li>WhatsApp: <a href="https://wa.me/256752971118">+256 752 971 118</a> (Kusuya Grace)</li>
-            <li>Call: <a href="tel:+256789738420">+256 789 738 420</a> (Waiswa Moses)</li>
+            <li>WhatsApp: <a href="https://wa.me/256752971118">+256 752 971 118</a> (Ssewasswa Comforts Tech)</li>
+            <li>Call: <a href="tel:+256789738420">+256 789 738 420</a> (Ssewasswa Comforts Tech)</li>
             <li>Email: support@ssewasswacomfortstechnologies.com</li>
           </ul>
           <p>Best regards,<br/>Ssewasswa Comforts Technologies</p>
