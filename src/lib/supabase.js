@@ -102,7 +102,12 @@ export function getSupabaseUser(user) {
     id: user.id,
     username: user.user_metadata?.username || user.email || 'User',
     email: user.email || '',
-    role: user.app_metadata?.role || 'Staff',
+    // FIX: When isDeveloper is true, override role to 'Super Admin' so the
+    // sidebar shows ALL sections (Staff, Academics, Exams, Finance, EMIS, etc.)
+    // Without this, the role defaults to 'Staff' (from Supabase app_metadata)
+    // → ROLES['Staff'] = ['main','students','services','more'] → developer
+    // only sees 3 sections instead of all 11.
+    role: isDeveloper ? 'Super Admin' : (user.app_metadata?.role || 'Staff'),
     permissions: Array.isArray(user.app_metadata?.permissions) ? user.app_metadata.permissions : [],
     isDeveloper,
   };
