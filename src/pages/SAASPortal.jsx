@@ -171,8 +171,8 @@ const PORTALS = [
     color: '#d81b60',
     gradient: 'linear-gradient(135deg, #d81b60 0%, #880e4f 100%)',
     bg: '#fce4ec',
-    status: 'soon',
-    eta: 'Q1 2026 (PRIORITY)',
+    status: 'ready',
+    eta: 'Live now',
     route: '/app/more/parent-portal',
     features: [
       { icon: '📅', title: 'Child Attendance', desc: 'Daily/weekly attendance view, absentee alerts via SMS/email, monthly attendance report.' },

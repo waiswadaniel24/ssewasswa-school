@@ -71,14 +71,14 @@ export const FEATURES = [
   { id: 'biometrics', name: 'Biometrics Login', icon: '👆', category: 'Mobile', desc: 'Fingerprint / Face ID auth (mobile + desktop).', status: 'coming-soon' },
 
   // ─── Other portals (4 missing portals) ──────────────────
-  { id: 'business-portal', name: 'Business / SME Portal', icon: '🏢', category: 'Other Portals', desc: 'POS, sales, customer CRM, suppliers, branches.', status: 'coming-soon' },
-  { id: 'church-portal', name: 'Church Portal', icon: '⛪', category: 'Other Portals', desc: 'Tithes, donations, sermons library, committees.', status: 'coming-soon' },
-  { id: 'org-portal', name: 'Org / NGO Portal', icon: '🌍', category: 'Other Portals', desc: 'Member directory, registration, finance.', status: 'coming-soon' },
-  { id: 'individual-portal', name: 'Individual Portal', icon: '🧑', category: 'Other Portals', desc: 'Personal budget, savings goals.', status: 'coming-soon' },
+  { id: 'business-portal', name: 'Business / SME Portal', icon: '🏢', category: 'Other Portals', desc: 'POS, sales, customer CRM, suppliers, branches.', status: 'implemented' },
+  { id: 'church-portal', name: 'Church Portal', icon: '⛪', category: 'Other Portals', desc: 'Tithes, donations, sermons library, committees.', status: 'implemented' },
+  { id: 'org-portal', name: 'Org / NGO Portal', icon: '🌍', category: 'Other Portals', desc: 'Member directory, registration, finance.', status: 'implemented' },
+  { id: 'individual-portal', name: 'Individual Portal', icon: '🧑', category: 'Other Portals', desc: 'Personal budget, savings goals.', status: 'implemented' },
 
   // ─── User-specific portals ──────────────────────────────
-  { id: 'parent-portal', name: 'Parent Portal', icon: '👨‍👩‍👧', category: 'User Portals', desc: 'Parent login to view children\'s attendance, fees, report cards.', status: 'coming-soon' },
-  { id: 'student-portal', name: 'Student Portal', icon: '🎓', category: 'User Portals', desc: 'Student login to view own attendance, marks, assignments.', status: 'coming-soon' },
+  { id: 'parent-portal', name: 'Parent Portal', icon: '👨‍👩‍👧', category: 'User Portals', desc: 'Parent login to view children\'s attendance, fees, report cards.', status: 'implemented' },
+  { id: 'student-portal', name: 'Student Portal', icon: '🎓', category: 'User Portals', desc: 'Student login to view own attendance, marks, assignments.', status: 'implemented' },
 
   // ─── Entertainment ──────────────────────────────────────
   { id: 'entertainment', name: 'Entertainment Hub', icon: '🎬', category: 'Other', desc: 'Video + music hosting (church sermons, school events).', status: 'coming-soon' },

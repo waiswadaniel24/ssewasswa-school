@@ -289,6 +289,286 @@ CREATE POLICY "Service role can manage subscriptions"
   USING (true) WITH CHECK (true);
 
 -- ═══════════════════════════════════════════════════════════════════
+-- PORTAL TABLES (added 2026-10-19 — 6 new portals)
+-- 20 tables for Business, Church, Org, Individual, Parent, Student portals
+-- All have RLS enabled with least-privilege policies.
+-- ═══════════════════════════════════════════════════════════════════
+
+-- ─── BUSINESS/SME PORTAL (4 tables) ─────────────────────────
+CREATE TABLE IF NOT EXISTS business_customers (
+  id BIGSERIAL PRIMARY KEY,
+  business_id BIGINT,
+  name TEXT NOT NULL,
+  phone TEXT,
+  email TEXT,
+  address TEXT,
+  total_purchases INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS business_customers_business_idx ON business_customers (business_id);
+ALTER TABLE business_customers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage business_customers" ON business_customers FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS business_suppliers (
+  id BIGSERIAL PRIMARY KEY,
+  business_id BIGINT,
+  name TEXT NOT NULL,
+  contact_person TEXT,
+  phone TEXT,
+  email TEXT,
+  payment_terms TEXT DEFAULT 'Net 30',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS business_suppliers_business_idx ON business_suppliers (business_id);
+ALTER TABLE business_suppliers ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage business_suppliers" ON business_suppliers FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS business_products (
+  id BIGSERIAL PRIMARY KEY,
+  business_id BIGINT,
+  name TEXT NOT NULL,
+  price INTEGER NOT NULL,
+  stock INTEGER DEFAULT 0,
+  category TEXT,
+  sku TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS business_products_business_idx ON business_products (business_id);
+ALTER TABLE business_products ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage business_products" ON business_products FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS business_sales (
+  id BIGSERIAL PRIMARY KEY,
+  business_id BIGINT,
+  customer_id BIGINT,
+  total_amount INTEGER NOT NULL,
+  payment_method TEXT,
+  sale_date TIMESTAMPTZ DEFAULT NOW(),
+  items JSONB
+);
+CREATE INDEX IF NOT EXISTS business_sales_business_idx ON business_sales (business_id);
+CREATE INDEX IF NOT EXISTS business_sales_date_idx ON business_sales (sale_date);
+ALTER TABLE business_sales ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage business_sales" ON business_sales FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ─── CHURCH PORTAL (3 tables) ───────────────────────────────
+CREATE TABLE IF NOT EXISTS church_tithes (
+  id BIGSERIAL PRIMARY KEY,
+  church_id BIGINT,
+  member_name TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  tithe_date TIMESTAMPTZ DEFAULT NOW(),
+  payment_method TEXT
+);
+CREATE INDEX IF NOT EXISTS church_tithes_church_idx ON church_tithes (church_id);
+CREATE INDEX IF NOT EXISTS church_tithes_date_idx ON church_tithes (tithe_date);
+ALTER TABLE church_tithes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage church_tithes" ON church_tithes FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS church_donations (
+  id BIGSERIAL PRIMARY KEY,
+  church_id BIGINT,
+  donor_name TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  purpose TEXT,
+  donation_date TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS church_donations_church_idx ON church_donations (church_id);
+ALTER TABLE church_donations ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage church_donations" ON church_donations FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS church_sermons (
+  id BIGSERIAL PRIMARY KEY,
+  church_id BIGINT,
+  title TEXT NOT NULL,
+  preacher TEXT,
+  scripture_ref TEXT,
+  sermon_date TIMESTAMPTZ DEFAULT NOW(),
+  audio_url TEXT,
+  video_url TEXT,
+  transcript TEXT
+);
+CREATE INDEX IF NOT EXISTS church_sermons_church_idx ON church_sermons (church_id);
+ALTER TABLE church_sermons ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage church_sermons" ON church_sermons FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ─── ORG/NGO PORTAL (3 tables) ─────────────────────────────
+CREATE TABLE IF NOT EXISTS org_members (
+  id BIGSERIAL PRIMARY KEY,
+  org_id BIGINT,
+  name TEXT NOT NULL,
+  phone TEXT,
+  email TEXT,
+  membership_id TEXT,
+  join_date TIMESTAMPTZ DEFAULT NOW(),
+  status TEXT DEFAULT 'active'
+);
+CREATE INDEX IF NOT EXISTS org_members_org_idx ON org_members (org_id);
+ALTER TABLE org_members ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage org_members" ON org_members FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS org_projects (
+  id BIGSERIAL PRIMARY KEY,
+  org_id BIGINT,
+  name TEXT NOT NULL,
+  description TEXT,
+  start_date TIMESTAMPTZ,
+  end_date TIMESTAMPTZ,
+  budget INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'planning',
+  beneficiaries_count INTEGER DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS org_projects_org_idx ON org_projects (org_id);
+ALTER TABLE org_projects ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage org_projects" ON org_projects FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS org_donors (
+  id BIGSERIAL PRIMARY KEY,
+  org_id BIGINT,
+  name TEXT NOT NULL,
+  organization TEXT,
+  email TEXT,
+  phone TEXT,
+  capacity TEXT,
+  interest_areas JSONB,
+  total_given INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS org_donors_org_idx ON org_donors (org_id);
+ALTER TABLE org_donors ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage org_donors" ON org_donors FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ─── INDIVIDUAL PORTAL (3 tables) ───────────────────────────
+CREATE TABLE IF NOT EXISTS individual_budgets (
+  id BIGSERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  month_year TEXT NOT NULL,
+  income INTEGER DEFAULT 0,
+  expenses INTEGER DEFAULT 0,
+  budget_limit INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS individual_budgets_user_idx ON individual_budgets (user_id);
+CREATE INDEX IF NOT EXISTS individual_budgets_month_idx ON individual_budgets (month_year);
+ALTER TABLE individual_budgets ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage individual_budgets" ON individual_budgets FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS individual_savings_goals (
+  id BIGSERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  target_amount INTEGER NOT NULL,
+  current_amount INTEGER DEFAULT 0,
+  deadline TIMESTAMPTZ,
+  status TEXT DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS individual_savings_user_idx ON individual_savings_goals (user_id);
+ALTER TABLE individual_savings_goals ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage individual_savings_goals" ON individual_savings_goals FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS individual_expenses (
+  id BIGSERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  category TEXT NOT NULL,
+  amount INTEGER NOT NULL,
+  description TEXT,
+  expense_date TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS individual_expenses_user_idx ON individual_expenses (user_id);
+CREATE INDEX IF NOT EXISTS individual_expenses_date_idx ON individual_expenses (expense_date);
+ALTER TABLE individual_expenses ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage individual_expenses" ON individual_expenses FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ─── PARENT PORTAL (2 tables) ──────────────────────────────
+CREATE TABLE IF NOT EXISTS parent_users (
+  id BIGSERIAL PRIMARY KEY,
+  phone TEXT NOT NULL UNIQUE,
+  name TEXT,
+  email TEXT,
+  password_hash TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS parent_users_phone_idx ON parent_users (phone);
+ALTER TABLE parent_users ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage parent_users" ON parent_users FOR ALL TO service_role USING (true) WITH CHECK (true);
+-- Parents can read their own record by phone (for lookup)
+CREATE POLICY "Parents can read own record" ON parent_users FOR SELECT TO anon, authenticated USING (phone = current_setting('request.header.x-parent-phone', true));
+
+CREATE TABLE IF NOT EXISTS parent_student_links (
+  id BIGSERIAL PRIMARY KEY,
+  parent_id BIGINT NOT NULL,
+  student_id BIGINT NOT NULL,
+  relationship TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS parent_student_links_parent_idx ON parent_student_links (parent_id);
+CREATE INDEX IF NOT EXISTS parent_student_links_student_idx ON parent_student_links (student_id);
+ALTER TABLE parent_student_links ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage parent_student_links" ON parent_student_links FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- ─── STUDENT PORTAL (3 tables) ─────────────────────────────
+CREATE TABLE IF NOT EXISTS student_assignments (
+  id BIGSERIAL PRIMARY KEY,
+  student_id BIGINT NOT NULL,
+  subject TEXT,
+  title TEXT,
+  due_date TIMESTAMPTZ,
+  status TEXT DEFAULT 'pending',
+  submitted_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS student_assignments_student_idx ON student_assignments (student_id);
+ALTER TABLE student_assignments ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage student_assignments" ON student_assignments FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS student_library_loans (
+  id BIGSERIAL PRIMARY KEY,
+  student_id BIGINT NOT NULL,
+  book_title TEXT NOT NULL,
+  checkout_date TIMESTAMPTZ DEFAULT NOW(),
+  due_date TIMESTAMPTZ,
+  return_date TIMESTAMPTZ,
+  fine_amount INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'borrowed'
+);
+CREATE INDEX IF NOT EXISTS student_library_loans_student_idx ON student_library_loans (student_id);
+ALTER TABLE student_library_loans ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage student_library_loans" ON student_library_loans FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS student_announcements (
+  id BIGSERIAL PRIMARY KEY,
+  student_id BIGINT,
+  title TEXT NOT NULL,
+  message TEXT,
+  announcement_date TIMESTAMPTZ DEFAULT NOW(),
+  is_read BOOLEAN DEFAULT FALSE
+);
+CREATE INDEX IF NOT EXISTS student_announcements_student_idx ON student_announcements (student_id);
+ALTER TABLE student_announcements ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role can manage student_announcements" ON student_announcements FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- Force RLS on all new tables
+ALTER TABLE business_customers FORCE ROW LEVEL SECURITY;
+ALTER TABLE business_suppliers FORCE ROW LEVEL SECURITY;
+ALTER TABLE business_products FORCE ROW LEVEL SECURITY;
+ALTER TABLE business_sales FORCE ROW LEVEL SECURITY;
+ALTER TABLE church_tithes FORCE ROW LEVEL SECURITY;
+ALTER TABLE church_donations FORCE ROW LEVEL SECURITY;
+ALTER TABLE church_sermons FORCE ROW LEVEL SECURITY;
+ALTER TABLE org_members FORCE ROW LEVEL SECURITY;
+ALTER TABLE org_projects FORCE ROW LEVEL SECURITY;
+ALTER TABLE org_donors FORCE ROW LEVEL SECURITY;
+ALTER TABLE individual_budgets FORCE ROW LEVEL SECURITY;
+ALTER TABLE individual_savings_goals FORCE ROW LEVEL SECURITY;
+ALTER TABLE individual_expenses FORCE ROW LEVEL SECURITY;
+ALTER TABLE parent_users FORCE ROW LEVEL SECURITY;
+ALTER TABLE parent_student_links FORCE ROW LEVEL SECURITY;
+ALTER TABLE student_assignments FORCE ROW LEVEL SECURITY;
+ALTER TABLE student_library_loans FORCE ROW LEVEL SECURITY;
+ALTER TABLE student_announcements FORCE ROW LEVEL SECURITY;
+
+-- ═══════════════════════════════════════════════════════════════════
 -- MIGRATION 2026-10-19 — Unblock SMS-MoMo payment flow
 -- ═══════════════════════════════════════════════════════════════════
 -- The SMS-MoMo flow needs to INSERT a license record BEFORE the actual

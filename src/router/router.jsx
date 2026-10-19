@@ -52,6 +52,12 @@ const APIKeys = React.lazy(() => import('../pages/features/APIKeys.jsx'));
 const APIDocs = React.lazy(() => import('../pages/features/APIDocs.jsx'));
 const Suppliers = React.lazy(() => import('../pages/features/Suppliers.jsx'));
 const DeepLinks = React.lazy(() => import('../pages/features/DeepLinks.jsx'));
+const IndividualPortal = React.lazy(() => import('../pages/features/IndividualPortal.jsx'));
+const ParentPortal = React.lazy(() => import('../pages/features/ParentPortal.jsx'));
+const ChurchPortal = React.lazy(() => import('../pages/features/ChurchPortal.jsx'));
+const BusinessPortal = React.lazy(() => import('../pages/features/BusinessPortal.jsx'));
+const OrgPortal = React.lazy(() => import('../pages/features/OrgPortal.jsx'));
+const StudentPortal = React.lazy(() => import('../pages/features/StudentPortal.jsx'));
 const FeatureComingSoon = React.lazy(() => import('../pages/features/FeatureComingSoon.jsx'));
 // ─── Loading fallback (defined FIRST so AuthCallback can use it) ──
 const LoadingFallback = () => (
@@ -636,12 +642,12 @@ export default function AppRouter({ isInitialized, isLocked }) {
                 { path: 'more/ussd', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="ussd" /></ProtectedRoute> },
                 { path: 'more/shortcuts', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="shortcuts" /></ProtectedRoute> },
                 { path: 'more/biometrics', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="biometrics" /></ProtectedRoute> },
-                { path: 'more/business-portal', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="business-portal" /></ProtectedRoute> },
-                { path: 'more/church-portal', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="church-portal" /></ProtectedRoute> },
-                { path: 'more/org-portal', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="org-portal" /></ProtectedRoute> },
-                { path: 'more/individual-portal', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="individual-portal" /></ProtectedRoute> },
-                { path: 'more/parent-portal', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="parent-portal" /></ProtectedRoute> },
-                { path: 'more/student-portal', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="student-portal" /></ProtectedRoute> },
+                { path: 'more/business-portal', element: <ProtectedRoute isLocked={isLocked}><BusinessPortal /></ProtectedRoute> },
+                { path: 'more/church-portal', element: <ProtectedRoute isLocked={isLocked}><ChurchPortal /></ProtectedRoute> },
+                { path: 'more/org-portal', element: <ProtectedRoute isLocked={isLocked}><OrgPortal /></ProtectedRoute> },
+                { path: 'more/individual-portal', element: <ProtectedRoute isLocked={isLocked}><IndividualPortal /></ProtectedRoute> },
+                { path: 'more/parent-portal', element: <ProtectedRoute isLocked={isLocked}><ParentPortal /></ProtectedRoute> },
+                { path: 'more/student-portal', element: <ProtectedRoute isLocked={isLocked}><StudentPortal /></ProtectedRoute> },
                 { path: 'more/entertainment', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="entertainment" /></ProtectedRoute> },
                 { path: 'more/app-store', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="app-store" /></ProtectedRoute> },
             ]
