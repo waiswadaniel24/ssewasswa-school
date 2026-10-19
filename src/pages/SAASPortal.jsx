@@ -79,8 +79,7 @@ const PORTALS = [
     color: '#5f6368',
     gradient: 'linear-gradient(135deg, #5f6368 0%, #202124 100%)',
     bg: '#f1f3f4',
-    status: 'soon',
-    eta: 'Q3 2026',
+    status: 'ready',
     route: '/app/more/business-portal',
     features: [
       { icon: '💳', title: 'Point of Sale (POS)', desc: 'Barcode scanning, quick keys, split payments, refund + exchange handling, end-of-day Z-reports.' },
@@ -102,8 +101,7 @@ const PORTALS = [
     color: '#9c27b0',
     gradient: 'linear-gradient(135deg, #9c27b0 0%, #4a148c 100%)',
     bg: '#f3e5f5',
-    status: 'soon',
-    eta: 'Q3 2026',
+    status: 'ready',
     route: '/app/more/church-portal',
     features: [
       { icon: '💰', title: 'Tithes Tracking', desc: 'Member-by-member tithe contributions, monthly statements, annual giving receipts (tax-deductible).' },
@@ -125,8 +123,7 @@ const PORTALS = [
     color: '#00796b',
     gradient: 'linear-gradient(135deg, #00796b 0%, #004d40 100%)',
     bg: '#e0f2f1',
-    status: 'soon',
-    eta: 'Q2 2026',
+    status: 'ready',
     route: '/app/more/org-portal',
     features: [
       { icon: '📋', title: 'Member Directory', desc: 'Member registration, membership cards (PDF), renewal reminders, lapsed member re-engagement.' },
@@ -148,8 +145,7 @@ const PORTALS = [
     color: '#0288d1',
     gradient: 'linear-gradient(135deg, #0288d1 0%, #01579b 100%)',
     bg: '#e1f5fe',
-    status: 'soon',
-    eta: 'Q2 2026',
+    status: 'ready',
     route: '/app/more/individual-portal',
     features: [
       { icon: '💰', title: 'Personal Budget', desc: 'Monthly income/expense tracking, category budget limits, alerts when over budget, recurring bills.' },
@@ -194,8 +190,7 @@ const PORTALS = [
     color: '#7b1fa2',
     gradient: 'linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%)',
     bg: '#f3e5f5',
-    status: 'soon',
-    eta: 'Q1 2026 (PRIORITY)',
+    status: 'ready',
     route: '/app/more/student-portal',
     features: [
       { icon: '📅', title: 'My Attendance', desc: 'View own attendance percentage, days present/absent, late arrivals, attendance warnings.' },

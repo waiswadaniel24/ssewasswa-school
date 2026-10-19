@@ -599,18 +599,18 @@ export default function ProductLanding() {
             </h2>
             <p style={{ color: '#b5c9d7', fontSize: 17, maxWidth: 700, margin: '0 auto' }}>
               Beyond School ERP, Ssewasswa Comforts Technologies builds software for hospitals, businesses,
-              churches, NGOs, and individuals across Uganda.
+              churches, NGOs, and individuals across Uganda. All 8 portals are now LIVE — explore them below.
             </p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
             {[
               { icon: '🏥', name: 'HMIS', desc: 'Hospital management — patients, OPD, lab, pharmacy, billing.', route: '/hmis-landing', color: '#0b8043', status: 'Ready' },
-              { icon: '🏢', name: 'Business', desc: 'POS, sales, customer CRM, multi-branch, loyalty.', route: '/app/more/business-portal', color: '#5f6368', status: 'Q3 2026' },
-              { icon: '⛪', name: 'Church', desc: 'Tithes, donations, sermons, committees.', route: '/app/more/church-portal', color: '#9c27b0', status: 'Q3 2026' },
-              { icon: '🌍', name: 'Org / NGO', desc: 'Member directory, finance, donor reporting.', route: '/app/more/org-portal', color: '#00796b', status: 'Q2 2026' },
-              { icon: '🧑', name: 'Individual', desc: 'Personal budget, savings goals, debt tracking.', route: '/app/more/individual-portal', color: '#0288d1', status: 'Q2 2026' },
-              { icon: '👨‍👩‍👧', name: 'Parent Portal', desc: 'Parents view children\'s data, pay fees online.', route: '/app/more/parent-portal', color: '#d81b60', status: 'Q1 2026' },
-              { icon: '🎓', name: 'Student Portal', desc: 'Students view attendance, marks, timetable.', route: '/app/more/student-portal', color: '#7b1fa2', status: 'Q1 2026' },
+              { icon: '🏢', name: 'Business', desc: 'POS, sales, customer CRM, multi-branch, loyalty.', route: '/app/more/business-portal', color: '#5f6368', status: 'Ready' },
+              { icon: '⛪', name: 'Church', desc: 'Tithes, donations, sermons, committees.', route: '/app/more/church-portal', color: '#9c27b0', status: 'Ready' },
+              { icon: '🌍', name: 'Org / NGO', desc: 'Member directory, finance, donor reporting.', route: '/app/more/org-portal', color: '#00796b', status: 'Ready' },
+              { icon: '🧑', name: 'Individual', desc: 'Personal budget, savings goals, debt tracking.', route: '/app/more/individual-portal', color: '#0288d1', status: 'Ready' },
+              { icon: '👨‍👩‍👧', name: 'Parent Portal', desc: 'Parents view children\'s data, pay fees online.', route: '/app/more/parent-portal', color: '#d81b60', status: 'Ready' },
+              { icon: '🎓', name: 'Student Portal', desc: 'Students view attendance, marks, timetable.', route: '/app/more/student-portal', color: '#7b1fa2', status: 'Ready' },
               { icon: '🧰', name: 'More Features', desc: '70+ features — Tasks, Notifications, Audit Logs, Surveys, etc.', route: '/app/more', color: '#f9ab00', status: '19 Ready' },
             ].map(p => (
               <div key={p.route} style={{
@@ -628,7 +628,7 @@ export default function ProductLanding() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div style={{ fontSize: 32 }}>{p.icon}</div>
                   <span style={{
-                    background: p.status === 'Ready' || p.status === '19 Ready' ? '#0b8043' : '#f9ab00',
+                    background: '#0b8043',
                     color: '#fff', fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 999,
                   }}>{p.status}</span>
                 </div>
