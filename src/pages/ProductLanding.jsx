@@ -230,10 +230,61 @@ export default function ProductLanding() {
               <div style={{ color: '#8fb3c9', fontSize: 12 }}>School ERP V10 — Uganda</div>
             </div>
           </div>
-          <button onClick={() => navigate('/login')} style={{ background: 'transparent', color: '#fff', border: '1px solid #45657b', borderRadius: 999, padding: '11px 18px', cursor: 'pointer' }}>
-            Sign in
-          </button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={() => navigate('/')} style={{ background: 'transparent', color: '#8fb3c9', border: '1px solid #45657b', borderRadius: 999, padding: '11px 18px', cursor: 'pointer' }}>
+              ← All Products
+            </button>
+            <button onClick={() => navigate('/login?next=/app')} style={{ background: '#1a73e8', color: '#fff', border: 0, borderRadius: 999, padding: '11px 18px', cursor: 'pointer', fontWeight: 600 }}>
+              Sign in
+            </button>
+          </div>
         </nav>
+
+        {/* ─── Tenant Switcher Banner — quick navigation to all portals ─── */}
+        {/* Without this, /product-landing only shows School ERP details and users
+            have no way to discover HMIS, Business, Church, Org, Individual,
+            Parent, Student portals. */}
+        <div style={{
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid #2c455a',
+          borderRadius: 12,
+          padding: '12px 16px',
+          marginBottom: 24,
+          display: 'flex',
+          gap: 8,
+          alignItems: 'center',
+          overflowX: 'auto',
+          flexWrap: 'wrap',
+        }}>
+          <span style={{ color: '#8fb3c9', fontSize: 12, fontWeight: 700, marginRight: 8, whiteSpace: 'nowrap' }}>SWITCH PRODUCT:</span>
+          {[
+            { label: '🏫 School ERP', route: '/product-landing', active: true, color: '#1a73e8' },
+            { label: '🏥 HMIS', route: '/hmis-landing', color: '#0b8043' },
+            { label: '🏢 Business', route: '/app/more/business-portal', color: '#5f6368' },
+            { label: '⛪ Church', route: '/app/more/church-portal', color: '#9c27b0' },
+            { label: '🌍 Org / NGO', route: '/app/more/org-portal', color: '#00796b' },
+            { label: '🧑 Individual', route: '/app/more/individual-portal', color: '#0288d1' },
+            { label: '👨‍👩‍👧 Parent', route: '/app/more/parent-portal', color: '#d81b60' },
+            { label: '🎓 Student', route: '/app/more/student-portal', color: '#7b1fa2' },
+            { label: '🧰 More Features', route: '/app/more', color: '#f9ab00' },
+          ].map(p => (
+            <button
+              key={p.route}
+              onClick={() => navigate(p.route)}
+              style={{
+                background: p.active ? p.color : 'transparent',
+                color: p.active ? '#fff' : '#b5c9d7',
+                border: `1px solid ${p.active ? p.color : '#45657b'}`,
+                borderRadius: 999,
+                padding: '6px 14px',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >{p.label}</button>
+          ))}
+        </div>
 
         {/* ─── Hero ─── */}
         <div style={{ textAlign: 'center', paddingTop: 60, paddingBottom: 40 }}>
@@ -575,6 +626,68 @@ export default function ProductLanding() {
               <strong>Activate license</strong>
               <p style={{ fontSize: 13, color: '#587080', margin: '6px 0 0', lineHeight: 1.5 }}>"Subscribe" above to get your key, then paste on Activation page.</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Other Products section — cross-promote other 7 portals ─── */}
+      {/* Ensures visitors to /product-landing discover HMIS, Business, Church,
+          Org, Individual, Parent, Student portals too. */}
+      <section style={{ background: '#0b1f33', padding: '60px 24px', borderTop: '1px solid #2c455a' }}>
+        <div style={{ maxWidth: 1180, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <div style={{ color: '#61d3a5', fontWeight: 700, letterSpacing: '.12em', fontSize: 13, textTransform: 'uppercase', marginBottom: 12 }}>
+              Looking for other Ssewasswa products?
+            </div>
+            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', margin: '0 0 12px', color: '#fff' }}>
+              One platform. Many solutions.
+            </h2>
+            <p style={{ color: '#b5c9d7', fontSize: 17, maxWidth: 700, margin: '0 auto' }}>
+              Beyond School ERP, Ssewasswa Comforts Technologies builds software for hospitals, businesses,
+              churches, NGOs, and individuals across Uganda.
+            </p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+            {[
+              { icon: '🏥', name: 'HMIS', desc: 'Hospital management — patients, OPD, lab, pharmacy, billing.', route: '/hmis-landing', color: '#0b8043', status: 'Ready' },
+              { icon: '🏢', name: 'Business', desc: 'POS, sales, customer CRM, multi-branch, loyalty.', route: '/app/more/business-portal', color: '#5f6368', status: 'Q3 2026' },
+              { icon: '⛪', name: 'Church', desc: 'Tithes, donations, sermons, committees.', route: '/app/more/church-portal', color: '#9c27b0', status: 'Q3 2026' },
+              { icon: '🌍', name: 'Org / NGO', desc: 'Member directory, finance, donor reporting.', route: '/app/more/org-portal', color: '#00796b', status: 'Q2 2026' },
+              { icon: '🧑', name: 'Individual', desc: 'Personal budget, savings goals, debt tracking.', route: '/app/more/individual-portal', color: '#0288d1', status: 'Q2 2026' },
+              { icon: '👨‍👩‍👧', name: 'Parent Portal', desc: 'Parents view children\'s data, pay fees online.', route: '/app/more/parent-portal', color: '#d81b60', status: 'Q1 2026' },
+              { icon: '🎓', name: 'Student Portal', desc: 'Students view attendance, marks, timetable.', route: '/app/more/student-portal', color: '#7b1fa2', status: 'Q1 2026' },
+              { icon: '🧰', name: 'More Features', desc: '70+ features — Tasks, Notifications, Audit Logs, Surveys, etc.', route: '/app/more', color: '#f9ab00', status: '19 Ready' },
+            ].map(p => (
+              <div key={p.route} style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: `1px solid ${p.color}40`,
+                borderRadius: 12,
+                padding: 20,
+                cursor: 'pointer',
+                transition: 'border-color 0.2s',
+              }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = p.color; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = p.color + '40'; }}
+                onClick={() => navigate(p.route)}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <div style={{ fontSize: 32 }}>{p.icon}</div>
+                  <span style={{
+                    background: p.status === 'Ready' || p.status === '19 Ready' ? '#0b8043' : '#f9ab00',
+                    color: '#fff', fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 999,
+                  }}>{p.status}</span>
+                </div>
+                <h3 style={{ margin: '0 0 8px', color: p.color, fontSize: 16 }}>{p.name}</h3>
+                <p style={{ color: '#b5c9d7', fontSize: 12, lineHeight: 1.5, margin: '0 0 12px' }}>{p.desc}</p>
+                <span style={{ color: p.color, fontWeight: 700, fontSize: 12 }}>Explore →</span>
+              </div>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center', marginTop: 32 }}>
+            <button onClick={() => navigate('/')} style={{
+              background: '#1a73e8', color: '#fff', border: 0, borderRadius: 999,
+              padding: '14px 28px', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+            }}>← View All Products on Homepage</button>
           </div>
         </div>
       </section>
