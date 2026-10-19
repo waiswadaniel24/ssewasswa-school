@@ -26,6 +26,9 @@ import HMISIPD from '../pages/hmis/IPD.jsx';
 import HMISTB from '../pages/hmis/TB.jsx';
 import HMISHIV from '../pages/hmis/HIV.jsx';
 import HMISMalaria from '../pages/hmis/Malaria.jsx';
+import HMISChildHealth from '../pages/hmis/ChildHealth.jsx';
+import HMISTheatre from '../pages/hmis/Theatre.jsx';
+import HMISMortuary from '../pages/hmis/Mortuary.jsx';
 import HMISMaternal from '../pages/hmis/Maternal.jsx';
 import HMISImmunizations from '../pages/hmis/Immunizations.jsx';
 import HMISNotifiable from '../pages/hmis/Notifiable.jsx';
@@ -37,6 +40,7 @@ import HMISOPD from '../pages/hmis/OPD.jsx';
 import HMISLab from '../pages/hmis/Lab.jsx';
 import HMISPharmacy from '../pages/hmis/Pharmacy.jsx';
 import HMISBilling from '../pages/hmis/Billing.jsx';
+import HMISSettings from '../pages/hmis/Settings.jsx';
 import SchoolSignup from '../pages/SchoolSignup.jsx';
 import ResetPassword from '../pages/ResetPassword.jsx';
 import Sponsor from '../pages/Sponsor.jsx';
@@ -574,6 +578,10 @@ export default function AppRouter({ isInitialized, isLocked }) {
                 { path: 'notifiable', element: <ProtectedRoute isLocked={isLocked}><HMISNotifiable /></ProtectedRoute> },
                 { path: 'staff', element: <ProtectedRoute isLocked={isLocked}><HMISStaff /></ProtectedRoute> },
                 { path: 'reports', element: <ProtectedRoute isLocked={isLocked}><HMISReports /></ProtectedRoute> },
+                { path: 'child-health', element: <ProtectedRoute isLocked={isLocked}><HMISChildHealth /></ProtectedRoute> },
+                { path: 'theatre', element: <ProtectedRoute isLocked={isLocked}><HMISTheatre /></ProtectedRoute> },
+                { path: 'mortuary', element: <ProtectedRoute isLocked={isLocked}><HMISMortuary /></ProtectedRoute> },
+                { path: 'settings', element: <ProtectedRoute isLocked={isLocked}><HMISSettings /></ProtectedRoute> },
             ]
         },
         // ─── School ERP (protected) ───

@@ -47,6 +47,7 @@ const HMIS_MENU = [
   // MATERNAL & CHILD HEALTH
   { path: '/maternal', name: 'Maternal Health', icon: '🤱', section: 'maternal', facilityTypes: ['HC3', 'HC4', 'GeneralHospital'] },
   { path: '/immunizations', name: 'Immunizations (EPI)', icon: '💉', section: 'maternal', facilityTypes: ['Clinic', 'HC2', 'HC3', 'HC4', 'GeneralHospital'] },
+  { path: '/child-health', name: 'Child Health + IMCI', icon: '👶', section: 'maternal', facilityTypes: ['Clinic', 'HC2', 'HC3', 'HC4', 'GeneralHospital'] },
 
   // DISEASE PROGRAMS
   { path: '/notifiable', name: 'Notifiable Diseases', icon: '⚠️', section: 'disease', facilityTypes: ['Clinic', 'HC2', 'HC3', 'HC4', 'GeneralHospital'] },
@@ -57,6 +58,9 @@ const HMIS_MENU = [
   // SUPPORT SERVICES
   { path: '/staff', name: 'Staff Management', icon: '👥', section: 'support', facilityTypes: 'all' },
   { path: '/reports', name: 'Reports (Form 105)', icon: '📈', section: 'support', facilityTypes: 'all' },
+  { path: '/theatre', name: 'Theatre', icon: '🔬', section: 'support', facilityTypes: ['HC4', 'GeneralHospital'] },
+  { path: '/mortuary', name: 'Mortuary', icon: '⚱️', section: 'support', facilityTypes: ['HC4', 'GeneralHospital'] },
+  { path: '/settings', name: 'Settings', icon: '⚙️', section: 'support', facilityTypes: 'all' },
 ];
 
 const SECTION_NAMES = {
