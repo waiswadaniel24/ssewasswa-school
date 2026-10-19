@@ -80,7 +80,7 @@ export default function HMISLayout() {
       fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
     }}>
       {/* ─── Top Header ────────────────────────────────── */}
-      <Header isDark={isDark} setIsDark={setIsDark} />
+      <Header isDark={isDark} toggleDarkMode={() => setIsDark(!isDark)} />
 
       {/* ─── Middle: HMIS Sidebar + Content ──────────── */}
       <div className="app-body" style={{

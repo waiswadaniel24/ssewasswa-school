@@ -436,7 +436,7 @@ export function canAccess(userRole, schoolLevel, modulePath) {
     // Without this, canAccess tries to match '/more/business-portal' against
     // MENU_ITEMS — which only has '/more' (no child paths) → returns false
     // → ProtectedRoute redirects to / → user can't access any portal/feature.
-    if (normalized === '/more' || normalized.startsWith('/more/')) {
+    if (normalized === '/more' || normalized.startsWith('/more/') || normalized.startsWith('/hmis') || normalized === '/hmis') {
         return true;
     }
 

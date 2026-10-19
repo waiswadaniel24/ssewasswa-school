@@ -20,14 +20,14 @@ export default function HMISDashboard() {
       }
       try {
         const queries = [
-          { key: 'totalPatients', sql: "SELECT COUNT(*) as count FROM patients" },
-          { key: 'totalOPD', sql: "SELECT COUNT(*) as count FROM opd_visits WHERE date(date) = date('now')" },
-          { key: 'totalIPD', sql: "SELECT COUNT(*) as count FROM ipd_admissions WHERE discharge_date IS NULL" },
-          { key: 'totalLab', sql: "SELECT COUNT(*) as count FROM lab_tests WHERE result_date IS NULL" },
-          { key: 'totalRevenue', sql: "SELECT COALESCE(SUM(amount), 0) as total FROM billing WHERE status = 'Paid'" },
-          { key: 'totalDebts', sql: "SELECT COALESCE(SUM(amount), 0) as total FROM billing WHERE status = 'Pending'" },
+          { key: 'totalPatients', sql: "SELECT COUNT(*) as count FROM hmis_patients" },
+          { key: 'totalOPD', sql: "SELECT COUNT(*) as count FROM hmis_opd_visits WHERE date(date) = date('now')" },
+          { key: 'totalIPD', sql: "SELECT COUNT(*) as count FROM hmis_ipd_admissions WHERE discharge_date IS NULL" },
+          { key: 'totalLab', sql: "SELECT COUNT(*) as count FROM hmis_lab_orders WHERE result_date IS NULL" },
+          { key: 'totalRevenue', sql: "SELECT COALESCE(SUM(amount), 0) as total FROM hmis_billing_invoices WHERE status = 'Paid'" },
+          { key: 'totalDebts', sql: "SELECT COALESCE(SUM(amount), 0) as total FROM hmis_billing_invoices WHERE status = 'Pending'" },
           { key: 'totalBeds', sql: "SELECT COUNT(*) as count FROM beds" },
-          { key: 'bedOccupancy', sql: "SELECT COUNT(*) as count FROM ipd_admissions WHERE discharge_date IS NULL" },
+          { key: 'bedOccupancy', sql: "SELECT COUNT(*) as count FROM hmis_ipd_admissions WHERE discharge_date IS NULL" },
         ];
         const results = {};
         for (const q of queries) {

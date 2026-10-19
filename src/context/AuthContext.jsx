@@ -38,6 +38,7 @@ export function AuthProvider({ children }) {
       id: userData.id || userData.user_id || null,
       username: userData.username || userData.email || 'User',
       role: userData.role || 'Staff',
+      portal: userData.portal || null,
     };
     setUser(normalized);
     try { localStorage.setItem('erp_user', JSON.stringify(normalized)); } catch { /* storage unavailable */ }

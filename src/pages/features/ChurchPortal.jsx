@@ -149,13 +149,13 @@ export default function ChurchPortal() {
   }, []);
 
   // ─── Generic persistence (state + localStorage write) ────────────────
-  const saveTithes = (u) => { setTithes(u); localStorage.setItem(STORAGE.tithes, JSON.stringify(u)); };
-  const saveDonations = (u) => { setDonations(u); localStorage.setItem(STORAGE.donations, JSON.stringify(u)); };
-  const saveSermons = (u) => { setSermons(u); localStorage.setItem(STORAGE.sermons, JSON.stringify(u)); };
-  const saveCommittees = (u) => { setCommittees(u); localStorage.setItem(STORAGE.committees, JSON.stringify(u)); };
-  const saveVolunteers = (u) => { setVolunteers(u); localStorage.setItem(STORAGE.volunteers, JSON.stringify(u)); };
-  const saveMembers = (u) => { setMembers(u); localStorage.setItem(STORAGE.members, JSON.stringify(u)); };
-  const saveEvents = (u) => { setEvents(u); localStorage.setItem(STORAGE.events, JSON.stringify(u)); };
+  const saveTithes = (u) => { setTithes(u); try { localStorage.setItem(STORAGE.tithes, JSON.stringify(u)); } catch(e) { console.warn("save failed"); } };
+  const saveDonations = (u) => { setDonations(u); try { localStorage.setItem(STORAGE.donations, JSON.stringify(u)); } catch(e) { console.warn("save failed"); } };
+  const saveSermons = (u) => { setSermons(u); try { localStorage.setItem(STORAGE.sermons, JSON.stringify(u)); } catch(e) { console.warn("save failed"); } };
+  const saveCommittees = (u) => { setCommittees(u); try { localStorage.setItem(STORAGE.committees, JSON.stringify(u)); } catch(e) { console.warn("save failed"); } };
+  const saveVolunteers = (u) => { setVolunteers(u); try { localStorage.setItem(STORAGE.volunteers, JSON.stringify(u)); } catch(e) { console.warn("save failed"); } };
+  const saveMembers = (u) => { setMembers(u); try { localStorage.setItem(STORAGE.members, JSON.stringify(u)); } catch(e) { console.warn("save failed"); } };
+  const saveEvents = (u) => { setEvents(u); try { localStorage.setItem(STORAGE.events, JSON.stringify(u)); } catch(e) { console.warn("save failed"); } };
 
   // ─── Dashboard aggregates ────────────────────────────────────────────
   const tmKey = thisMonthKey();
