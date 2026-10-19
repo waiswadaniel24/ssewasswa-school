@@ -23,6 +23,9 @@ import PortalLogin from '../pages/PortalLogin.jsx';
 import HMISSetup from '../pages/hmis/Setup.jsx';
 import HMISLogin from '../pages/hmis/Login.jsx';
 import HMISIPD from '../pages/hmis/IPD.jsx';
+import HMISTB from '../pages/hmis/TB.jsx';
+import HMISHIV from '../pages/hmis/HIV.jsx';
+import HMISMalaria from '../pages/hmis/Malaria.jsx';
 import HMISMaternal from '../pages/hmis/Maternal.jsx';
 import HMISImmunizations from '../pages/hmis/Immunizations.jsx';
 import HMISNotifiable from '../pages/hmis/Notifiable.jsx';
@@ -563,6 +566,9 @@ export default function AppRouter({ isInitialized, isLocked }) {
                 { path: 'pharmacy', element: <ProtectedRoute isLocked={isLocked}><HMISPharmacy /></ProtectedRoute> },
                 { path: 'billing', element: <ProtectedRoute isLocked={isLocked}><HMISBilling /></ProtectedRoute> },
                 { path: 'ipd', element: <ProtectedRoute isLocked={isLocked}><HMISIPD /></ProtectedRoute> },
+                { path: 'tb', element: <ProtectedRoute isLocked={isLocked}><HMISTB /></ProtectedRoute> },
+                { path: 'hiv', element: <ProtectedRoute isLocked={isLocked}><HMISHIV /></ProtectedRoute> },
+                { path: 'malaria', element: <ProtectedRoute isLocked={isLocked}><HMISMalaria /></ProtectedRoute> },
                 { path: 'maternal', element: <ProtectedRoute isLocked={isLocked}><HMISMaternal /></ProtectedRoute> },
                 { path: 'immunizations', element: <ProtectedRoute isLocked={isLocked}><HMISImmunizations /></ProtectedRoute> },
                 { path: 'notifiable', element: <ProtectedRoute isLocked={isLocked}><HMISNotifiable /></ProtectedRoute> },

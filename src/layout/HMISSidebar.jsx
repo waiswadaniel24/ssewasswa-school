@@ -50,6 +50,9 @@ const HMIS_MENU = [
 
   // DISEASE PROGRAMS
   { path: '/notifiable', name: 'Notifiable Diseases', icon: '⚠️', section: 'disease', facilityTypes: ['Clinic', 'HC2', 'HC3', 'HC4', 'GeneralHospital'] },
+  { path: '/tb', name: 'TB Program (DOTS)', icon: '🫁', section: 'disease', facilityTypes: ['HC3', 'HC4', 'GeneralHospital'] },
+  { path: '/hiv', name: 'HIV/AIDS Program', icon: '🧬', section: 'disease', facilityTypes: ['HC3', 'HC4', 'GeneralHospital'] },
+  { path: '/malaria', name: 'Malaria Program', icon: '🦟', section: 'disease', facilityTypes: ['Clinic', 'HC2', 'HC3', 'HC4', 'GeneralHospital'] },
 
   // SUPPORT SERVICES
   { path: '/staff', name: 'Staff Management', icon: '👥', section: 'support', facilityTypes: 'all' },
@@ -60,12 +63,18 @@ const SECTION_NAMES = {
   main: 'Main',
   clinical: 'Clinical',
   finance: 'Finance',
+  maternal: 'Maternal & Child Health',
+  disease: 'Disease Programs',
+  support: 'Support',
 };
 
 const SECTION_ICONS = {
   main: '📋',
   clinical: '🩺',
   finance: '💰',
+  maternal: '🤱',
+  disease: '🦠',
+  support: '🛠️',
 };
 
 export default function HMISSidebar({ isDark }) {

@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 
 var UGANDA_DISTRICTS = ['Kampala','Wakiso','Mukono','Mpigi','Masaka','Mityana','Mubende','Buikwe','Bukomansimbi','Butambala','Buvuma','Gomba','Kalangala','Kalungu','Kayunga','Kiboga','Kyankwanzi','Lwengo','Lyantonde','Nakaseke','Nakasongola','Rakai','Ssembabule','Jinja','Mbale','Soroti','Tororo','Iganga','Kamuli','Kumi','Busia','Bugiri','Budaka','Bududa','Bukedea','Bulambuli','Butaleja','Butebo','Kaberamaido','Kaliro','Kapchorwa','Katakwi','Kibuku','Namayingo','Namutumba','Ngora','Pallisa','Serere','Sironko','Mbarara','Kasese','Kabale','Hoima','Masindi','Kisoro','Rukungiri','Ntungamo','Bushenyi','Ibanda','Isingiro','Kabarole','Kamwenge','Kanungu','Kyenjojo','Kiruhura','Kibaale','Kyegegwa','Mitooma','Ntoroko','Rubirizi','Sheema','Gulu','Lira','Kitgum','Pader','Apac','Amolatar','Amuru','Nwoya','Otuke','Oyam','Alebtong','Abim','Agago','Amudat','Lamwo','Napak','Nakapiripirit','Kaabong','Kotido','Arua','Nebbi','Adjumani','Moyo','Yumbe','Koboko','Maracha','Zombo','Other'];
 
-var FACILITY_LEVELS = ['HC I','HC II','HC III','HC IV','General Hospital','Regional Referral','National Referral'];
+var FACILITY_LEVELS = ['DrugShop','Pharmacy','Clinic','HC2','HC3','HC4','GeneralHospital','RegionalReferral','NationalReferral'];
 var OWNERSHIP_TYPES = ['Government','PNFP','PFP','NGO','FBO'];
 var SECURITY_QUESTIONS = [
   "What is your mother's maiden name?",
