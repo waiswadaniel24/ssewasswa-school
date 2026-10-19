@@ -202,6 +202,40 @@ class RouteErrorBoundary extends React.Component {
     }
 }
 
+// ─── Root route component (REACTIVE — replaces the broken IIFE) ──
+// Earlier this was an IIFE inside the router config, which only ran ONCE
+// at router creation. After login (user state changes), the IIFE never
+// re-evaluated → users got bounced back to SAASPortal instead of going
+// to /app. This component re-renders when auth state changes.
+//
+// Routing logic:
+//   desktop (Electron)        → /app
+//   web + logged in + isDeveloper → /app/dev
+//   web + logged in            → /app
+//   web + guest                → SAASPortal (product selector)
+const RootRoute = () => {
+    const { user, authReady } = useAuth();
+    const isElectron = typeof window !== 'undefined' && (
+        !!window.electronAPI ||
+        (navigator.userAgent && navigator.userAgent.toLowerCase().includes('electron'))
+    );
+
+    // On desktop, always go to /app — desktop users don't see marketing
+    if (isElectron) return <Navigate to="/app" replace />;
+
+    // Wait for auth state to settle (Supabase session check)
+    if (!authReady) return <LoadingFallback />;
+
+    // Logged in as developer → go to dev dashboard
+    if (user?.isDeveloper) return <Navigate to="/app/dev" replace />;
+
+    // Logged in as regular user → go to School ERP (default product)
+    if (user) return <Navigate to="/app" replace />;
+
+    // Guest → show the SaaS Portal (product selector)
+    return <PublicRoute><SAASPortal /></PublicRoute>;
+};
+
 // ─── Auth-protected layout (shows ProductLanding for guests, Layout for users) ──
 // Unauthenticated visitors hitting '/' (the root URL) see the marketing/product-landing
 // page (with subscription tiers + benefits) instead of being immediately bounced to /login.
@@ -331,37 +365,15 @@ export default function AppRouter({ isInitialized, isLocked }) {
             element: <PublicRoute><ResetPassword /></PublicRoute>
         },
 
-        // ─── Root route — SaaS Portal on web (for guests), redirect to /app for logged-in users + desktop ───
-        // Earlier this always showed SAASPortal on web, even for logged-in
-        // users. That caused "after login I land on the marketing page" UX
-        // confusion. Now: if you're logged in (any platform) OR on desktop,
-        // redirect to /app (School ERP). Otherwise show SAASPortal (guests).
+        // ─── Root route — REACTIVE component (was IIFE, which only ran once) ───
+        // RootRoute uses useAuth() so it re-renders when auth state changes.
+        // Logic: desktop → /app; web + dev → /app/dev; web + user → /app; web + guest → SAASPortal.
+        // The dev-user redirect was previously handled inside AuthContext.login() via
+        // setTimeout + window.history.replaceState + popstate — that caused blinking loops.
+        // Now RootRoute handles all auth-aware redirects cleanly.
         {
             path: '/',
-            element: (() => {
-                // On desktop (Electron), always go to /app — desktop users
-                // never see the marketing portal, they want the ERP directly.
-                const isElectron = typeof window !== 'undefined' && (
-                    !!window.electronAPI ||
-                    (navigator.userAgent && navigator.userAgent.toLowerCase().includes('electron'))
-                );
-                if (isElectron) return <Navigate to="/app" replace />;
-                // On web — check if the user is already logged in by reading
-                // localStorage (same source-of-truth as AuthContext). We
-                // can't use useAuth() here because this is the route element
-                // factory, not a component body — so check localStorage directly.
-                try {
-                    const stored = localStorage.getItem('erp_user');
-                    if (stored) {
-                        const parsed = JSON.parse(stored);
-                        if (parsed && typeof parsed === 'object' && parsed.id) {
-                            return <Navigate to="/app" replace />;
-                        }
-                    }
-                } catch { /* ignore — treat as guest */ }
-                // Guest on web → show the SaaS Portal (product selector)
-                return <PublicRoute><SAASPortal /></PublicRoute>;
-            })()
+            element: <RootRoute />
         },
         // ─── HMIS Landing (public) ───
         {

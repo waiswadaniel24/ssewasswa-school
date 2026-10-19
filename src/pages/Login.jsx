@@ -28,13 +28,25 @@ export default function Login() {
     var hasElectron = Boolean(typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.authLogin === 'function');
     var hasSupabase = Boolean(supabase);
 
+    // ─── "next" redirect target after login ────────────────
+    // Supports ?next=/hmis so HMIS users land on /hmis after sign-in (was bug:
+    // HMIS sign-in always redirected to School ERP /app because Login.jsx
+    // always did navigate('/')). Defaults to '/' which RootRoute resolves to
+    // /app/dev (devs) or /app (regular users).
+    var nextParam = '/';
+    try {
+        var params = new URLSearchParams(window.location.search);
+        var n = params.get('next');
+        if (n && n.startsWith('/') && !n.startsWith('//')) nextParam = n;
+    } catch (e) { /* ignore */ }
+
     var handleSignIn = async function (e) {
         e.preventDefault(); setError(''); setSuccessMsg(''); setLoading(true);
         try {
             if (hasElectron) {
                 var res = await window.electronAPI.authLogin({ username: username, password: password });
                 setLoading(false);
-                if (res && res.success && res.user) { loginFn(res.user); navigate('/'); }
+                if (res && res.success && res.user) { loginFn(res.user); navigate(nextParam); }
                 else { setError((res && res.error) || 'Invalid credentials'); }
             } else if (hasSupabase) {
                 var loginEmail = username.indexOf('@') >= 0 ? username : email;
@@ -43,7 +55,7 @@ export default function Login() {
                 setLoading(false);
                 if (sRes.error) { setError(sRes.error.message || 'Invalid credentials'); return; }
                 setSuccessMsg('Signed in! Redirecting...');
-                setTimeout(function () { navigate('/'); }, 800);
+                setTimeout(function () { navigate(nextParam); }, 800);
             } else {
                 setLoading(false);
                 setError('No auth backend available. Run via Electron (npm run dev:desktop) or configure Supabase env vars.');
@@ -113,7 +125,7 @@ export default function Login() {
                 if (res && res.success && res.data && res.data.length > 0) {
                     var s = res.data[0];
                     loginFn({ id: s.id, username: ((s.first_name || '') + ' ' + (s.last_name || '')).trim(), role: 'Student' });
-                    navigate('/');
+                    navigate(nextParam);
                 } else { setError('Invalid Paycode'); }
             } else if (hasSupabase) {
                 var sRes = await supabase.from('students')
@@ -126,7 +138,7 @@ export default function Login() {
                 if (sRes.data && sRes.data.length > 0) {
                     var st = sRes.data[0];
                     loginFn({ id: st.id, username: ((st.first_name || '') + ' ' + (st.last_name || '')).trim(), role: 'Student' });
-                    navigate('/');
+                    navigate(nextParam);
                 } else { setError('Invalid Paycode'); }
             } else {
                 setLoading(false);

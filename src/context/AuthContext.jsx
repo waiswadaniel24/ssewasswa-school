@@ -41,19 +41,13 @@ export function AuthProvider({ children }) {
     };
     setUser(normalized);
     try { localStorage.setItem('erp_user', JSON.stringify(normalized)); } catch { /* storage unavailable */ }
-    // For developer users, redirect to the developer dashboard.
-    // NOTE: the dev dashboard lives under /app/dev in the router (nested
-    // inside the School ERP ProtectedLayout). Earlier this redirected to
-    // bare '/dev' which hit the catch-all '*' → bounced back to '/' →
-    // SAASPortal on web / /app on desktop. So the developer never actually
-    // reached the DevDashboard after login — they landed on the regular
-    // Dashboard instead. Fix: route to '/app/dev'.
-    if (normalized.isDeveloper && window.location.pathname !== '/app/dev') {
-      setTimeout(() => {
-        try { window.history.replaceState({}, '', '/app/dev'); } catch {}
-        window.dispatchEvent(new PopStateEvent('popstate'));
-      }, 50);
-    }
+    // NOTE: Do NOT do redirect logic here. The router's <RootRoute /> component
+    // reactively reads user + isDeveloper from useAuth() and navigates to the
+    // correct route (/app/dev for devs, /app for users). Earlier this function
+    // did window.history.replaceState + dispatchEvent('popstate') in a setTimeout
+    // to force a redirect — that caused blinking loops because popstate triggered
+    // router re-syncs which collided with React's own state updates.
+    // Callers (Login.jsx) should call navigate(?next) themselves after login.
   };
 
   const logout = async () => {

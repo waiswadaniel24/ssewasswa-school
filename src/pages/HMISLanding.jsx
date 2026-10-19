@@ -73,7 +73,7 @@ export default function HMISLanding() {
           </div>
           <div style={{ display: 'flex', gap: 12 }}>
             <button onClick={() => navigate('/')} style={{ background: 'transparent', color: '#8fb3c9', border: '1px solid #45657b', borderRadius: 999, padding: '11px 18px', cursor: 'pointer' }}>← Back to Products</button>
-            <button onClick={() => navigate('/login')} style={{ background: 'transparent', color: '#fff', border: '1px solid #45657b', borderRadius: 999, padding: '11px 18px', cursor: 'pointer' }}>Sign in</button>
+            <button onClick={() => navigate('/login?next=/hmis')} style={{ background: 'transparent', color: '#fff', border: '1px solid #45657b', borderRadius: 999, padding: '11px 18px', cursor: 'pointer' }}>Sign in</button>
           </div>
         </nav>
 
