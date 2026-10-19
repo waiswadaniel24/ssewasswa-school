@@ -18,6 +18,7 @@ import QuickLicense from '../pages/QuickLicense.jsx';
 import SAASPortal from '../pages/SAASPortal.jsx';
 import HMISLanding from '../pages/HMISLanding.jsx';
 import HMISLayout from '../layout/HMISLayout.jsx';
+import ExamBoardPage from '../pages/ExamBoardPage.jsx';
 import HMISDashboard from '../pages/hmis/Dashboard.jsx';
 import HMISPatients from '../pages/hmis/Patients.jsx';
 import HMISOPD from '../pages/hmis/OPD.jsx';
@@ -534,6 +535,12 @@ export default function AppRouter({ isInitialized, isLocked }) {
                 { path: 'report-cards', element: <ProtectedRoute isLocked={isLocked}><ReportCards /></ProtectedRoute> },
                 { path: 'id-cards', element: <ProtectedRoute isLocked={isLocked}><IDCards /></ProtectedRoute> },
                 { path: 'uneb-exams', element: <ProtectedRoute isLocked={isLocked}><UNEBRegistration /></ProtectedRoute> },
+                // Other exam boards — all use the shared ExamBoardPage component
+                { path: 'ubteb-exams', element: <ProtectedRoute isLocked={isLocked}><ExamBoardPage /></ProtectedRoute> },
+                { path: 'nche-accreditation', element: <ProtectedRoute isLocked={isLocked}><ExamBoardPage /></ProtectedRoute> },
+                { path: 'nurses-council-exams', element: <ProtectedRoute isLocked={isLocked}><ExamBoardPage /></ProtectedRoute> },
+                { path: 'ahpc-exams', element: <ProtectedRoute isLocked={isLocked}><ExamBoardPage /></ProtectedRoute> },
+                { path: 'kyambogo-teacher-ed', element: <ProtectedRoute isLocked={isLocked}><ExamBoardPage /></ProtectedRoute> },
 
                 // Finance
                 { path: 'finance', element: <ProtectedRoute isLocked={isLocked}><Finance /></ProtectedRoute> },

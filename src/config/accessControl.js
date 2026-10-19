@@ -353,6 +353,16 @@ export const MENU_ITEMS = [
     // UNEB - Only for Ugandan curriculum levels
     { path: '/uneb-exams', name: 'UNEB Registration', icon: '🏛️', section: 'UNEB & Exams', roles: ['Super Admin', 'Admin'], levels: ['Primary', 'Nursery_Primary', 'Secondary', 'Primary_Secondary'], unebOnly: true },
 
+    // ─── OTHER EXAM BOARDS (6 total — UNEB + 5 more) ───────────
+    // Each exam board has its own registration page.
+    // Visible to Super Admin + Admin + Developer (full access).
+    // Levels filter which school types see which board.
+    { path: '/ubteb-exams', name: 'UBTEB Registration', icon: '🏢', section: 'UNEB & Exams', roles: ['Super Admin', 'Admin'], levels: ['Business', 'Technical', 'Vocational', 'Tertiary'] },
+    { path: '/nche-accreditation', name: 'NCHE Accreditation', icon: '🎓', section: 'UNEB & Exams', roles: ['Super Admin', 'Admin'], levels: ['University', 'Tertiary', 'Business', 'Arts', 'Sciences', 'Theological'] },
+    { path: '/nurses-council-exams', name: 'Nurses Council Exams', icon: '🏥', section: 'UNEB & Exams', roles: ['Super Admin', 'Admin'], levels: ['Health'] },
+    { path: '/ahpc-exams', name: 'AHPC Exams', icon: '💊', section: 'UNEB & Exams', roles: ['Super Admin', 'Admin'], levels: ['Health'] },
+    { path: '/kyambogo-teacher-ed', name: 'Kyambogo Teacher Ed.', icon: '👨‍🏫', section: 'UNEB & Exams', roles: ['Super Admin', 'Admin'], levels: ['TeacherTraining', 'University'] },
+
     // FINANCE
     { path: '/finance', name: 'Fees & Payments', icon: '💵', section: 'Finance', roles: ['Super Admin', 'Admin', 'Bursar'], levels: 'all' },
     { path: '/payments', name: 'Mobile Money & Bank', icon: '📱', section: 'Finance', roles: ['Super Admin', 'Admin', 'Bursar'], levels: 'all' },
