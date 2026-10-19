@@ -84,7 +84,7 @@ export default function SchoolSignup() {
         <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: "'Segoe UI', sans-serif", padding: '20px' }}>
             <div style={{ background: 'white', width: '100%', maxWidth: '600px', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
                 <div style={{ background: '#0d904f', padding: '25px', textAlign: 'center', color: 'white' }}>
-                    <img src="/ssewasswa-comforts-technologies-logo.png" alt="Ssewasswa Comforts Technologies" style={{ width: '70px', height: '70px', objectFit: 'contain', marginBottom: '8px' }} />
+                    <img src="/ssewasswa-comforts-technologies-logo.png" alt="Ssewasswa Comforts Technologies" style={{ filter: 'brightness(1.18) saturate(1.35) contrast(1.05) drop-shadow(0 2px 6px rgba(0,0,0,0.18))', width: '70px', height: '70px', objectFit: 'contain', marginBottom: '8px' }} />
                     <div style={{ fontSize: '20px', fontWeight: '800' }}>Register Your School</div>
                     <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '4px' }}>Sign up for SSEWASSWA ERP Cloud Edition</div>
                 </div>

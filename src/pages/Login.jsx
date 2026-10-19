@@ -211,7 +211,7 @@ export default function Login() {
         <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: "'Segoe UI', sans-serif", padding: '20px' }}>
             <div style={{ background: 'white', width: '100%', maxWidth: '420px', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
                 <div style={{ background: '#1a73e8', padding: '30px', textAlign: 'center', color: 'white' }}>
-                    <img src="/ssewasswa-comforts-technologies-logo.png" alt="Ssewasswa Comforts Technologies" style={{ width: '90px', height: '90px', objectFit: 'contain', marginBottom: '10px', filter: 'drop-shadow(0px 4px 6px rgba(0,0,0,0.2))' }} />
+                    <img src="/ssewasswa-comforts-technologies-logo.png" alt="Ssewasswa Comforts Technologies" style={{ width: '90px', height: '90px', objectFit: 'contain', marginBottom: '10px', filter: 'brightness(1.18) saturate(1.35) contrast(1.05) drop-shadow(0 2px 6px rgba(0,0,0,0.18))' }} />
                     <div style={{ fontSize: '20px', fontWeight: '800' }}>SSEWASSWA ERP</div>
                     <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '4px' }}>
                         {hasElectron ? 'Desktop Edition' : (hasSupabase ? 'Cloud Edition' : 'School Management System')}

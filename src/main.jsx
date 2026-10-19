@@ -19,7 +19,49 @@ import AppRouter from "./router/router.jsx";
 // On desktop (Electron), the real preload.js exposes window.electronAPI
 // BEFORE main.jsx runs, so this shim is skipped.
 if (typeof window !== 'undefined' && !window.electronAPI) {
-  // Known methods that need specific return shapes
+  // ─── ELECTRON-ONLY METHODS ─────────────────────────────────────
+  // These methods should NOT exist on web. Returning `undefined` (NOT a function)
+  // means `typeof window.electronAPI.authLogin === 'function'` correctly returns
+  // false on web → caller code (Login.jsx, SystemSetup.jsx, Activation.jsx)
+  // detects web mode and falls through to the Supabase branch.
+  //
+  // Earlier bug: the shim returned a DEFAULT_STUB function for ALL methods,
+  // including authLogin. Login.jsx did `typeof window.electronAPI.authLogin === 'function'`
+  // → got true → took the Electron branch → called the stub → got "Desktop only" error
+  // → web users couldn't sign in.
+  //
+  // Fix: explicitly return undefined for these methods. Pages that check
+  // `typeof window.electronAPI.X === 'function'` will correctly see false → fall through.
+  const ELECTRON_ONLY_METHODS = new Set([
+    'authLogin',              // desktop local auth (Login.jsx checks this)
+    'auth-add-user',          // desktop add user
+    'auth-setup',              // desktop auth setup
+    'auth-reset-password-via-question',
+    'auth-get-security-question',
+    'addUser',                // desktop user management
+    'deleteUser',
+    'activateLicense',        // desktop license activation (Activation.jsx)
+    'validateLicenseKey',
+    'checkLicense',           // careful — was in KNOWN_STUBS, but we want a real stub for it
+    'backupDatabase',         // desktop DB backup
+    'restoreDatabase',
+    'backupToGmail',
+    'getLicenseTier',
+    'generatePaycodes',
+    'generateLicenseForHwid',
+    'submit-helpdesk-ticket',
+    'send-bulk-sms',         // desktop SMS via Africa's Talking
+    'staff-clock-in',
+    'log-sickbay',
+    'createPurchaseRequest',
+    'authorizePurchase',
+    'confirm-bank-payment',
+    'create-bank-payment',
+    'confirmManualPayment',
+    'check-payment-status',
+  ]);
+
+  // Known methods that need specific return shapes (NOT in ELECTRON_ONLY_METHODS)
   const KNOWN_STUBS = {
     checkInitialized: async () => ({ success: true, data: false }),
     checkLicense: async () => ({ success: false, isTrial: false, daysLeft: 0, note: 'Web mode — license not enforced. Use desktop app for trial enforcement.' }),
@@ -28,6 +70,7 @@ if (typeof window !== 'undefined' && !window.electronAPI) {
     onUpdateAvailable: () => {}, onUpdateDownloaded: () => {},
     onUpdateDownloadProgress: () => {}, onUpdateError: () => {},
     onUpdateShowDialog: () => {},
+    onUpdateNotAvailable: () => {},
     // Auto-update stubs (return "not available")
     checkForUpdates: async () => ({ success: false, error: 'Web mode — no auto-update' }),
     downloadUpdate: async () => ({ success: false, error: 'Web mode — no auto-update' }),
@@ -38,24 +81,52 @@ if (typeof window !== 'undefined' && !window.electronAPI) {
     getSyncStatus: async () => ({ lastSyncAt: null, syncing: false, supabaseConfigured: false }),
     startAutoSync: async () => ({ success: false }),
     stopAutoSync: async () => ({ success: false }),
+    // queryDatabase — return empty results gracefully (HMIS pages + others use this for SELECTs)
+    queryDatabase: async (sql, params) => {
+      const upperSql = String(sql || '').trim().toUpperCase();
+      if (upperSql.startsWith('SELECT') || upperSql.startsWith('PRAGMA')) {
+        return { success: true, data: [] };  // empty array for SELECTs
+      }
+      return { success: false, data: null, error: 'Web mode — DB writes not available' };
+    },
+    // getSignature — return null gracefully (SignatureManagement.jsx uses this)
+    getSignature: async () => ({ success: false, data: null }),
+    getSignatureAssignments: async () => ({ success: false, data: [] }),
+    saveSignature: async () => ({ success: false, error: 'Desktop only' }),
+    saveSignatureAssignment: async () => ({ success: false }),
+    // Photo + document handlers
+    savePhoto: async () => ({ success: false, error: 'Desktop only' }),
+    getPhoto: async () => ({ success: false, data: null }),
+    deletePhoto: async () => ({ success: false }),
+    saveDocument: async () => ({ success: false }),
+    getDocument: async () => ({ success: false, data: null }),
+    deleteDocument: async () => ({ success: false }),
   };
 
   // Default stub for any unknown method — returns safe empty result
+  // BUT only if the method is NOT in ELECTRON_ONLY_METHODS (those return undefined)
   const DEFAULT_STUB = async (...args) => ({
     success: false,
-    data: Array.isArray(args[0]) ? [] : (typeof args[0] === 'string' && args[0].trim().toUpperCase().startsWith('SELECT') ? [] : null),
+    data: Array.isArray(args[0]) ? [] : null,
     error: 'Desktop only — feature not available on web. Run via Electron app to use this.'
   });
 
   window.electronAPI = new Proxy(KNOWN_STUBS, {
     get(target, prop) {
+      // 1. If it's an ELECTRON_ONLY_METHOD, return undefined (NOT a function)
+      //    so caller-side typeof === 'function' checks return false → fall through to web branch
+      if (ELECTRON_ONLY_METHODS.has(prop)) {
+        return undefined;
+      }
+      // 2. If it's a known stub, return it
       if (prop in target) return target[prop];
-      // For event listener methods (start with 'on'), return a no-op
+      // 3. For event listener methods (start with 'on'), return a no-op
       if (typeof prop === 'string' && prop.startsWith('on')) return () => {};
+      // 4. Default: return the stub function (for IPC methods we don't know about)
       return DEFAULT_STUB;
     }
   });
-  console.log('[Shim] Web-mode electronAPI stub installed (no Electron detected)');
+  console.log('[Shim] Web-mode electronAPI stub installed (ELECTRON_ONLY_METHODS return undefined → web fallback works)');
 }
 
 

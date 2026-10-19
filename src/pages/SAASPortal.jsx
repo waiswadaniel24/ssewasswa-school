@@ -246,7 +246,7 @@ export default function SAASPortal() {
           {/* Top nav */}
           <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, marginBottom: 60 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <img src="/ssewasswa-comforts-school-erp-mark.png" alt="Ssewasswa" style={{ width: 50, height: 50, objectFit: 'contain' }} />
+              <img src="/ssewasswa-comforts-school-erp-mark.png" alt="Ssewasswa" style={{ filter: 'brightness(1.18) saturate(1.35) contrast(1.05) drop-shadow(0 2px 6px rgba(0,0,0,0.18))', width: 50, height: 50, objectFit: 'contain' }} />
               <div>
                 <strong style={{ letterSpacing: '.06em', fontSize: 16 }}>SSEWASSWA COMFORTS</strong>
                 <div style={{ color: '#8fb3c9', fontSize: 12 }}>Technologies — Multi-Portal SaaS Platform</div>

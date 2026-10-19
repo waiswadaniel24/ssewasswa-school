@@ -52,7 +52,7 @@ export default function Activation() {
     <div style={{ minHeight: '100vh', background: '#f0f2f5', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'sans-serif', padding: '20px' }}>
       <div style={{ background: 'white', width: '100%', maxWidth: '800px', borderRadius: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <div style={{ background: '#1a73e8', padding: '30px', textAlign: 'center', color: 'white' }}>
-          <img src="/ssewasswa-comforts-school-erp-mark.png" alt="Ssewasswa Comforts Technologies logo" style={{ width: '82px', height: '82px', objectFit: 'contain', background: 'white', borderRadius: '16px', padding: '6px', marginBottom: '10px' }} />
+          <img src="/ssewasswa-comforts-school-erp-mark.png" alt="Ssewasswa Comforts Technologies logo" style={{ filter: 'brightness(1.18) saturate(1.35) contrast(1.05) drop-shadow(0 2px 6px rgba(0,0,0,0.18))', width: '82px', height: '82px', objectFit: 'contain', background: 'white', borderRadius: '16px', padding: '6px', marginBottom: '10px' }} />
           <h1 style={{ margin: 0, fontSize: '24px' }}>Unlock Ssewasswa Comforts School ERP™</h1>
           <p style={{ margin: '5px 0 0', opacity: 0.9 }}>Choose your subscription plan</p>
         </div>

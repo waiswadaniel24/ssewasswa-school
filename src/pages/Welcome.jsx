@@ -62,7 +62,7 @@ export default function Welcome() {
         {/* Top brand bar */}
         <nav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 60 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <img src="/ssewasswa-comforts-school-erp-mark.png" alt="Ssewasswa" style={{ width: 46, height: 46, objectFit: 'contain' }} />
+            <img src="/ssewasswa-comforts-school-erp-mark.png" alt="Ssewasswa" style={{ filter: 'brightness(1.18) saturate(1.35) contrast(1.05) drop-shadow(0 2px 6px rgba(0,0,0,0.18))', width: 46, height: 46, objectFit: 'contain' }} />
             <div>
               <strong style={{ letterSpacing: '.06em' }}>SSEWASSWA COMFORTS</strong>
               <div style={{ color: '#8fb3c9', fontSize: 12 }}>School ERP</div>

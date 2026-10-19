@@ -120,7 +120,7 @@ export default function Admin() {
       <div style={{ maxWidth: 900, margin: '0 auto' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
-          <img src="/ssewasswa-comforts-school-erp-mark.png" alt="Ssewasswa" style={{ width: 46, height: 46, objectFit: 'contain' }} />
+          <img src="/ssewasswa-comforts-school-erp-mark.png" alt="Ssewasswa" style={{ filter: 'brightness(1.18) saturate(1.35) contrast(1.05) drop-shadow(0 2px 6px rgba(0,0,0,0.18))', width: 46, height: 46, objectFit: 'contain' }} />
           <div>
             <h1 style={{ margin: 0, fontSize: 24 }}>Admin: License Generator</h1>
             <p style={{ margin: 0, color: '#8fb3c9', fontSize: 13 }}>

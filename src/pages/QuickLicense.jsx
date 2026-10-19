@@ -97,7 +97,7 @@ export default function QuickLicense() {
     }}>
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: 24, paddingTop: 20 }}>
-        <img src="/ssewasswa-comforts-school-erp-mark.png" alt="Ssewasswa" style={{ width: 50, height: 50, objectFit: 'contain', marginBottom: 8 }} />
+        <img src="/ssewasswa-comforts-school-erp-mark.png" alt="Ssewasswa" style={{ filter: 'brightness(1.18) saturate(1.35) contrast(1.05) drop-shadow(0 2px 6px rgba(0,0,0,0.18))', width: 50, height: 50, objectFit: 'contain', marginBottom: 8 }} />
         <h1 style={{ fontSize: 22, margin: '0 0 4px' }}>Quick License</h1>
         <p style={{ fontSize: 13, color: '#8fb3c9', margin: 0 }}>Generate + email license keys from your phone</p>
       </div>
