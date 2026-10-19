@@ -57,7 +57,7 @@ module.exports = async (req, res) => {
       if (errText.includes('duplicate') || errText.includes('unique')) {
         return res.status(200).json({ success: true, message: 'You are already subscribed!' });
       }
-      return res.status(400).json({ success: false, error: `Supabase error: ${errText}` });
+      return res.status(400).json({ success: false, error: `Database error. Please try again.` });
     }
     return res.status(201).json({ success: true, message: 'Subscribed successfully. Check your email for confirmation.' });
   } catch (err) {

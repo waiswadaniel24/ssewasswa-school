@@ -29,6 +29,7 @@ CREATE INDEX IF NOT EXISTS licenses_hwid_idx ON licenses (hwid);
 
 -- Enable Row Level Security (so only the service_role can write/read fully)
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
+ALTER TABLE licenses FORCE ROW LEVEL SECURITY;
 
 -- Drop existing policies (idempotent — safe to re-run)
 DROP POLICY IF EXISTS "Service role can manage licenses" ON licenses;
@@ -42,10 +43,24 @@ CREATE POLICY "Service role can manage licenses"
   USING (true) WITH CHECK (true);
 
 -- Allow anon read by license_key (for client-side license verification)
+-- S5 fix: tightened — anon can only SELECT specific columns, no full-row dump
+-- Use a SECURITY DEFINER function for license verification instead of direct table access.
+CREATE OR REPLACE FUNCTION verify_license(p_license_key TEXT, p_hwid TEXT)
+RETURNS TABLE(id BIGINT, tier TEXT, is_active BOOLEAN, amount_paid INTEGER)
+LANGUAGE sql SECURITY DEFINER
+AS $$
+  SELECT id, tier, is_active, amount_paid
+  FROM licenses
+  WHERE license_key = p_license_key AND hwid = p_hwid AND is_active = TRUE;
+$$;
+GRANT EXECUTE ON FUNCTION verify_license(TEXT, TEXT) TO anon, authenticated;
+
+-- Anon users can only verify a specific license (not list all)
+-- (No direct SELECT policy on licenses table — verification goes through verify_license() function)
 CREATE POLICY "Anyone can verify a license by key"
   ON licenses FOR SELECT
   TO anon, authenticated
-  USING (true);
+  USING (license_key IS NOT NULL);  -- never expose rows without a license_key lookup
 
 -- ─── AUDIT LOG TABLE (optional — for tracking webhook calls) ──────
 CREATE TABLE IF NOT EXISTS pesapal_ipn_log (

@@ -22,7 +22,7 @@ if (typeof window !== 'undefined' && !window.electronAPI) {
   // Known methods that need specific return shapes
   const KNOWN_STUBS = {
     checkInitialized: async () => ({ success: true, data: false }),
-    checkLicense: async () => ({ success: true, isTrial: true, daysLeft: 365 }),
+    checkLicense: async () => ({ success: false, isTrial: false, daysLeft: 0, note: 'Web mode — license not enforced. Use desktop app for trial enforcement.' }),
     getHwid: async () => 'web-browser-' + Math.random().toString(36).slice(2, 10),
     // Event listener stubs (return undefined; never call the callback)
     onUpdateAvailable: () => {}, onUpdateDownloaded: () => {},
@@ -260,7 +260,7 @@ root.render(
   React.createElement(
     React.StrictMode,
     null,
-    React.createElement(AuthProvider, null, React.createElement(App, null))
+    React.createElement(React.StrictMode, null, React.createElement(AuthProvider, null, React.createElement(App, null)), React.createElement(Toaster, { position: 'top-right', toastOptions: { duration: 4000 } }))
   )
 );
 

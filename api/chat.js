@@ -37,8 +37,8 @@ KEY INFO YOU KNOW:
 - Premium Access: UGX 300,000/year (All Ordinary + EMIS compliance + UNEB API + Multi-school + Auto-Docs)
 
 **Payment methods:**
-1. MTN Mobile Money to 0752 971 118 (Kusuya Grace)
-2. Airtel Money to 0789 738 420 (Waiswa Moses)
+1. MTN Mobile Money to 0789 736 737 (Kusuya Grace)
+2. Airtel Money to 0789 736 737 (Waiswa Moses)
 3. Online via Pesapal (Visa/Mastercard)
 
 **Live URLs:**
@@ -91,7 +91,7 @@ function ruleBasedResponse(message) {
     return 'To subscribe:\n1. Visit https://ssewasswa-school.pages.dev/\n2. Click "Subscribe to Ordinary" or "Subscribe to Premium"\n3. Enter your name + email\n4. Pay via MTN/Airtel MoMo OR Pesapal\n5. Send payment screenshot + HWID via WhatsApp\n6. Receive license key via email';
   }
   if (m.includes('payment') || m.includes('pay')) {
-    return 'Payment methods:\n- MTN MoMo: 0752 971 118 (Kusuya Grace)\n- Airtel Money: 0789 738 420 (Waiswa Moses)\n- Online: Pesapal (Visa/Mastercard)';
+    return 'Payment methods:\n- MTN MoMo: 0789 736 737 (Kusuya Grace)\n- Airtel Money: 0789 736 737 (Waiswa Moses)\n- Online: Pesapal (Visa/Mastercard)';
   }
   if (m.includes('download') || m.includes('app') || m.includes('install')) {
     return 'Download the desktop app here:\nhttps://github.com/waiswadaniel24/ssewasswa-school/releases/download/v10.0.0/Ssewasswa-School-ERP-V10-Setup.exe\n\n(130 MB, Windows 7+ 64-bit)';
@@ -145,7 +145,7 @@ module.exports = async (req, res) => {
     }
 
     const messages = [
-      { role: 'assistant', content: SYSTEM_PROMPT },
+      { role: 'system', content: SYSTEM_PROMPT },
       ...history.slice(-10).map(h => ({
         role: h.role === 'assistant' ? 'assistant' : 'user',
         content: h.content

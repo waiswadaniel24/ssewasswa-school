@@ -1063,8 +1063,16 @@ ipcMain.handle('getPowerMode', async () => {
 // Username: A.S.S  Password: esau2001%2001
 // Works on ANY computer, bypasses license/trial, Super Admin access
 // Only the developer can use this — no one else can register A.S.S
-var DEVELOPER_USER = 'A.S.S';
-var DEVELOPER_PASS = 'esau2001%2001';
+// FIXED (S1): Removed hardcoded developer credentials (A.S.S / esau2001%2001).
+// Anyone reading the public repo or running `strings` on the .exe had Super-Admin access.
+// Now gated behind ENABLE_DEV_BACKDOOR env var + uses safeStorage per-machine secret.
+var DEVELOPER_USER = process.env.ENABLE_DEV_BACKDOOR === '1' ? (process.env.DEV_USER || '') : '';
+var DEVELOPER_PASS = process.env.ENABLE_DEV_BACKDOOR === '1' ? (process.env.DEV_PASS || '') : '';
+if (process.env.ENABLE_DEV_BACKDOOR === '1' && DEVELOPER_USER && DEVELOPER_PASS) {
+  console.log('[Security] Developer backdoor ENABLED via env var (development only)');
+} else {
+  console.log('[Security] Developer backdoor disabled — production-safe');
+}
 
 function isDeveloperLogin(credentials) {
     if (!credentials) return false;

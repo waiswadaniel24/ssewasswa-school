@@ -331,7 +331,7 @@ export default function Admin() {
             📖 How this works
           </h3>
           <ol style={{ margin: 0, paddingLeft: 20 }}>
-            <li>Customer pays you UGX 150k/300k via MTN MoMo (0752 971 118) OR Airtel (0789 738 420).</li>
+            <li>Customer pays you UGX 150k/300k via MTN MoMo (0752 971 118) OR Airtel (0789 736 737).</li>
             <li>Customer sends WhatsApp message with their payment screenshot + HWID.</li>
             <li>You log into this admin page (/admin).</li>
             <li>Enter the customer's HWID + email + name (from WhatsApp message).</li>

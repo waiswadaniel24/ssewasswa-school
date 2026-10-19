@@ -80,7 +80,7 @@ const PAYMENT_METHODS = [
     color: '#e31e24',
     bg: '#fff',
     holder: 'Waiswa Moses',
-    number: '0789 738 420',
+    number: '0789 736 737',
     display: '+256 789 738 420',
   },
   {
@@ -114,7 +114,8 @@ const DOWNLOAD_INFO = {
 export default function ProductLanding() {
   const navigate = useNavigate();
   const { user, authReady } = useAuth();
-  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState
+  const [paymentRef, setPaymentRef] = useState('');(null);
   const [paymentStep, setPaymentStep] = useState('plans'); // 'plans' | 'methods' | 'momo' | 'processing'
   const [hwid, setHwid] = useState('');
   const [email, setEmail] = useState('');
@@ -164,7 +165,7 @@ export default function ProductLanding() {
       const refRes = await fetch('/api/create-reference', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tier: plan.tier, email: '', customer_name: '' })
+        body: JSON.stringify({ tier: plan.tier, email: email || (user && user.email) || '', customer_name: customerName || (user && user.username) || '' })
       });
       const refData = await refRes.json();
       if (refData.success) {

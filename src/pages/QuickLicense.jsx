@@ -332,7 +332,7 @@ export default function QuickLicense() {
         lineHeight: 1.6
       }}>
         <strong style={{ color: '#61d3a5' }}>How it works:</strong><br />
-        1. Customer pays via MoMo (0752 971 118 or 0789 738 420)<br />
+        1. Customer pays via MoMo (0752 971 118 or 0789 736 737)<br />
         2. Customer sends WhatsApp with HWID + email<br />
         3. You enter HWID + email here → click Generate<br />
         4. License key auto-generated + emailed to customer<br />

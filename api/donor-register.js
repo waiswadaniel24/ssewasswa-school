@@ -55,7 +55,7 @@ module.exports = async (req, res) => {
     });
     if (!r.ok) {
       const errText = await r.text();
-      return res.status(400).json({ success: false, error: `Supabase error: ${errText}` });
+      return res.status(400).json({ success: false, error: `Database error. Please try again.` });
     }
     return res.status(201).json({ success: true, message: 'Donor registered. We will verify and connect you with matching institutions.' });
   } catch (err) {

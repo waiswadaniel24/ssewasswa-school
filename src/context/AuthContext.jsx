@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(readUserFromStorage);
   const [authReady, setAuthReady] = useState(!supabase);
   const [schoolLevel, setSchoolLevel] = useState(() => readLocal('erp_school_level', 'Primary'));
-  const [currentSchoolId, setCurrentSchoolId] = useState(() => Number(readLocal('erp_school_id', '1')) || 1);
+  const [currentSchoolId, setCurrentSchoolId] = useState(() => readLocal('erp_school_id', '1') || '1');
   const [schools, setSchools] = useState([]);
 
   const login = (userData) => {

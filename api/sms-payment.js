@@ -15,6 +15,13 @@
 // And in your SMS Forwarder app (Android), set the same secret in the
 // webhook URL header configuration.
 
+
+// S4 fix: HTML-escape user input to prevent email/HTML injection
+function htmlEscape(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');

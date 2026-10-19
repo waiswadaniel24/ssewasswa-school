@@ -12,6 +12,13 @@
 // the request is rejected with 401. If the env var is NOT set, the
 // webhook accepts all requests (backwards-compatible).
 
+
+// S4 fix: HTML-escape user input to prevent email/HTML injection
+function htmlEscape(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
@@ -175,7 +182,7 @@ module.exports = async (req, res) => {
         to: userEmail,
         subject: `Your Ssewasswa ERP ${tierName} Activation Key`,
         html: `
-          <h2>Thank you for your subscription, ${customerName}!</h2>
+          <h2>Thank you for your subscription, ${htmlEscape(customerName)}!</h2>
           <p>Your ${tierName} Access activation key is:</p>
           <h1 style="color:#1a73e8; background:#e8f0fe; padding:14px; border-radius:8px; text-align:center; font-family:monospace;">${licenseKey}</h1>
           <p><strong>Tier:</strong> ${tierName} Access</p>
