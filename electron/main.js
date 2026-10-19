@@ -644,7 +644,12 @@ app.whenReady().then(async () => {
 
         // ─── Hybrid cloud sync (Supabase) ──────────────────────
         // Adds last_modified + is_deleted + school_id columns to all
-        // syncable tables, then starts the 5-min auto-sync timer.
+        // syncable tables, then sets up the auto-sync timer.
+        //
+        // NOTE: Auto-sync is DISABLED by default to prevent potential freezes
+        // during app startup. The sync IPC handlers are still registered
+        // so users can manually trigger sync via the "Sync now" button.
+        // To re-enable auto-sync, set ENABLE_AUTO_SYNC=true in env.
         try {
             const { SyncManager, ensureSyncColumns } = require('./syncManager');
             ensureSyncColumns(db);  // idempotent — adds columns if missing
@@ -656,9 +661,15 @@ app.whenReady().then(async () => {
                 schoolId: 1,
             });
             syncManager.registerIpc();
-            syncManager.startAutoSync();
-            global.syncManager = syncManager;  // for main process access
-            console.log('[Main] Cloud sync manager initialized');
+            // Auto-sync disabled by default — was causing freeze on some systems
+            // when Supabase was unreachable. User can manually sync via UI button.
+            if (process.env.ENABLE_AUTO_SYNC === 'true') {
+                syncManager.startAutoSync();
+                console.log('[Main] Cloud sync auto-started (ENABLE_AUTO_SYNC=true)');
+            } else {
+                console.log('[Main] Cloud sync registered (auto-sync disabled — manual sync only)');
+            }
+            global.syncManager = syncManager;
         } catch (e) {
             console.error('[Main] Sync manager init failed (sync disabled):', e.message);
         }

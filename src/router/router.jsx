@@ -17,6 +17,7 @@ import Admin from '../pages/Admin.jsx';
 import QuickLicense from '../pages/QuickLicense.jsx';
 import SAASPortal from '../pages/SAASPortal.jsx';
 import HMISLanding from '../pages/HMISLanding.jsx';
+import HMISLayout from '../layout/HMISLayout.jsx';
 import HMISDashboard from '../pages/hmis/Dashboard.jsx';
 import HMISPatients from '../pages/hmis/Patients.jsx';
 import HMISOPD from '../pages/hmis/OPD.jsx';
@@ -259,10 +260,43 @@ const ProtectedLayout = () => {
             </Suspense>
         );
     }
-    // Authenticated user → render the full Layout (sidebar + main content)
+    // Authenticated user → render the full School ERP Layout (sidebar + main content)
     return (
         <Suspense fallback={<LoadingFallback />}>
             <Layout />
+        </Suspense>
+    );
+};
+
+// ─── Auth-protected HMIS Layout (separate from School ERP Layout) ───
+// Earlier HMIS routes used <ProtectedLayout /> which renders the School ERP
+// Sidebar with menu items like 'Students', 'Library', 'Transport' — clicking
+// any of them navigated to /app/* paths (School ERP routes). So HMIS users
+// appeared to "be in School ERP" because the sidebar WAS School ERP.
+// Fix: HMIS routes use this ProtectedHMISLayout that renders <HMISLayout />
+// (which uses <HMISSidebar /> with HMIS menu items: Dashboard, Patients,
+// OPD, Lab, Pharmacy, Billing — all navigating to /hmis/* paths).
+const ProtectedHMISLayout = () => {
+    const { user, authReady } = useAuth();
+    if (!authReady) {
+        return (
+            <Suspense fallback={<LoadingFallback />}>
+                <LoadingFallback />
+            </Suspense>
+        );
+    }
+    if (!user) {
+        // Unauthenticated visitor → show HMIS marketing landing page
+        return (
+            <Suspense fallback={<LoadingFallback />}>
+                <HMISLanding />
+            </Suspense>
+        );
+    }
+    // Authenticated user → render the HMIS Layout
+    return (
+        <Suspense fallback={<LoadingFallback />}>
+            <HMISLayout />
         </Suspense>
     );
 };
@@ -281,7 +315,13 @@ const ProtectedRoute = ({ isLocked, children, pageName }) => {
     const location = useLocation();
     if (!authReady) return <LoadingFallback />;
     const path = location.pathname === '/' ? '/' : location.pathname;
-    const allowed = path === '/' || canAccess(user?.role || 'Viewer', schoolLevel, path);
+
+    // DEVELOPER BYPASS: developers can access ALL routes without canAccess check.
+    // Earlier devs were blocked from /app/staff, /app/finance, etc. because the
+    // MENU_ITEMS roles list doesn't include 'Developer' — they could only access
+    // /app/dev. Now devs skip canAccess entirely.
+    const isDeveloper = Boolean(user?.isDeveloper);
+    const allowed = isDeveloper || path === '/' || canAccess(user?.role || 'Viewer', schoolLevel, path);
 
     if (!allowed) return <Navigate to="/" replace />;
 
@@ -406,10 +446,16 @@ export default function AppRouter({ isInitialized, isLocked }) {
             path: '/business-directory',
             element: <PublicRoute><BusinessDirectory /></PublicRoute>
         },
-        // ─── HMIS App (protected) ───
+        // ─── HMIS App (protected + uses HMIS Layout, not School ERP) ───
+        // CRITICAL FIX: Earlier this used <ProtectedLayout /> which renders the
+        // School ERP Sidebar — so HMIS users saw 'Students', 'Library', 'Transport'
+        // menu items and clicking them navigated to /app/* paths (leaving HMIS).
+        // Now uses <ProtectedHMISLayout /> which renders <HMISLayout /> with
+        // <HMISSidebar /> showing HMIS menu items (Dashboard, Patients, OPD, Lab,
+        // Pharmacy, Billing) that navigate to /hmis/* paths.
         {
             path: '/hmis',
-            element: <ProtectedLayout />,
+            element: <ProtectedHMISLayout />,
             children: [
                 { index: true, element: <ProtectedRoute isLocked={isLocked}><HMISDashboard /></ProtectedRoute> },
                 { path: 'patients', element: <ProtectedRoute isLocked={isLocked}><HMISPatients /></ProtectedRoute> },
