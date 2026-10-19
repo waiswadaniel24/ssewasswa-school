@@ -45,7 +45,14 @@ jobs:
           VITE_PRODUCT_NAME: 'Ssewasswa Comforts HMIS'
 
       - name: 🖥️ Package Electron app — HMIS branded
-        run: npx electron-builder --win --config.electron-builder-hmis.json
+        # IMPORTANT: use `--config <path>` (with SPACE) NOT `--config.<path>`.
+        # Electron-builder parses `--config.<name>` as "override config option
+        # <name>", which causes "unknown property" validation errors.
+        # Earlier command `npx electron-builder --win --config.electron-builder-hmis.json`
+        # was being parsed as "set config option `electron-builder-hmis` to `json`"
+        # → ValidationError: unknown property 'electron-builder-hmis'.
+        # Fix: use space-separated form OR `--config=path` form.
+        run: npx electron-builder --win --config electron-builder-hmis.json
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
