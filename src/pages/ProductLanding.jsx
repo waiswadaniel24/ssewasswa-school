@@ -240,52 +240,6 @@ export default function ProductLanding() {
           </div>
         </nav>
 
-        {/* ─── Tenant Switcher Banner — quick navigation to all portals ─── */}
-        {/* Without this, /product-landing only shows School ERP details and users
-            have no way to discover HMIS, Business, Church, Org, Individual,
-            Parent, Student portals. */}
-        <div style={{
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid #2c455a',
-          borderRadius: 12,
-          padding: '12px 16px',
-          marginBottom: 24,
-          display: 'flex',
-          gap: 8,
-          alignItems: 'center',
-          overflowX: 'auto',
-          flexWrap: 'wrap',
-        }}>
-          <span style={{ color: '#8fb3c9', fontSize: 12, fontWeight: 700, marginRight: 8, whiteSpace: 'nowrap' }}>SWITCH PRODUCT:</span>
-          {[
-            { label: '🏫 School ERP', route: '/product-landing', active: true, color: '#1a73e8' },
-            { label: '🏥 HMIS', route: '/hmis-landing', color: '#0b8043' },
-            { label: '🏢 Business', route: '/app/more/business-portal', color: '#5f6368' },
-            { label: '⛪ Church', route: '/app/more/church-portal', color: '#9c27b0' },
-            { label: '🌍 Org / NGO', route: '/app/more/org-portal', color: '#00796b' },
-            { label: '🧑 Individual', route: '/app/more/individual-portal', color: '#0288d1' },
-            { label: '👨‍👩‍👧 Parent', route: '/app/more/parent-portal', color: '#d81b60' },
-            { label: '🎓 Student', route: '/app/more/student-portal', color: '#7b1fa2' },
-            { label: '🧰 More Features', route: '/app/more', color: '#f9ab00' },
-          ].map(p => (
-            <button
-              key={p.route}
-              onClick={() => navigate(p.route)}
-              style={{
-                background: p.active ? p.color : 'transparent',
-                color: p.active ? '#fff' : '#b5c9d7',
-                border: `1px solid ${p.active ? p.color : '#45657b'}`,
-                borderRadius: 999,
-                padding: '6px 14px',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}
-            >{p.label}</button>
-          ))}
-        </div>
-
         {/* ─── Hero ─── */}
         <div style={{ textAlign: 'center', paddingTop: 60, paddingBottom: 40 }}>
           <div style={{ color: '#61d3a5', fontWeight: 700, letterSpacing: '.12em', fontSize: 13, textTransform: 'uppercase', marginBottom: 16 }}>
