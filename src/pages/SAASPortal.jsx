@@ -51,7 +51,7 @@ const PORTALS = [
     bg: '#e6f4ea',
     status: 'ready',
     route: '/hmis-landing',
-    signInSection: '/login?next=/hmis',
+    signInSection: '/hmis/login',
     pricing: [
       { tier: 'Drug Shop', price: 'UGX 100,000', period: '/year', features: ['Patient walk-in registration', 'Pharmacy inventory + dispensing', 'Billing + receipts', 'Single-terminal license', 'Email support'] },
       { tier: 'Clinic', price: 'UGX 200,000', period: '/year', features: ['Patient + OPD + pharmacy + lab + billing', 'Triage + diagnosis + prescription', 'Single-terminal', 'Email support'], featured: true },
@@ -81,6 +81,7 @@ const PORTALS = [
     bg: '#f1f3f4',
     status: 'ready',
     route: '/business-portal',
+    signInSection: '/login/business',
     features: [
       { icon: '💳', title: 'Point of Sale (POS)', desc: 'Barcode scanning, quick keys, split payments, refund + exchange handling, end-of-day Z-reports.' },
       { icon: '📈', title: 'Sales Tracking', desc: 'Real-time sales charts by product, branch, cashier, payment method, time of day, customer segment.' },
@@ -103,6 +104,7 @@ const PORTALS = [
     bg: '#f3e5f5',
     status: 'ready',
     route: '/church-portal',
+    signInSection: '/login/church',
     features: [
       { icon: '💰', title: 'Tithes Tracking', desc: 'Member-by-member tithe contributions, monthly statements, annual giving receipts (tax-deductible).' },
       { icon: '🤝', title: 'Donations + Pledges', desc: 'One-time + recurring donations, pledge campaigns with progress tracking, gift-aid recovery.' },
@@ -125,6 +127,7 @@ const PORTALS = [
     bg: '#e0f2f1',
     status: 'ready',
     route: '/org-portal',
+    signInSection: '/login/org',
     features: [
       { icon: '📋', title: 'Member Directory', desc: 'Member registration, membership cards (PDF), renewal reminders, lapsed member re-engagement.' },
       { icon: '💳', title: 'Membership Renewal', desc: 'Annual/quarterly/monthly dues via Pesapal/MoMo, auto-renewal opt-in, receipt auto-email.' },
@@ -147,6 +150,7 @@ const PORTALS = [
     bg: '#e1f5fe',
     status: 'ready',
     route: '/individual-portal',
+    signInSection: '/login/individual',
     features: [
       { icon: '💰', title: 'Personal Budget', desc: 'Monthly income/expense tracking, category budget limits, alerts when over budget, recurring bills.' },
       { icon: '🎯', title: 'Savings Goals', desc: 'Set savings targets (school fees, land, car), track progress, auto-deposit reminders.' },

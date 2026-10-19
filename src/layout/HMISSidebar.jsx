@@ -36,20 +36,24 @@ const HMIS_MENU = [
   // MAIN
   { path: '/', name: 'Dashboard', icon: '📊', section: 'main', facilityTypes: 'all' },
 
-  // PATIENTS
+  // CLINICAL SERVICES
   { path: '/patients', name: 'Patients', icon: '🧑‍⚕️', section: 'clinical', facilityTypes: 'all' },
-
-  // OPD (outpatient)
   { path: '/opd', name: 'OPD / Outpatient', icon: '🏥', section: 'clinical', facilityTypes: ['Clinic', 'HC2', 'HC3', 'HC4', 'GeneralHospital'] },
-
-  // LABORATORY
+  { path: '/ipd', name: 'IPD / Wards', icon: '🛏️', section: 'clinical', facilityTypes: ['HC3', 'HC4', 'GeneralHospital'] },
   { path: '/lab', name: 'Laboratory', icon: '🧪', section: 'clinical', facilityTypes: ['Pharmacy', 'Clinic', 'HC3', 'HC4', 'GeneralHospital'] },
-
-  // PHARMACY
   { path: '/pharmacy', name: 'Pharmacy', icon: '💊', section: 'clinical', facilityTypes: 'all' },
+  { path: '/billing', name: 'Billing', icon: '💵', section: 'clinical', facilityTypes: 'all' },
 
-  // BILLING
-  { path: '/billing', name: 'Billing', icon: '💵', section: 'finance', facilityTypes: 'all' },
+  // MATERNAL & CHILD HEALTH
+  { path: '/maternal', name: 'Maternal Health', icon: '🤱', section: 'maternal', facilityTypes: ['HC3', 'HC4', 'GeneralHospital'] },
+  { path: '/immunizations', name: 'Immunizations (EPI)', icon: '💉', section: 'maternal', facilityTypes: ['Clinic', 'HC2', 'HC3', 'HC4', 'GeneralHospital'] },
+
+  // DISEASE PROGRAMS
+  { path: '/notifiable', name: 'Notifiable Diseases', icon: '⚠️', section: 'disease', facilityTypes: ['Clinic', 'HC2', 'HC3', 'HC4', 'GeneralHospital'] },
+
+  // SUPPORT SERVICES
+  { path: '/staff', name: 'Staff Management', icon: '👥', section: 'support', facilityTypes: 'all' },
+  { path: '/reports', name: 'Reports (Form 105)', icon: '📈', section: 'support', facilityTypes: 'all' },
 ];
 
 const SECTION_NAMES = {

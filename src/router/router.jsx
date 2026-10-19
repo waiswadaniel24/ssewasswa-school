@@ -19,6 +19,15 @@ import SAASPortal from '../pages/SAASPortal.jsx';
 import HMISLanding from '../pages/HMISLanding.jsx';
 import HMISLayout from '../layout/HMISLayout.jsx';
 import ExamBoardPage from '../pages/ExamBoardPage.jsx';
+import PortalLogin from '../pages/PortalLogin.jsx';
+import HMISSetup from '../pages/hmis/Setup.jsx';
+import HMISLogin from '../pages/hmis/Login.jsx';
+import HMISIPD from '../pages/hmis/IPD.jsx';
+import HMISMaternal from '../pages/hmis/Maternal.jsx';
+import HMISImmunizations from '../pages/hmis/Immunizations.jsx';
+import HMISNotifiable from '../pages/hmis/Notifiable.jsx';
+import HMISStaff from '../pages/hmis/Staff.jsx';
+import HMISReports from '../pages/hmis/Reports.jsx';
 import HMISDashboard from '../pages/hmis/Dashboard.jsx';
 import HMISPatients from '../pages/hmis/Patients.jsx';
 import HMISOPD from '../pages/hmis/OPD.jsx';
@@ -452,6 +461,35 @@ export default function AppRouter({ isInitialized, isLocked }) {
             path: '/hmis-landing',
             element: <PublicRoute><HMISLanding /></PublicRoute>
         },
+        // ─── HMIS Facility Setup (public — first-time facility registration) ───
+        // SEPARATE from school SystemSetup.jsx. Collects HMIS-specific facility
+        // info (level, ownership, HMIS code, beds, staff) + admin HMIO user.
+        // Desktop mode → IPC hmis-setup (pending); Web mode → localStorage('hmis_facility') + navigate('/hmis/login').
+        {
+            path: '/hmis/setup',
+            element: <PublicRoute><HMISSetup /></PublicRoute>
+        },
+        {
+            path: '/hmis/login',
+            element: <PublicRoute><HMISLogin /></PublicRoute>
+        },
+        // ─── Portal-specific login routes (public) ───
+        {
+            path: '/login/business',
+            element: <PublicRoute><PortalLogin portal={{id:'business-portal',name:'Business / SME',icon:'🏢',color:'#5f6368',gradient:'linear-gradient(135deg,#5f6368 0%,#202124 100%)',route:'/business-portal'}} /></PublicRoute>
+        },
+        {
+            path: '/login/church',
+            element: <PublicRoute><PortalLogin portal={{id:'church-portal',name:'Church / Religious Org',icon:'⛪',color:'#9c27b0',gradient:'linear-gradient(135deg,#9c27b0 0%,#4a148c 100%)',route:'/church-portal'}} /></PublicRoute>
+        },
+        {
+            path: '/login/org',
+            element: <PublicRoute><PortalLogin portal={{id:'org-portal',name:'Org / NGO / CBO',icon:'🌍',color:'#00796b',gradient:'linear-gradient(135deg,#00796b 0%,#004d40 100%)',route:'/org-portal'}} /></PublicRoute>
+        },
+        {
+            path: '/login/individual',
+            element: <PublicRoute><PortalLogin portal={{id:'individual-portal',name:'Individual / Personal',icon:'🧑',color:'#0288d1',gradient:'linear-gradient(135deg,#0288d1 0%,#01579b 100%)',route:'/individual-portal'}} /></PublicRoute>
+        },
         // ─── Product Landing (public) — detailed marketing/pricing page ───
         // Used by SAASPortal "Explore" button + referenced by sitemap.xml + SEO.
         // Without this route, /product-landing hit the catch-all '*' → redirected
@@ -524,6 +562,12 @@ export default function AppRouter({ isInitialized, isLocked }) {
                 { path: 'lab', element: <ProtectedRoute isLocked={isLocked}><HMISLab /></ProtectedRoute> },
                 { path: 'pharmacy', element: <ProtectedRoute isLocked={isLocked}><HMISPharmacy /></ProtectedRoute> },
                 { path: 'billing', element: <ProtectedRoute isLocked={isLocked}><HMISBilling /></ProtectedRoute> },
+                { path: 'ipd', element: <ProtectedRoute isLocked={isLocked}><HMISIPD /></ProtectedRoute> },
+                { path: 'maternal', element: <ProtectedRoute isLocked={isLocked}><HMISMaternal /></ProtectedRoute> },
+                { path: 'immunizations', element: <ProtectedRoute isLocked={isLocked}><HMISImmunizations /></ProtectedRoute> },
+                { path: 'notifiable', element: <ProtectedRoute isLocked={isLocked}><HMISNotifiable /></ProtectedRoute> },
+                { path: 'staff', element: <ProtectedRoute isLocked={isLocked}><HMISStaff /></ProtectedRoute> },
+                { path: 'reports', element: <ProtectedRoute isLocked={isLocked}><HMISReports /></ProtectedRoute> },
             ]
         },
         // ─── School ERP (protected) ───
