@@ -68,9 +68,14 @@ export default function SAASPortal() {
               <div style={{ color: '#8fb3c9', fontSize: 12 }}>Technologies — SaaS Platform</div>
             </div>
           </div>
-          <button onClick={() => navigate('/login')} style={{ background: 'transparent', color: '#fff', border: '1px solid #45657b', borderRadius: 999, padding: '11px 18px', cursor: 'pointer' }}>
-            Sign in
-          </button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={() => navigate('/login?next=/app')} style={{ background: 'transparent', color: '#fff', border: '1px solid #45657b', borderRadius: 999, padding: '11px 18px', cursor: 'pointer' }}>
+              School ERP Sign in
+            </button>
+            <button onClick={() => navigate('/login?next=/hmis')} style={{ background: '#0b8043', color: '#fff', border: 0, borderRadius: 999, padding: '11px 18px', cursor: 'pointer', fontWeight: 600 }}>
+              HMIS Sign in
+            </button>
+          </div>
         </nav>
 
         <div style={{ textAlign: 'center', paddingTop: 60, paddingBottom: 40 }}>

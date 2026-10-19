@@ -58,7 +58,9 @@ function AuthCallback() {
     const navigate = useNavigate();
     useEffect(() => {
         if (!authReady) return;
-        navigate(user?.isDeveloper ? '/dev' : '/', { replace: true });
+        // FIXED: was navigate('/dev') which hit the catch-all '*' → redirected
+        // to '/' → SAASPortal. Dev dashboard is at /app/dev (nested route).
+        navigate(user?.isDeveloper ? '/app/dev' : '/app', { replace: true });
     }, [authReady, navigate, user?.isDeveloper]);
     return <LoadingFallback />;
 }
