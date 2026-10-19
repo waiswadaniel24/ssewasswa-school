@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { getSupabaseUser, supabase } from '../lib/supabase.js';
+import { getSupabaseUser, supabase, isSupabaseConfigured } from '../lib/supabase.js';
 
 const AuthContext = createContext(null);
 
@@ -22,6 +22,46 @@ function readUserFromStorage() {
   return null;
 }
 
+// ─── Portal isolation constants ──────────────────────────────────────
+// Trial window (days) — after this, non-developer portal users must have
+// an active subscription (checked at the portal gate). In demo / localStorage
+// mode (no Supabase), trial is unlimited — see checkPortalAccess below.
+const TRIAL_DAYS = 14;
+const DEVELOPER_EMAIL = 'waiswadaniel24@gmail.com';
+
+// All localStorage keys we use for portal session scoping — cleared on logout
+// so a user cannot jump from one portal to another without re-authenticating.
+const PORTAL_LS_PREFIXES = ['erp_portal_user_', 'erp_business_', 'erp_church_', 'erp_org_', 'erp_individual_'];
+
+function clearPortalLocalStorage() {
+  try {
+    const toRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      if (PORTAL_LS_PREFIXES.some((p) => key.startsWith(p))) toRemove.push(key);
+    }
+    toRemove.forEach((k) => localStorage.removeItem(k));
+  } catch { /* storage unavailable */ }
+}
+
+// Compute trial days left from a user's created_at timestamp.
+// Returns null when created_at is missing (treat as unlimited) so the
+// gate never accidentally locks out a brand-new account that hasn't synced
+// its created_at yet.
+function computeTrialDaysLeft(user) {
+  if (!user) return null;
+  if (user.isDeveloper) return Number.POSITIVE_INFINITY;
+  if (!user.created_at) return null;
+  try {
+    const created = new Date(user.created_at).getTime();
+    if (!Number.isFinite(created)) return null;
+    const now = Date.now();
+    const elapsedDays = Math.floor((now - created) / (24 * 60 * 60 * 1000));
+    return TRIAL_DAYS - elapsedDays;
+  } catch { return null; }
+}
+
 export function AuthProvider({ children }) {
   // LAZY INITIAL STATE: read user from localStorage on first mount.
   // This is what makes login → page reload → still logged in work.
@@ -33,12 +73,22 @@ export function AuthProvider({ children }) {
 
   const login = (userData) => {
     if (!userData) return;
+    // Normalize so portal-scoping fields survive round-trips through localStorage
+    // and downstream portal gates can read user.portal / user.isDeveloper reliably.
     const normalized = {
       ...userData,
       id: userData.id || userData.user_id || null,
       username: userData.username || userData.email || 'User',
+      email: userData.email || '',
       role: userData.role || 'Staff',
-      portal: userData.portal || null,
+      // Explicitly preserve portal-scoping + developer bypass fields so that
+      // a user signed in for one portal cannot be silently re-scoped to another.
+      portal: userData.portal || userData.user_metadata?.portal || null,
+      isDeveloper: Boolean(
+        userData.isDeveloper ||
+        (typeof userData.email === 'string' && userData.email.toLowerCase() === DEVELOPER_EMAIL)
+      ),
+      created_at: userData.created_at || userData.user_metadata?.created_at || null,
     };
     setUser(normalized);
     try { localStorage.setItem('erp_user', JSON.stringify(normalized)); } catch { /* storage unavailable */ }
@@ -58,9 +108,48 @@ export function AuthProvider({ children }) {
     }
     setUser(null);
     try { localStorage.removeItem('erp_user'); } catch { /* storage unavailable */ }
+    // ─── Portal isolation: clear all portal-scoped localStorage ─────────
+    // Prevents a user from hopping from one portal to another without signing
+    // in again. erp_user is already removed above; clear erp_portal_user_*
+    // plus the per-portal data buckets so the next portal session is clean.
+    clearPortalLocalStorage();
     // Redirect to /login (the page reload is OK because logout explicitly clears state)
     window.location.assign('/login');
   };
+
+  // ─── Portal isolation helper ────────────────────────────────────────
+  // Returns true if the current user is allowed to access the given portal.
+  //   • Developer → always allowed (bypass)
+  //   • User signed in for that portal → allowed
+  //   • Demo mode (no Supabase configured) → trial is unlimited; allowed
+  //   • Otherwise (cross-portal or expired trial + no subscription) → false
+  //
+  // `portalId` should be the portal.id from a PortalLogin portal prop
+  // (e.g. 'business-portal', 'church-portal', 'org-portal', 'individual-portal').
+  const checkPortalAccess = (portalId) => {
+    if (!portalId) return false;
+    if (!user) return false;
+    if (user.isDeveloper) return true;
+    if (user.portal === portalId) {
+      // Same portal — also gate on subscription / trial expiry (only when
+      // Supabase is configured; demo mode trial is unlimited).
+      if (isSupabaseConfigured) {
+        const daysLeft = computeTrialDaysLeft(user);
+        if (daysLeft !== null && !Number.isFinite(daysLeft) && daysLeft !== Number.POSITIVE_INFINITY) {
+          // shouldn't happen — defensive
+        }
+        if (daysLeft !== null && daysLeft <= 0 && !user.subscriptionActive) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  };
+
+  // Convenience: trial days left for the current user (Number.POSITIVE_INFINITY
+  // for developer, null when unknown, otherwise an integer).
+  const trialDaysLeft = useMemo(() => computeTrialDaysLeft(user), [user]);
 
   const switchSchool = (schoolId) => {
     setCurrentSchoolId(schoolId);
@@ -115,7 +204,7 @@ export function AuthProvider({ children }) {
     return () => { active = false; };
   }, []);
 
-  const value = useMemo(() => ({ user, login, logout, authReady, schoolLevel, setSchoolLevel, currentSchoolId, switchSchool, schools }), [user, authReady, schoolLevel, currentSchoolId, schools]);
+  const value = useMemo(() => ({ user, login, logout, authReady, schoolLevel, setSchoolLevel, currentSchoolId, switchSchool, schools, checkPortalAccess, trialDaysLeft, isSupabaseConfigured }), [user, authReady, schoolLevel, currentSchoolId, schools, trialDaysLeft]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

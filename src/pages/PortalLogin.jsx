@@ -13,7 +13,7 @@
 // On success the user is sent to the portal route (e.g. /business-portal),
 // taken from portal.route if present, otherwise built as `/${portal.id}`.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, isSupabaseConfigured } from '../lib/supabase.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -44,8 +44,44 @@ export default function PortalLogin(props) {
     var navigate = useNavigate();
     var auth = useAuth();
     var loginFn = (auth && auth.login) ? auth.login : function () { /* no-op */ };
+    var logoutFn = (auth && auth.logout) ? auth.logout : function () { /* no-op */ };
+    // user may be null (not signed in) or a normalized user object with .portal
+    var user = (auth && auth.user) ? auth.user : null;
+    var authReady = (auth && typeof auth.authReady !== 'undefined') ? auth.authReady : true;
+    var trialDaysLeft = (auth && typeof auth.trialDaysLeft !== 'undefined') ? auth.trialDaysLeft : null;
 
     var hasSupabase = Boolean(supabase && isSupabaseConfigured);
+
+    // ─── Portal isolation: redirect / block cross-portal sessions ───────
+    // • If a user is already signed in for THIS portal (or is the developer),
+    //   skip the login form and bounce them straight to the portal route.
+    // • If they're signed in for a DIFFERENT portal, show a banner telling
+    //   them to sign out first so they can't hop between portals without
+    //   re-authenticating. (Developer bypass: developers can open any portal.)
+    useEffect(function () {
+        if (!user || !authReady) return;
+        if (user.isDeveloper || user.portal === portal.id) {
+            // Slight delay so the redirect message is visible briefly.
+            var t = setTimeout(function () { navigate(portal.route); }, 250);
+            return function () { clearTimeout(t); };
+        }
+        return undefined;
+    }, [user, authReady, portal.id, portal.route, navigate]);
+
+    // Cross-portal warning banner is rendered below in the body.
+    var isCrossPortal = Boolean(
+        user && authReady && !user.isDeveloper && user.portal && user.portal !== portal.id
+    );
+    var isAlreadyHere = Boolean(
+        user && authReady && (user.isDeveloper || user.portal === portal.id)
+    );
+    // Subscription expired only matters in cloud (Supabase) mode — demo mode
+    // has unlimited trial by design.
+    var isSubscriptionExpired = Boolean(
+        user && authReady && !user.isDeveloper && hasSupabase
+        && trialDaysLeft !== null && trialDaysLeft !== Number.POSITIVE_INFINITY
+        && trialDaysLeft <= 0
+    );
 
     // ─── Form state ─────────────────────────────────────────
     var [tab, setTab] = useState('signin');           // 'signin' | 'register'
@@ -274,6 +310,73 @@ export default function PortalLogin(props) {
 
                 {/* ─── Body ─── */}
                 <div style={{ padding: '28px' }}>
+                    {/* ─── Cross-portal session warning ─── */}
+                    {isCrossPortal && !isSubscriptionExpired && (
+                        <div style={{
+                            background: '#fff3cd', color: '#856404', padding: '14px',
+                            borderRadius: '8px', marginBottom: '16px', fontSize: '14px',
+                            border: '1px solid #ffe69b', lineHeight: 1.5
+                        }}>
+                            <strong>You are signed in for {user.portal}.</strong>{' '}
+                            Please sign out and sign in for {portal.name} to switch portals.
+                            <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+                                <button
+                                    type="button"
+                                    onClick={function () { if (logoutFn) logoutFn(); }}
+                                    style={{
+                                        background: '#856404', color: 'white', border: 'none',
+                                        borderRadius: 6, padding: '6px 12px', fontSize: 13,
+                                        cursor: 'pointer', fontWeight: 600
+                                    }}
+                                >Sign out</button>
+                                <button
+                                    type="button"
+                                    onClick={function () { navigate(portal.route); }}
+                                    style={{
+                                        background: 'transparent', color: '#856404',
+                                        border: '1px solid #856404', borderRadius: 6,
+                                        padding: '6px 12px', fontSize: 13, cursor: 'pointer',
+                                        fontWeight: 600
+                                    }}
+                                >Go to {portal.name} anyway →</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ─── Already-signed-in redirect notice ─── */}
+                    {isAlreadyHere && !isSubscriptionExpired && (
+                        <div style={{
+                            background: '#e8f5e9', color: '#2e7d32', padding: '14px',
+                            borderRadius: '8px', marginBottom: '16px', fontSize: '14px',
+                            border: '1px solid #a5d6a7'
+                        }}>
+                            You are already signed in to {portal.name}. Redirecting…
+                        </div>
+                    )}
+
+                    {/* ─── Subscription expired notice ─── */}
+                    {isSubscriptionExpired && (
+                        <div style={{
+                            background: '#ffebee', color: '#c62828', padding: '14px',
+                            borderRadius: '8px', marginBottom: '16px', fontSize: '14px',
+                            border: '1px solid #ef9a9a', lineHeight: 1.5
+                        }}>
+                            <strong>Subscription expired.</strong> Your {portal.name} trial has ended.
+                            Please renew your subscription to regain access to {portal.name}.
+                            <div style={{ marginTop: 10 }}>
+                                <button
+                                    type="button"
+                                    onClick={function () { if (logoutFn) logoutFn(); }}
+                                    style={{
+                                        background: '#c62828', color: 'white', border: 'none',
+                                        borderRadius: 6, padding: '6px 12px', fontSize: 13,
+                                        cursor: 'pointer', fontWeight: 600
+                                    }}
+                                >Sign out</button>
+                            </div>
+                        </div>
+                    )}
+
                     {error && (
                         <div style={{
                             background: '#ffebee', color: '#c62828', padding: '12px',

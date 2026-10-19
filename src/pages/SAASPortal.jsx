@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AIChatbot from '../components/AIChatbot.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 
 // ═══════════════════════════════════════════════════════════════════
 // PORTAL DEFINITIONS — each portal gets a full detailed section
@@ -214,6 +215,9 @@ const PORTALS = [
 // ═══════════════════════════════════════════════════════════════════
 export default function SAASPortal() {
   const navigate = useNavigate();
+  const auth = useAuth();
+  const user = auth?.user || null;
+  const logoutFn = (auth && auth.logout) ? auth.logout : null;
   const [activeSection, setActiveSection] = useState('hero');
   const readyCount = PORTALS.filter(p => p.status === 'ready').length;
   const soonCount = PORTALS.filter(p => p.status === 'soon').length;
@@ -299,7 +303,7 @@ export default function SAASPortal() {
 
       {/* ═══ PORTAL SECTIONS — each portal gets a full detailed section ══ */}
       {PORTALS.map((portal, idx) => (
-        <PortalSection key={portal.id} portal={portal} navigate={navigate} index={idx} />
+        <PortalSection key={portal.id} portal={portal} navigate={navigate} index={idx} user={user} logoutFn={logoutFn} />
       ))}
 
       {/* ═══ MARKETPLACE SECTION ══════════════════════════════════ */}
@@ -403,8 +407,22 @@ export default function SAASPortal() {
 // ═══════════════════════════════════════════════════════════════════
 // PORTAL SECTION — each portal gets a beautiful detailed section
 // ═══════════════════════════════════════════════════════════════════
-function PortalSection({ portal, navigate, index }) {
+function PortalSection({ portal, navigate, index, user, logoutFn }) {
   const isReversed = index % 2 === 1;
+
+  // ─── Portal-aware CTA buttons ───────────────────────────────────────
+  // • If the user is already signed in for THIS portal (or is developer),
+  //   the secondary "Sign in" button becomes "Open {name} →" linking to
+  //   portal.route. This lets returning users jump straight into their portal
+  //   without re-typing credentials.
+  // • If the user is signed in for a DIFFERENT portal, the button becomes
+  //   "Sign out first" (warning style) — clicking calls logoutFn so they can
+  //   re-authenticate for this portal.
+  const isDeveloper = Boolean(user && user.isDeveloper);
+  const isSamePortal = Boolean(user && (isDeveloper || user.portal === portal.id));
+  const isDifferentPortal = Boolean(
+    user && !isDeveloper && user.portal && user.portal !== portal.id
+  );
 
   return (
     <section id={`portal-${portal.id}`} style={{
@@ -547,13 +565,34 @@ function PortalSection({ portal, navigate, index }) {
               }}>
                 Explore {portal.name} →
               </button>
-              <button onClick={() => navigate(portal.signInSection)} style={{
-                background: 'transparent', color: portal.color,
-                border: `2px solid ${portal.color}`, borderRadius: 12,
-                padding: '16px 32px', fontSize: 16, fontWeight: 700, cursor: 'pointer',
-              }}>
-                Sign in to {portal.name}
-              </button>
+              {isSamePortal ? (
+                // Already signed in for this portal — let them open it directly.
+                <button onClick={() => navigate(portal.route)} style={{
+                  background: 'transparent', color: portal.color,
+                  border: `2px solid ${portal.color}`, borderRadius: 12,
+                  padding: '16px 32px', fontSize: 16, fontWeight: 700, cursor: 'pointer',
+                }}>
+                  Open {portal.name} →
+                </button>
+              ) : isDifferentPortal ? (
+                // Signed in for a different portal — block direct access; warn.
+                <button onClick={() => { if (logoutFn) logoutFn(); else navigate(portal.signInSection); }} style={{
+                  background: 'transparent', color: '#f9ab00',
+                  border: `2px solid #f9ab00`, borderRadius: 12,
+                  padding: '16px 32px', fontSize: 16, fontWeight: 700, cursor: 'pointer',
+                }} title={`You are signed in for ${user?.portal}. Sign out to access ${portal.name}.`}>
+                  ⚠ Sign out first
+                </button>
+              ) : (
+                // Anonymous (not signed in) — normal sign-in CTA.
+                <button onClick={() => navigate(portal.signInSection)} style={{
+                  background: 'transparent', color: portal.color,
+                  border: `2px solid ${portal.color}`, borderRadius: 12,
+                  padding: '16px 32px', fontSize: 16, fontWeight: 700, cursor: 'pointer',
+                }}>
+                  Sign in to {portal.name}
+                </button>
+              )}
             </div>
           ) : (
             <button onClick={() => navigate(portal.route)} style={{
