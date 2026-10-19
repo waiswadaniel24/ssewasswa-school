@@ -5,6 +5,60 @@ import "./App.css";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import AppRouter from "./router/router.jsx";
 
+// ═══════════════════════════════════════════════════════════════════
+// WEB-MODE SHIM for window.electronAPI
+// ═══════════════════════════════════════════════════════════════════
+// On web (Cloudflare Pages / Vercel), window.electronAPI is undefined
+// because the Electron preload script doesn't run. Many pages call
+// window.electronAPI.queryDatabase(...) or window.electronAPI.getSignature(...)
+// without checking — those calls throw "cannot access property X of undefined"
+// → "Module Failed to Load" error → page crashes.
+//
+// This shim provides a JavaScript Proxy that returns safe defaults for
+// ANY method call. Pages get empty arrays / null data instead of crashing.
+// On desktop (Electron), the real preload.js exposes window.electronAPI
+// BEFORE main.jsx runs, so this shim is skipped.
+if (typeof window !== 'undefined' && !window.electronAPI) {
+  // Known methods that need specific return shapes
+  const KNOWN_STUBS = {
+    checkInitialized: async () => ({ success: true, data: false }),
+    checkLicense: async () => ({ success: true, isTrial: true, daysLeft: 365 }),
+    getHwid: async () => 'web-browser-' + Math.random().toString(36).slice(2, 10),
+    // Event listener stubs (return undefined; never call the callback)
+    onUpdateAvailable: () => {}, onUpdateDownloaded: () => {},
+    onUpdateDownloadProgress: () => {}, onUpdateError: () => {},
+    onUpdateShowDialog: () => {},
+    // Auto-update stubs (return "not available")
+    checkForUpdates: async () => ({ success: false, error: 'Web mode — no auto-update' }),
+    downloadUpdate: async () => ({ success: false, error: 'Web mode — no auto-update' }),
+    installUpdate: async () => ({ success: false, error: 'Web mode — no auto-update' }),
+    getUpdateStatus: async () => ({ updateAvailable: false }),
+    // Sync stubs
+    syncNow: async () => ({ success: false, error: 'Web mode — sync available on desktop only' }),
+    getSyncStatus: async () => ({ lastSyncAt: null, syncing: false, supabaseConfigured: false }),
+    startAutoSync: async () => ({ success: false }),
+    stopAutoSync: async () => ({ success: false }),
+  };
+
+  // Default stub for any unknown method — returns safe empty result
+  const DEFAULT_STUB = async (...args) => ({
+    success: false,
+    data: Array.isArray(args[0]) ? [] : (typeof args[0] === 'string' && args[0].trim().toUpperCase().startsWith('SELECT') ? [] : null),
+    error: 'Desktop only — feature not available on web. Run via Electron app to use this.'
+  });
+
+  window.electronAPI = new Proxy(KNOWN_STUBS, {
+    get(target, prop) {
+      if (prop in target) return target[prop];
+      // For event listener methods (start with 'on'), return a no-op
+      if (typeof prop === 'string' && prop.startsWith('on')) return () => {};
+      return DEFAULT_STUB;
+    }
+  });
+  console.log('[Shim] Web-mode electronAPI stub installed (no Electron detected)');
+}
+
+
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);

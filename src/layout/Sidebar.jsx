@@ -104,7 +104,12 @@ const ROLES = {
   'Teacher': ['main', 'students', 'academics', 'exams'],
   'Bursar': ['main', 'finance'],
   'Admin': ['main', 'students', 'staff', 'academics', 'exams', 'finance', 'services', 'early_childhood', 'emis', 'admin'],
-  'Super Admin': ['main', 'students', 'staff', 'academics', 'exams', 'uneb', 'finance', 'services', 'early_childhood', 'emis', 'admin']
+  'Super Admin': ['main', 'students', 'staff', 'academics', 'exams', 'uneb', 'finance', 'services', 'early_childhood', 'emis', 'admin'],
+  // Developer role: full access to everything (same as Super Admin + uneb section).
+  // Without this entry, developers fell back to ROLES['Staff'] = ['main', 'students', 'services']
+  // → only 3 sections visible (Dashboard, Students, Services). That's why devs couldn't
+  // see Staff/Academics/Exams/Finance/EMIS/Administration sections in the sidebar.
+  'Developer': ['main', 'students', 'staff', 'academics', 'exams', 'uneb', 'finance', 'services', 'early_childhood', 'emis', 'admin']
 };
 
 // ═══════════════════════════════════════════════════════════
