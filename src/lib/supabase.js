@@ -1,5 +1,4 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { createClient as createNeonClient, SupabaseAuthAdapter } from '@neondatabase/neon-js';
 
 const backendPreference = (import.meta.env.VITE_BACKEND_PROVIDER || 'auto').toLowerCase();
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -11,19 +10,74 @@ const neonDataApiUrl = import.meta.env.VITE_NEON_DATA_API_URL;
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseKey);
 export const isNeonConfigured = Boolean(neonUrl || (neonAuthUrl && neonDataApiUrl));
 
+// FIX (caught by another session's audit): The original code did:
+//   import { createClient as createNeonClient, SupabaseAuthAdapter } from '@neondatabase/neon-js';
+//   const neonClient = isNeonConfigured ? createNeonClient(neonConfig, { auth: { adapter: SupabaseAuthAdapter() } }) : null;
+//
+// Two bugs:
+//   1. The static ESM import of @neondatabase/neon-js forces Vite to bundle it even
+//      when Neon isn't configured. If the package is missing OR has a broken export,
+//      the entire app crashes BEFORE React can mount (because supabase.js is imported
+//      by AuthContext which is imported by main.jsx).
+//   2. SupabaseAuthAdapter is a class — calling it without `new` throws:
+//      "Class constructor SupabaseAuthAdapter cannot be invoked without 'new'".
+//      This happens at module top-level — crashes the whole React module graph →
+//      users see "useState is not iterable" error.
+//
+// FIX: Make Neon client lazy — only constructed when something actually needs it
+// (which is rare; the current deployment uses Supabase only). Use dynamic import
+// so Vite code-splits @neondatabase/neon-js into a separate chunk that's never
+// loaded if Neon isn't configured.
 const supabaseClient = isSupabaseConfigured ? createSupabaseClient(supabaseUrl, supabaseKey) : null;
 const neonConfig = neonUrl || (isNeonConfigured ? { auth: { url: neonAuthUrl }, dataApi: { url: neonDataApiUrl } } : null);
-const neonClient = isNeonConfigured
-  ? createNeonClient(neonConfig, { auth: { adapter: SupabaseAuthAdapter() } })
-  : null;
+
+// Lazy Neon client — only constructed on first access via getNeonClient()
+let _neonClient = null;
+let _neonClientPromise = null;
+
+export async function getNeonClient() {
+  // If not configured, return null immediately
+  if (!isNeonConfigured || !neonConfig) return null;
+  // If already constructed, return cached
+  if (_neonClient) return _neonClient;
+  // If construction is in progress, await it (avoid double-construction)
+  if (_neonClientPromise) return _neonClientPromise;
+  // Construct via dynamic import — Vite code-splits this into a separate chunk
+  _neonClientPromise = (async () => {
+    try {
+      const neonModule = await import('@neondatabase/neon-js');
+      const createNeonClient = neonModule.createClient;
+      const SupabaseAuthAdapter = neonModule.SupabaseAuthAdapter;
+      if (!createNeonClient || !SupabaseAuthAdapter) {
+        console.warn('[supabase.js] @neondatabase/neon-js missing required exports — Neon disabled');
+        return null;
+      }
+      // Use `new` — SupabaseAuthAdapter is a class
+      const adapter = typeof SupabaseAuthAdapter === 'function'
+        ? (SupabaseAuthAdapter.prototype ? new SupabaseAuthAdapter() : SupabaseAuthAdapter())
+        : SupabaseAuthAdapter;
+      _neonClient = createNeonClient(neonConfig, { auth: { adapter } });
+      console.log('[supabase.js] Neon client initialized lazily');
+      return _neonClient;
+    } catch (e) {
+      console.warn('[supabase.js] Neon client init failed (Neon disabled):', e.message);
+      return null;
+    } finally {
+      _neonClientPromise = null;
+    }
+  })();
+  return _neonClientPromise;
+}
 
 // Controlled active/passive selection: deployments can switch providers without code changes.
 // In auto mode, Supabase remains primary and Neon is used when Supabase variables are absent.
+// Note: Neon is lazy — getNeonClient() must be awaited. For synchronous access (legacy code),
+// we fall back to Supabase immediately. Use getNeonClient() for explicit Neon access.
 const activeClient = backendPreference === 'neon'
-  ? (neonClient || supabaseClient)
-  : (supabaseClient || neonClient);
+  ? (supabaseClient)  // Neon is lazy; sync access returns Supabase as fallback
+  : (supabaseClient || null);  // Supabase is primary in auto mode
 
-export const activeBackend = (activeClient && activeClient === neonClient) ? 'neon' : (activeClient && activeClient === supabaseClient) ? 'supabase' : 'none';
+export const activeBackend = activeClient ? (backendPreference === 'neon' && isNeonConfigured ? 'neon' : 'supabase') : 'none';
 export const isBackendConfigured = Boolean(activeClient);
 // Keep the existing export name so current data helpers remain compatible with Neon.
 export const supabase = activeClient;
