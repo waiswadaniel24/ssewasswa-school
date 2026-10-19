@@ -302,6 +302,19 @@ export default function Sidebar({ searchQuery = '', isDark }) {
     textOverflow: 'ellipsis'
   });
 
+  // ─── Path prefixer — sidebar items live under /app/ on web + desktop ──
+  // MENU_ITEMS paths look like '/students', '/staff', etc. (bare).
+  // But the router nests School ERP routes under '/app/*'. Without this
+  // prefixer, clicking a sidebar item navigates to '/staff' which hits the
+  // catch-all '*' → redirects to '/' → SAASPortal on web, /app on desktop.
+  // That's why users were "stuck on the dashboard" — every click bounced back.
+  const toAppPath = (p) => {
+    if (!p) return '/app';
+    if (p === '/') return '/app';
+    if (p.startsWith('/')) return '/app' + p;
+    return '/app/' + p;
+  };
+
   return (
   <aside className="app-sidebar" style={{
     width: '240px',
@@ -333,7 +346,7 @@ export default function Sidebar({ searchQuery = '', isDark }) {
       <nav style={{ flex: 1, overflowY: 'auto', paddingBottom: '10px' }}>
 
         {/* Dashboard always visible */}
-        <NavLink to="/" end style={navLinkStyle}>
+        <NavLink to="/app" end style={navLinkStyle}>
           📊 Dashboard
         </NavLink>
 
@@ -374,7 +387,7 @@ export default function Sidebar({ searchQuery = '', isDark }) {
               {items.map(item => (
                 <NavLink
                   key={item.path}
-                  to={item.path}
+                  to={toAppPath(item.path)}
                   style={navLinkStyle}
                 >
                   {item.icon} {item.name}

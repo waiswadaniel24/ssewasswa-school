@@ -103,7 +103,7 @@ export default function StaffProfile() {
     if (loading) {
         return (
             <div className="page-container">
-                <button onClick={() => navigate('/staff')}
+                <button onClick={() => navigate('/app/staff')}
                     style={{ marginBottom: '20px', background: 'none', border: 'none', color: '#1a73e8', cursor: 'pointer', fontSize: '14px' }}>
                     ← Back to Staff
                 </button>
@@ -129,7 +129,7 @@ export default function StaffProfile() {
     if (error) {
         return (
             <div className="page-container">
-                <button onClick={() => navigate('/staff')}
+                <button onClick={() => navigate('/app/staff')}
                     style={{ marginBottom: '20px', background: 'none', border: 'none', color: '#1a73e8', cursor: 'pointer', fontSize: '14px' }}>
                     ← Back to Staff
                 </button>
@@ -137,7 +137,7 @@ export default function StaffProfile() {
                     <div className="card-body" style={{ textAlign: 'center', padding: '40px' }}>
                         <p style={{ fontSize: '48px', marginBottom: '10px' }}>❌</p>
                         <h3 style={{ color: '#d32f2f' }}>{error}</h3>
-                        <button onClick={() => navigate('/staff')} className="btn btn-primary" style={{ marginTop: '20px' }}>
+                        <button onClick={() => navigate('/app/staff')} className="btn btn-primary" style={{ marginTop: '20px' }}>
                             Back to Staff List
                         </button>
                     </div>
@@ -178,7 +178,7 @@ export default function StaffProfile() {
         <div className="page-container">
             {/* ─── Back Button ──────────────────────────────────── */}
             <button
-                onClick={() => navigate('/staff')}
+                onClick={() => navigate('/app/staff')}
                 style={{
                     marginBottom: '20px',
                     background: 'none', border: 'none',

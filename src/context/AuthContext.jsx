@@ -41,13 +41,16 @@ export function AuthProvider({ children }) {
     };
     setUser(normalized);
     try { localStorage.setItem('erp_user', JSON.stringify(normalized)); } catch { /* storage unavailable */ }
-    // For developer users, redirect to /dev (but DON'T force a page reload
-    // — React Router navigation is enough; user state is preserved via localStorage).
-    if (normalized.isDeveloper && window.location.pathname !== '/dev') {
-      // Use history.replaceState for a soft redirect (preserves React state)
-      // OR use a small delay to let React Router handle it
-      setTimeout(() => { 
-        try { window.history.replaceState({}, '', '/dev'); } catch {}
+    // For developer users, redirect to the developer dashboard.
+    // NOTE: the dev dashboard lives under /app/dev in the router (nested
+    // inside the School ERP ProtectedLayout). Earlier this redirected to
+    // bare '/dev' which hit the catch-all '*' → bounced back to '/' →
+    // SAASPortal on web / /app on desktop. So the developer never actually
+    // reached the DevDashboard after login — they landed on the regular
+    // Dashboard instead. Fix: route to '/app/dev'.
+    if (normalized.isDeveloper && window.location.pathname !== '/app/dev') {
+      setTimeout(() => {
+        try { window.history.replaceState({}, '', '/app/dev'); } catch {}
         window.dispatchEvent(new PopStateEvent('popstate'));
       }, 50);
     }

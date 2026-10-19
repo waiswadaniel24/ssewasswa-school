@@ -45,8 +45,9 @@ export const SCHOOL_LEVELS = {
         modules: [
             'dashboard', 'students', 'student/:id', 'staff', 'payroll', 'attendance',
             'academics', 'timetable', 'calendar', 'exams', 'broad-sheet', 'report-cards',
-            'promotion', 'id-cards', 'finance', 'debts', 'school-finances', 'accounting',
+            'promotion', 'id-cards', 'finance', 'payments', 'debts', 'school-finances', 'accounting',
             'canteen', 'library', 'discipline', 'transport', 'requirements',
+            'uneb-exams',
             'kpi-dashboard', 'data-validation', 'data-export', 'infrastructure', 'wash',
             'governance', 'health-nutrition', 'special-needs', 'dropouts', 'textbooks',
             'emis-report', 'emis-config', 'reports', 'settings', 'users', 'manuals',
@@ -65,9 +66,10 @@ export const SCHOOL_LEVELS = {
         modules: [
             'dashboard', 'students', 'student/:id', 'staff', 'payroll', 'attendance',
             'academics', 'timetable', 'calendar', 'exams', 'broad-sheet', 'report-cards',
-            'promotion', 'id-cards', 'finance', 'debts', 'school-finances', 'accounting',
+            'promotion', 'id-cards', 'finance', 'payments', 'debts', 'school-finances', 'accounting',
             'canteen', 'library', 'discipline', 'transport', 'requirements',
-            'nursery', 'ecd', 'kpi-dashboard', 'data-validation', 'data-export',
+            'nursery', 'ecd', 'uneb-exams',
+            'kpi-dashboard', 'data-validation', 'data-export',
             'infrastructure', 'wash', 'governance', 'health-nutrition', 'special-needs',
             'dropouts', 'textbooks', 'emis-report', 'emis-config', 'reports',
             'settings', 'users', 'manuals', 'generate-docs', 'about', 'signatures', 'deductions', 'purchases', 'meeting-minutes'
@@ -399,15 +401,22 @@ export const MENU_ITEMS = [
 
 /**
  * Check if a user can access a module
- * @param {string} userRole 
- * @param {string} schoolLevel 
- * @param {string} modulePath 
+ * @param {string} userRole
+ * @param {string} schoolLevel
+ * @param {string} modulePath  e.g. '/app/students' or '/students' or 'students'
  * @returns {boolean}
  */
 export function canAccess(userRole, schoolLevel, modulePath) {
+    // Normalize: strip the '/app' or '/hmis' prefix so paths like
+    // '/app/students' become '/students' to match MENU_ITEMS paths.
+    let normalized = String(modulePath || '');
+    // Strip leading '/app' or '/hmis' (router base paths for School ERP / HMIS)
+    normalized = normalized.replace(/^\/(app|hmis)(?=\/|$)/, '');
+    // Now `normalized` looks like '/students', '/', 'students', etc.
+
     const menuItem = MENU_ITEMS.find(item => {
         const itemPath = item.path.replace(/:\w+$/, ':id');
-        return itemPath === modulePath || item.path === modulePath;
+        return itemPath === normalized || item.path === normalized;
     });
 
     if (!menuItem) return false;
@@ -419,7 +428,7 @@ export function canAccess(userRole, schoolLevel, modulePath) {
 
     if (menuItem.unebOnly && !levelConfig.showUNEB) return false;
 
-    const cleanPath = modulePath.replace(/:\w+$/, ':id').replace(/^\//, '');
+    const cleanPath = normalized.replace(/:\w+$/, ':id').replace(/^\//, '');
     return levelConfig.modules.includes(cleanPath);
 }
 

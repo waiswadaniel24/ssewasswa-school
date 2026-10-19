@@ -151,7 +151,7 @@ export default function ProductLanding() {
 
   useEffect(() => {
     if (!authReady) return;
-    if (user?.isDeveloper) navigate('/dev', { replace: true });
+    if (user?.isDeveloper) navigate('/app/dev', { replace: true });
     if (user?.email) setEmail(user.email);
     if (user?.username) setCustomerName(user.username);
   }, [authReady, user, navigate]);

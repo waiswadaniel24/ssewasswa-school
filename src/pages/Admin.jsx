@@ -127,7 +127,7 @@ export default function Admin() {
               Generate license keys manually when customers pay via MoMo.
             </p>
           </div>
-          <button onClick={() => navigate('/dev')} style={{
+          <button onClick={() => navigate('/app/dev')} style={{
             marginLeft: 'auto', background: 'transparent', color: '#fff',
             border: '1px solid #45657b', borderRadius: 999,
             padding: '10px 18px', cursor: 'pointer'

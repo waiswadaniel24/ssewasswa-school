@@ -327,19 +327,35 @@ export default function AppRouter({ isInitialized, isLocked }) {
             element: <PublicRoute><ResetPassword /></PublicRoute>
         },
 
-        // ─── Root route — SaaS Portal on web, redirect on desktop ───
+        // ─── Root route — SaaS Portal on web (for guests), redirect to /app for logged-in users + desktop ───
+        // Earlier this always showed SAASPortal on web, even for logged-in
+        // users. That caused "after login I land on the marketing page" UX
+        // confusion. Now: if you're logged in (any platform) OR on desktop,
+        // redirect to /app (School ERP). Otherwise show SAASPortal (guests).
         {
             path: '/',
             element: (() => {
-                // On desktop (Electron), redirect to /app (school ERP) or /login
+                // On desktop (Electron), always go to /app — desktop users
+                // never see the marketing portal, they want the ERP directly.
                 const isElectron = typeof window !== 'undefined' && (
                     !!window.electronAPI ||
                     (navigator.userAgent && navigator.userAgent.toLowerCase().includes('electron'))
                 );
-                if (isElectron) {
-                    return <Navigate to="/app" replace />;
-                }
-                // On web, show the SaaS Portal (product selector)
+                if (isElectron) return <Navigate to="/app" replace />;
+                // On web — check if the user is already logged in by reading
+                // localStorage (same source-of-truth as AuthContext). We
+                // can't use useAuth() here because this is the route element
+                // factory, not a component body — so check localStorage directly.
+                try {
+                    const stored = localStorage.getItem('erp_user');
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        if (parsed && typeof parsed === 'object' && parsed.id) {
+                            return <Navigate to="/app" replace />;
+                        }
+                    }
+                } catch { /* ignore — treat as guest */ }
+                // Guest on web → show the SaaS Portal (product selector)
                 return <PublicRoute><SAASPortal /></PublicRoute>;
             })()
         },
@@ -347,6 +363,14 @@ export default function AppRouter({ isInitialized, isLocked }) {
         {
             path: '/hmis-landing',
             element: <PublicRoute><HMISLanding /></PublicRoute>
+        },
+        // ─── Product Landing (public) — detailed marketing/pricing page ───
+        // Used by SAASPortal "Explore" button + referenced by sitemap.xml + SEO.
+        // Without this route, /product-landing hit the catch-all '*' → redirected
+        // to '/' (SAASPortal) so the "Explore" button was a no-op.
+        {
+            path: '/product-landing',
+            element: <PublicRoute><ProductLanding /></PublicRoute>
         },
         // ─── HMIS App (protected) ───
         {

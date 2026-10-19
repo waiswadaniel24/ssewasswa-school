@@ -68,7 +68,7 @@ export default function Welcome() {
               <div style={{ color: '#8fb3c9', fontSize: 12 }}>School ERP</div>
             </div>
           </div>
-          <button onClick={() => navigate('/dashboard')} style={{ background: 'transparent', color: '#fff', border: '1px solid #45657b', borderRadius: 999, padding: '11px 18px', cursor: 'pointer' }}>
+          <button onClick={() => navigate('/app')} style={{ background: 'transparent', color: '#fff', border: '1px solid #45657b', borderRadius: 999, padding: '11px 18px', cursor: 'pointer' }}>
             Skip to dashboard →
           </button>
         </nav>
