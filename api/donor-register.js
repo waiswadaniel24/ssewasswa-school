@@ -20,7 +20,12 @@ module.exports = async (req, res) => {
   }
 
   let body;
-  try { body = JSON.parse(req.body); } catch { return res.status(400).json({ success: false, error: 'Invalid JSON' }); }
+  try {
+    // Vercel auto-parses application/json into an object; req.body may already
+    // be an object. Handle both cases (string or object).
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    if (!body || typeof body !== 'object') throw new Error('not object');
+  } catch { return res.status(400).json({ success: false, error: 'Invalid JSON' }); }
 
   const { donorName, organization, email, phone, country, interestAreas, capacity } = body;
   if (!donorName || !email) {
