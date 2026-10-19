@@ -274,6 +274,125 @@ CREATE POLICY "Service role can manage subscriptions"
   USING (true) WITH CHECK (true);
 
 -- ═══════════════════════════════════════════════════════════════════
+-- MIGRATION 2026-10-19 — Unblock SMS-MoMo payment flow
+-- ═══════════════════════════════════════════════════════════════════
+-- The SMS-MoMo flow needs to INSERT a license record BEFORE the actual
+-- license_key is generated (the record is created when payment is detected
+-- via SMS, then the license_key is filled in AFTER the SMS Forwarder
+-- delivers the payment confirmation email + we generate the key).
+--
+-- Currently the licenses table has license_key NOT NULL — this BLOCKS
+-- the SMS-MoMo flow because we can't insert a placeholder row.
+--
+-- Also: is_active should default to FALSE (the row is created when payment
+-- is detected, but the license is only ACTIVATED after the customer clicks
+-- the activation link in their email).
+--
+-- These DO $$ ... $$ blocks make the changes IDEMPOTENT — safe to re-run.
+-- ═══════════════════════════════════════════════════════════════════
+
+-- 1. Make license_key nullable (so SMS-MoMo can insert placeholder rows)
+DO $$
+BEGIN
+  -- Check if license_key has NOT NULL constraint — if so, drop it
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'licenses'
+      AND column_name = 'license_key'
+      AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE licenses ALTER COLUMN license_key DROP NOT NULL;
+    RAISE NOTICE 'licenses.license_key is now nullable (SMS-MoMo flow unblocked)';
+  ELSE
+    RAISE NOTICE 'licenses.license_key already nullable — no change';
+  END IF;
+END $$;
+
+-- 2. Set is_active default to FALSE (license must be explicitly activated)
+DO $$
+BEGIN
+  -- Check if is_active default is currently TRUE — if so, change to FALSE
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'licenses'
+      AND column_name = 'is_active'
+      AND column_default = 'true'
+  ) THEN
+    ALTER TABLE licenses ALTER COLUMN is_active SET DEFAULT FALSE;
+    RAISE NOTICE 'licenses.is_active default changed to FALSE (must be explicitly activated)';
+  ELSE
+    RAISE NOTICE 'licenses.is_active default already FALSE — no change';
+  END IF;
+END $$;
+
+-- 3. Add new columns for the SMS-MoMo flow (if missing)
+DO $$
+BEGIN
+  -- sms_sender_phone — the phone number that sent the MoMo payment
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'licenses' AND column_name = 'sms_sender_phone'
+  ) THEN
+    ALTER TABLE licenses ADD COLUMN sms_sender_phone TEXT;
+    RAISE NOTICE 'Added sms_sender_phone column';
+  END IF;
+
+  -- sms_network — MTN or Airtel
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'licenses' AND column_name = 'sms_network'
+  ) THEN
+    ALTER TABLE licenses ADD COLUMN sms_network TEXT;
+    RAISE NOTICE 'Added sms_network column';
+  END IF;
+
+  -- sms_raw_text — the full SMS content for audit/debug
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'licenses' AND column_name = 'sms_raw_text'
+  ) THEN
+    ALTER TABLE licenses ADD COLUMN sms_raw_text TEXT;
+    RAISE NOTICE 'Added sms_raw_text column';
+  END IF;
+
+  -- webhook_signature — the HMAC-SHA256 signature from the webhook
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'licenses' AND column_name = 'webhook_signature'
+  ) THEN
+    ALTER TABLE licenses ADD COLUMN webhook_signature TEXT;
+    RAISE NOTICE 'Added webhook_signature column';
+  END IF;
+END $$;
+
+-- 4. Update the tier CHECK constraint to allow more tiers (sponsor, donor, news)
+DO $$
+BEGIN
+  -- Drop the old constraint if it exists
+  IF EXISTS (
+    SELECT 1 FROM information_schema.check_constraints
+    WHERE constraint_name = 'licenses_tier_check'
+  ) THEN
+    ALTER TABLE licenses DROP CONSTRAINT licenses_tier_check;
+    RAISE NOTICE 'Dropped old licenses_tier_check constraint';
+  END IF;
+
+  -- Add the new broader constraint (allows ORD, PREM, DEV + sponsor/donor/news tiers)
+  ALTER TABLE licenses ADD CONSTRAINT licenses_tier_check
+    CHECK (tier IN (
+      'ORD', 'PREM', 'DEV',
+      'sponsor-starter', 'sponsor-growth', 'sponsor-premium',
+      'donor-standard', 'donor-featured',
+      'news-email', 'news-whatsapp', 'news-sms'
+    ));
+  RAISE NOTICE 'Added new licenses_tier_check constraint (allows all marketplace tiers)';
+END $$;
+
+-- Index on payment_reference for fast webhook lookups
+CREATE INDEX IF NOT EXISTS licenses_payment_reference_idx ON licenses (payment_reference);
+CREATE INDEX IF NOT EXISTS licenses_sms_sender_phone_idx ON licenses (sms_sender_phone);
+
+-- ═══════════════════════════════════════════════════════════════════
 -- AFTER RUNNING THIS FILE: run the following verification:
 --   SELECT * FROM business_ads LIMIT 5;
 --   SELECT * FROM donors LIMIT 5;

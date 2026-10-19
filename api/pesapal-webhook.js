@@ -4,6 +4,13 @@
 //
 // Pesapal does a GET verification when registering the IPN URL, so we return 200 OK for any method.
 // The actual license generation only happens for POST requests with status=COMPLETED.
+//
+// SECURITY (2026-10-19): HMAC-SHA256 signature verification.
+// If PESAPAL_WEBHOOK_SECRET env var is set, the webhook verifies the
+// 'X-Pesapal-Signature' header (or 'x-pesapal-signature') against
+// HMAC-SHA256(secret, raw_body). If signature is missing or invalid,
+// the request is rejected with 401. If the env var is NOT set, the
+// webhook accepts all requests (backwards-compatible).
 
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
@@ -19,14 +26,73 @@ try {
   console.log('[Pesapal Webhook] Supabase client init failed:', e.message);
 }
 
+// ═══════════════════════════════════════════════════════════
+// HMAC-SHA256 signature verification helper
+// ═══════════════════════════════════════════════════════════
+// Pesapal sends the signature in the 'X-Pesapal-Signature' header.
+// The signature is HMAC-SHA256 of the RAW request body using the
+// shared secret (PESAPAL_WEBHOOK_SECRET).
+//
+// Configure PESAPAL_WEBHOOK_SECRET on Vercel:
+//   vercel env add PESAPAL_WEBHOOK_SECRET
+// And in your Pesapal merchant dashboard, set the same secret for IPN signing.
+function verifyPesapalSignature(req) {
+  const secret = process.env.PESAPAL_WEBHOOK_SECRET;
+  // If no secret configured, accept all requests (backwards-compatible)
+  if (!secret) {
+    console.log('[Pesapal Webhook] No PESAPAL_WEBHOOK_SECRET set — skipping signature verification');
+    return { valid: true, reason: 'no-secret-configured' };
+  }
+
+  // Get the signature from any of these headers (Pesapal uses different ones per version)
+  const signature = req.headers['x-pesapal-signature']
+    || req.headers['x-pesapal-token']
+    || req.headers['x-signature']
+    || req.headers['pesapal-signature'];
+
+  if (!signature) {
+    return { valid: false, reason: 'missing-signature-header' };
+  }
+
+  // Compute expected HMAC-SHA256
+  const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
+  const expectedSig = crypto
+    .createHmac('sha256', secret)
+    .update(rawBody)
+    .digest('hex');
+
+  // Constant-time comparison to prevent timing attacks
+  const isValid = signature.length === expectedSig.length
+    && crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig));
+
+  return { valid: isValid, reason: isValid ? 'valid' : 'signature-mismatch', expected: expectedSig.slice(0, 16) + '...' };
+}
+
 module.exports = async (req, res) => {
   // CORS — allow Pesapal + our own frontend
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Pesapal-Token');
-  
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Pesapal-Token, X-Pesapal-Signature, X-Signature');
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') return res.status(204).end();
+
+  // ═══════════════════════════════════════════════════════════
+  // HMAC-SHA256 signature verification (only for POST, not GET)
+  // GET is the IPN URL verification — Pesapal doesn't sign it
+  // ═══════════════════════════════════════════════════════════
+  if (req.method === 'POST') {
+    const sigCheck = verifyPesapalSignature(req);
+    if (!sigCheck.valid) {
+      console.error(`[Pesapal Webhook] REJECTED: ${sigCheck.reason}`);
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid webhook signature',
+        reason: sigCheck.reason,
+      });
+    }
+    console.log(`[Pesapal Webhook] Signature verified (${sigCheck.reason})`);
+  }
   
   // Handle GET — Pesapal does this to verify the IPN URL is reachable
   // Return 200 OK with simple acknowledgment (no license generation)

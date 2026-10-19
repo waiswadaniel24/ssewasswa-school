@@ -2,6 +2,18 @@
 // Parses the SMS to extract: amount + reference code + sender phone
 // Looks up the reference in licenses table → generates license → emails customer
 // FULLY AUTOMATIC — zero manual work needed
+//
+// SECURITY (2026-10-19): HMAC-SHA256 signature verification.
+// If SMS_WEBHOOK_SECRET env var is set, the webhook verifies the
+// 'X-SMS-Signature' header (or 'x-sms-signature') against
+// HMAC-SHA256(secret, raw_body). If signature is missing or invalid,
+// the request is rejected with 401. If the env var is NOT set, the
+// webhook accepts all requests (backwards-compatible).
+//
+// Configure SMS_WEBHOOK_SECRET on Vercel:
+//   vercel env add SMS_WEBHOOK_SECRET
+// And in your SMS Forwarder app (Android), set the same secret in the
+// webhook URL header configuration.
 
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
@@ -11,6 +23,43 @@ const supabase = createClient(
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY
 );
+
+// ═══════════════════════════════════════════════════════════
+// HMAC-SHA256 signature verification helper
+// ═══════════════════════════════════════════════════════════
+// SMS Forwarder app sends the signature in the 'X-SMS-Signature' header.
+// The signature is HMAC-SHA256 of the RAW request body using the
+// shared secret (SMS_WEBHOOK_SECRET).
+function verifySmsSignature(req) {
+  const secret = process.env.SMS_WEBHOOK_SECRET;
+  // If no secret configured, accept all requests (backwards-compatible)
+  if (!secret) {
+    console.log('[SMS Payment] No SMS_WEBHOOK_SECRET set — skipping signature verification');
+    return { valid: true, reason: 'no-secret-configured' };
+  }
+
+  // Get the signature from any of these headers
+  const signature = req.headers['x-sms-signature']
+    || req.headers['x-signature']
+    || req.headers['x-webhook-signature'];
+
+  if (!signature) {
+    return { valid: false, reason: 'missing-signature-header' };
+  }
+
+  // Compute expected HMAC-SHA256
+  const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body || {});
+  const expectedSig = crypto
+    .createHmac('sha256', secret)
+    .update(rawBody)
+    .digest('hex');
+
+  // Constant-time comparison to prevent timing attacks
+  const isValid = signature.length === expectedSig.length
+    && crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSig));
+
+  return { valid: isValid, reason: isValid ? 'valid' : 'signature-mismatch' };
+}
 
 // Parse SMS to extract payment details
 function parseMomoSMS(text) {
@@ -48,8 +97,23 @@ function parseMomoSMS(text) {
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-SMS-Signature, X-Signature, X-Webhook-Signature');
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
+  // ═══════════════════════════════════════════════════════════
+  // HMAC-SHA256 signature verification
+  // ═══════════════════════════════════════════════════════════
+  const sigCheck = verifySmsSignature(req);
+  if (!sigCheck.valid) {
+    console.error(`[SMS Payment] REJECTED: ${sigCheck.reason}`);
+    return res.status(401).json({
+      success: false,
+      error: 'Invalid webhook signature',
+      reason: sigCheck.reason,
+    });
+  }
+  console.log(`[SMS Payment] Signature verified (${sigCheck.reason})`);
 
   // SMS Forwarder apps send SMS text in various formats — handle all
   const body = req.body || {};
