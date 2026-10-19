@@ -138,9 +138,9 @@ export default function ExamBoardPage() {
             )}
             {board.apiIntegration !== undefined && (
               <div>
-                <div style={{ fontSize: 12, color: '#666', fontWeight: 600 }}>API INTEGRATION</div>
-                <div style={{ fontSize: 14, color: board.apiIntegration ? '#0b8043' : '#f9ab00' }}>
-                  {board.apiIntegration ? 'Available ✓' : 'Coming soon'}
+                <div style={{ fontSize: 12, color: '#666', fontWeight: 600 }}>REGISTRATION MODE</div>
+                <div style={{ fontSize: 14, color: board.apiIntegration ? '#0b8043' : '#1a73e8' }}>
+                  {board.apiIntegration ? 'Automated (API) ✓' : 'In-app + Manual'}
                 </div>
               </div>
             )}
