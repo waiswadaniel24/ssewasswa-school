@@ -99,17 +99,17 @@ const MENU = [
 // ═══════════════════════════════════════════════════════════
 
 const ROLES = {
-  'Viewer': ['main'],
-  'Staff': ['main', 'students', 'services'],
-  'Teacher': ['main', 'students', 'academics', 'exams'],
-  'Bursar': ['main', 'finance'],
-  'Admin': ['main', 'students', 'staff', 'academics', 'exams', 'finance', 'services', 'early_childhood', 'emis', 'admin'],
-  'Super Admin': ['main', 'students', 'staff', 'academics', 'exams', 'uneb', 'finance', 'services', 'early_childhood', 'emis', 'admin'],
+  'Viewer': ['main', 'more'],
+  'Staff': ['main', 'students', 'services', 'more'],
+  'Teacher': ['main', 'students', 'academics', 'exams', 'more'],
+  'Bursar': ['main', 'finance', 'more'],
+  'Admin': ['main', 'students', 'staff', 'academics', 'exams', 'finance', 'services', 'early_childhood', 'emis', 'admin', 'more'],
+  'Super Admin': ['main', 'students', 'staff', 'academics', 'exams', 'uneb', 'finance', 'services', 'early_childhood', 'emis', 'admin', 'more'],
   // Developer role: full access to everything (same as Super Admin + uneb section).
   // Without this entry, developers fell back to ROLES['Staff'] = ['main', 'students', 'services']
   // → only 3 sections visible (Dashboard, Students, Services). That's why devs couldn't
   // see Staff/Academics/Exams/Finance/EMIS/Administration sections in the sidebar.
-  'Developer': ['main', 'students', 'staff', 'academics', 'exams', 'uneb', 'finance', 'services', 'early_childhood', 'emis', 'admin']
+  'Developer': ['main', 'students', 'staff', 'academics', 'exams', 'uneb', 'finance', 'services', 'early_childhood', 'emis', 'admin', 'more']
 };
 
 // ═══════════════════════════════════════════════════════════
@@ -127,7 +127,8 @@ const SECTION_NAMES = {
   'services': 'Services',
   'early_childhood': 'Early Childhood',
   'emis': 'EMIS Compliance',
-  'admin': 'Administration'
+  'admin': 'Administration',
+  'more': 'More Features'
 };
 
 const SECTION_ICONS = {
@@ -141,7 +142,8 @@ const SECTION_ICONS = {
   'services': '🔧',
   'early_childhood': '🧒',
   'emis': '📊',
-  'admin': '⚙️'
+  'admin': '⚙️',
+  'more': '🧰'
 };
 
 // ═══════════════════════════════════════════════════════════

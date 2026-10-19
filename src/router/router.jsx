@@ -30,6 +30,29 @@ import Sponsor from '../pages/Sponsor.jsx';
 import Donors from '../pages/Donors.jsx';
 import News from '../pages/News.jsx';
 import BusinessDirectory from '../pages/BusinessDirectory.jsx';
+import MoreFeatures from '../pages/MoreFeatures.jsx';
+
+// Lazy-loaded "more features" pages (ported from legacy platform)
+const Tasks = React.lazy(() => import('../pages/features/Tasks.jsx'));
+const Notifications = React.lazy(() => import('../pages/features/Notifications.jsx'));
+const AuditLogs = React.lazy(() => import('../pages/features/AuditLogs.jsx'));
+const Trash = React.lazy(() => import('../pages/features/Trash.jsx'));
+const Suggestions = React.lazy(() => import('../pages/features/Suggestions.jsx'));
+const CustomFields = React.lazy(() => import('../pages/features/CustomFields.jsx'));
+const Surveys = React.lazy(() => import('../pages/features/Surveys.jsx'));
+const Events = React.lazy(() => import('../pages/features/Events.jsx'));
+const RecurringDonations = React.lazy(() => import('../pages/features/RecurringDonations.jsx'));
+const EmailTemplates = React.lazy(() => import('../pages/features/EmailTemplates.jsx'));
+const LoginHistory = React.lazy(() => import('../pages/features/LoginHistory.jsx'));
+const Roles = React.lazy(() => import('../pages/features/Roles.jsx'));
+const BackupRestore = React.lazy(() => import('../pages/features/BackupRestore.jsx'));
+const QRCodes = React.lazy(() => import('../pages/features/QRCodes.jsx'));
+const BulkSMS = React.lazy(() => import('../pages/features/BulkSMS.jsx'));
+const APIKeys = React.lazy(() => import('../pages/features/APIKeys.jsx'));
+const APIDocs = React.lazy(() => import('../pages/features/APIDocs.jsx'));
+const Suppliers = React.lazy(() => import('../pages/features/Suppliers.jsx'));
+const DeepLinks = React.lazy(() => import('../pages/features/DeepLinks.jsx'));
+const FeatureComingSoon = React.lazy(() => import('../pages/features/FeatureComingSoon.jsx'));
 // ─── Loading fallback (defined FIRST so AuthCallback can use it) ──
 const LoadingFallback = () => (
     <div style={{
@@ -556,6 +579,71 @@ export default function AppRouter({ isInitialized, isLocked }) {
 
                 // Developer tools
                 { path: 'dev', element: <DeveloperRoute isLocked={isLocked}><DevDashboard /></DeveloperRoute> },
+
+                // ─── More Features (ported from legacy platform) ─────────
+                // Hub page shows all 70 features. Each card routes to /app/more/<id>.
+                { path: 'more', element: <ProtectedRoute isLocked={isLocked}><MoreFeatures /></ProtectedRoute> },
+
+                // Fully-implemented features (each has its own page)
+                { path: 'more/tasks', element: <ProtectedRoute isLocked={isLocked}><Tasks /></ProtectedRoute> },
+                { path: 'more/notifications', element: <ProtectedRoute isLocked={isLocked}><Notifications /></ProtectedRoute> },
+                { path: 'more/audit-logs', element: <ProtectedRoute isLocked={isLocked}><AuditLogs /></ProtectedRoute> },
+                { path: 'more/trash', element: <ProtectedRoute isLocked={isLocked}><Trash /></ProtectedRoute> },
+                { path: 'more/suggestions', element: <ProtectedRoute isLocked={isLocked}><Suggestions /></ProtectedRoute> },
+                { path: 'more/custom-fields', element: <ProtectedRoute isLocked={isLocked}><CustomFields /></ProtectedRoute> },
+                { path: 'more/surveys', element: <ProtectedRoute isLocked={isLocked}><Surveys /></ProtectedRoute> },
+                { path: 'more/events', element: <ProtectedRoute isLocked={isLocked}><Events /></ProtectedRoute> },
+                { path: 'more/recurring-donations', element: <ProtectedRoute isLocked={isLocked}><RecurringDonations /></ProtectedRoute> },
+                { path: 'more/email-templates', element: <ProtectedRoute isLocked={isLocked}><EmailTemplates /></ProtectedRoute> },
+                { path: 'more/login-history', element: <ProtectedRoute isLocked={isLocked}><LoginHistory /></ProtectedRoute> },
+                { path: 'more/roles', element: <ProtectedRoute isLocked={isLocked}><Roles /></ProtectedRoute> },
+                { path: 'more/backup-restore', element: <ProtectedRoute isLocked={isLocked}><BackupRestore /></ProtectedRoute> },
+                { path: 'more/qr-codes', element: <ProtectedRoute isLocked={isLocked}><QRCodes /></ProtectedRoute> },
+                { path: 'more/bulk-sms', element: <ProtectedRoute isLocked={isLocked}><BulkSMS /></ProtectedRoute> },
+                { path: 'more/api-keys', element: <ProtectedRoute isLocked={isLocked}><APIKeys /></ProtectedRoute> },
+                { path: 'more/api-docs', element: <ProtectedRoute isLocked={isLocked}><APIDocs /></ProtectedRoute> },
+                { path: 'more/suppliers', element: <ProtectedRoute isLocked={isLocked}><Suppliers /></ProtectedRoute> },
+                { path: 'more/deep-links', element: <ProtectedRoute isLocked={isLocked}><DeepLinks /></ProtectedRoute> },
+
+                // Coming-soon features (all use shared FeatureComingSoon component)
+                // Each route passes the featureId so the page knows which feature to describe.
+                { path: 'more/chat', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="chat" /></ProtectedRoute> },
+                { path: 'more/forums', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="forums" /></ProtectedRoute> },
+                { path: 'more/push-notifications', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="push-notifications" /></ProtectedRoute> },
+                { path: 'more/workflows', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="workflows" /></ProtectedRoute> },
+                { path: 'more/automations', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="automations" /></ProtectedRoute> },
+                { path: 'more/scheduled-reports', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="scheduled-reports" /></ProtectedRoute> },
+                { path: 'more/shop', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="shop" /></ProtectedRoute> },
+                { path: 'more/marketplace', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="marketplace" /></ProtectedRoute> },
+                { path: 'more/loyalty', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="loyalty" /></ProtectedRoute> },
+                { path: 'more/fundraising', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="fundraising" /></ProtectedRoute> },
+                { path: 'more/report-builder', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="report-builder" /></ProtectedRoute> },
+                { path: 'more/benchmarks', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="benchmarks" /></ProtectedRoute> },
+                { path: 'more/ai-insights', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="ai-insights" /></ProtectedRoute> },
+                { path: 'more/analytics', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="analytics" /></ProtectedRoute> },
+                { path: 'more/compliance', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="compliance" /></ProtectedRoute> },
+                { path: 'more/government-reports', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="government-reports" /></ProtectedRoute> },
+                { path: 'more/duplicates', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="duplicates" /></ProtectedRoute> },
+                { path: 'more/policies', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="policies" /></ProtectedRoute> },
+                { path: 'more/opt-out', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="opt-out" /></ProtectedRoute> },
+                { path: 'more/requisitions', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="requisitions" /></ProtectedRoute> },
+                { path: 'more/signing', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="signing" /></ProtectedRoute> },
+                { path: 'more/plugins', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="plugins" /></ProtectedRoute> },
+                { path: 'more/blog', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="blog" /></ProtectedRoute> },
+                { path: 'more/public-pages', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="public-pages" /></ProtectedRoute> },
+                { path: 'more/homepage-builder', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="homepage-builder" /></ProtectedRoute> },
+                { path: 'more/barcodes', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="barcodes" /></ProtectedRoute> },
+                { path: 'more/ussd', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="ussd" /></ProtectedRoute> },
+                { path: 'more/shortcuts', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="shortcuts" /></ProtectedRoute> },
+                { path: 'more/biometrics', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="biometrics" /></ProtectedRoute> },
+                { path: 'more/business-portal', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="business-portal" /></ProtectedRoute> },
+                { path: 'more/church-portal', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="church-portal" /></ProtectedRoute> },
+                { path: 'more/org-portal', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="org-portal" /></ProtectedRoute> },
+                { path: 'more/individual-portal', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="individual-portal" /></ProtectedRoute> },
+                { path: 'more/parent-portal', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="parent-portal" /></ProtectedRoute> },
+                { path: 'more/student-portal', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="student-portal" /></ProtectedRoute> },
+                { path: 'more/entertainment', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="entertainment" /></ProtectedRoute> },
+                { path: 'more/app-store', element: <ProtectedRoute isLocked={isLocked}><FeatureComingSoon featureId="app-store" /></ProtectedRoute> },
             ]
         },
 

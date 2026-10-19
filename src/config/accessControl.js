@@ -396,7 +396,12 @@ export const MENU_ITEMS = [
     { path: '/generate-docs', name: 'Print Word Documents', icon: '🖨️', section: 'Administration', roles: ['Super Admin'], levels: 'all' },
     { path: '/settings', name: 'System Settings', icon: '⚙️', section: 'Administration', roles: ['Super Admin', 'Admin'], levels: 'all' },
     { path: '/meeting-minutes', name: 'Meeting Minutes', icon: '📝', section: 'Administration', roles: ['Super Admin', 'Admin', 'Staff'], levels: 'all' },
-    { path: '/about', name: 'About', icon: 'ℹ️', section: 'Administration', roles: ['Super Admin', 'Admin', 'Teacher', 'Staff', 'Bursar', 'Viewer'], levels: 'all' }
+    { path: '/about', name: 'About', icon: 'ℹ️', section: 'Administration', roles: ['Super Admin', 'Admin', 'Teacher', 'Staff', 'Bursar', 'Viewer'], levels: 'all' },
+
+    // ─── MORE FEATURES (ported from legacy platform) ───────
+    // One-stop hub showing all 70 features (15 fully implemented + 55 coming soon).
+    // Visible to all logged-in users — provides catalog of upcoming + ready features.
+    { path: '/more', name: 'More Features', icon: '🧰', section: 'More', roles: ['Super Admin', 'Admin', 'Teacher', 'Staff', 'Bursar', 'Viewer', 'Developer'], levels: 'all' }
 ];
 
 /**
