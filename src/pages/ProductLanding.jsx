@@ -114,8 +114,8 @@ const DOWNLOAD_INFO = {
 export default function ProductLanding() {
   const navigate = useNavigate();
   const { user, authReady } = useAuth();
-  const [selectedPlan, setSelectedPlan] = useState
-  const [paymentRef, setPaymentRef] = useState('');(null);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [paymentRef, setPaymentRef] = useState('');
   const [paymentStep, setPaymentStep] = useState('plans'); // 'plans' | 'methods' | 'momo' | 'processing'
   const [hwid, setHwid] = useState('');
   const [email, setEmail] = useState('');

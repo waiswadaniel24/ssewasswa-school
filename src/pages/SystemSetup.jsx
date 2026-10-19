@@ -4,19 +4,19 @@ import { useNavigate } from 'react-router-dom';
 var UGANDA_DISTRICTS = ['Kampala','Wakiso','Mukono','Mpigi','Masaka','Mityana','Mubende','Buikwe','Bukomansimbi','Butambala','Buvuma','Gomba','Kalangala','Kalungu','Kayunga','Kiboga','Kyankwanzi','Lwengo','Lyantonde','Nakaseke','Nakasongola','Rakai','Ssembabule','Jinja','Mbale','Soroti','Tororo','Iganga','Kamuli','Kumi','Busia','Bugiri','Budaka','Bududa','Bukedea','Bulambuli','Butaleja','Butebo','Kaberamaido','Kaliro','Kapchorwa','Katakwi','Kibuku','Namayingo','Namutumba','Ngora','Pallisa','Serere','Sironko','Mbarara','Kasese','Kabale','Hoima','Masindi','Kisoro','Rukungiri','Ntungamo','Bushenyi','Ibanda','Isingiro','Kabarole','Kamwenge','Kanungu','Kyenjojo','Kiruhura','Kibaale','Kyegegwa','Mitooma','Ntoroko','Rubirizi','Sheema','Gulu','Lira','Kitgum','Pader','Apac','Amolatar','Amuru','Nwoya','Otuke','Oyam','Alebtong','Abim','Agago','Amudat','Lamwo','Napak','Nakapiripirit','Kaabong','Kotido','Arua','Nebbi','Adjumani','Moyo','Yumbe','Koboko','Maracha','Zombo','Other'];
 export default function SystemSetup() {
 var navigate = useNavigate();
-var [formData, setFormData] = useState
-  const [success, setSuccess] = useState('');
-  const hasElectron = Boolean(typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.authLogin === 'function');({
-schoolName: '', schoolLevel: 'Primary', genderType: 'Mixed', boardingStatus: 'Day',
-backupEmail: '', secQuestion: "What is your mother's maiden name?", secAnswer: '',
-adminUser: 'admin', adminPass: '', confirmPass: '',
-district: '', county: '', subCounty: '', parish: '', village: '',
-ownerName: '', ownerNin: '', ownerPhone: '',
-headTeacherName: '', headTeacherPhone: '', chairpersonName: '', chairpersonPhone: '',
-phone: '', email: '', postalAddress: '', foundingYear: ''
+var [formData, setFormData] = useState({
+  schoolName: '', schoolLevel: 'Primary', genderType: 'Mixed', boardingStatus: 'Day',
+  backupEmail: '', secQuestion: "What is your mother's maiden name?", secAnswer: '',
+  adminUser: 'admin', adminPass: '', confirmPass: '',
+  district: '', county: '', subCounty: '', parish: '', village: '',
+  ownerName: '', ownerNin: '', ownerPhone: '',
+  headTeacherName: '', headTeacherPhone: '', chairpersonName: '', chairpersonPhone: '',
+  phone: '', email: '', postalAddress: '', foundingYear: ''
 });
 var [error, setError] = useState('');
 var [loading, setLoading] = useState(false);
+var [success, setSuccess] = useState('');
+var hasElectron = Boolean(typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.authLogin === 'function');
 var handleChange = function(e) { setFormData(function(prev) { var n = {}; for (var k in prev) n[k] = prev[k]; n[e.target.name] = e.target.value; return n; }); };
 var handleSubmit = async function(e) {
 e.preventDefault(); setError('');
