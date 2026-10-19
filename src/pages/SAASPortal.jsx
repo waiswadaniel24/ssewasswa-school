@@ -80,7 +80,7 @@ const PORTALS = [
     gradient: 'linear-gradient(135deg, #5f6368 0%, #202124 100%)',
     bg: '#f1f3f4',
     status: 'ready',
-    route: '/app/more/business-portal',
+    route: '/business-portal',
     features: [
       { icon: '💳', title: 'Point of Sale (POS)', desc: 'Barcode scanning, quick keys, split payments, refund + exchange handling, end-of-day Z-reports.' },
       { icon: '📈', title: 'Sales Tracking', desc: 'Real-time sales charts by product, branch, cashier, payment method, time of day, customer segment.' },
@@ -102,7 +102,7 @@ const PORTALS = [
     gradient: 'linear-gradient(135deg, #9c27b0 0%, #4a148c 100%)',
     bg: '#f3e5f5',
     status: 'ready',
-    route: '/app/more/church-portal',
+    route: '/church-portal',
     features: [
       { icon: '💰', title: 'Tithes Tracking', desc: 'Member-by-member tithe contributions, monthly statements, annual giving receipts (tax-deductible).' },
       { icon: '🤝', title: 'Donations + Pledges', desc: 'One-time + recurring donations, pledge campaigns with progress tracking, gift-aid recovery.' },
@@ -124,7 +124,7 @@ const PORTALS = [
     gradient: 'linear-gradient(135deg, #00796b 0%, #004d40 100%)',
     bg: '#e0f2f1',
     status: 'ready',
-    route: '/app/more/org-portal',
+    route: '/org-portal',
     features: [
       { icon: '📋', title: 'Member Directory', desc: 'Member registration, membership cards (PDF), renewal reminders, lapsed member re-engagement.' },
       { icon: '💳', title: 'Membership Renewal', desc: 'Annual/quarterly/monthly dues via Pesapal/MoMo, auto-renewal opt-in, receipt auto-email.' },
@@ -146,7 +146,7 @@ const PORTALS = [
     gradient: 'linear-gradient(135deg, #0288d1 0%, #01579b 100%)',
     bg: '#e1f5fe',
     status: 'ready',
-    route: '/app/more/individual-portal',
+    route: '/individual-portal',
     features: [
       { icon: '💰', title: 'Personal Budget', desc: 'Monthly income/expense tracking, category budget limits, alerts when over budget, recurring bills.' },
       { icon: '🎯', title: 'Savings Goals', desc: 'Set savings targets (school fees, land, car), track progress, auto-deposit reminders.' },
@@ -169,7 +169,7 @@ const PORTALS = [
     bg: '#fce4ec',
     status: 'ready',
     eta: 'Live now',
-    route: '/app/more/parent-portal',
+    route: '/parent-portal',
     features: [
       { icon: '📅', title: 'Child Attendance', desc: 'Daily/weekly attendance view, absentee alerts via SMS/email, monthly attendance report.' },
       { icon: '💳', title: 'Pay Fees Online', desc: 'Pay via Pesapal (card), MTN MoMo, Airtel Money. Receipt auto-emailed, balance updated instantly.' },
@@ -191,7 +191,7 @@ const PORTALS = [
     gradient: 'linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%)',
     bg: '#f3e5f5',
     status: 'ready',
-    route: '/app/more/student-portal',
+    route: '/student-portal',
     features: [
       { icon: '📅', title: 'My Attendance', desc: 'View own attendance percentage, days present/absent, late arrivals, attendance warnings.' },
       { icon: '📝', title: 'My Marks', desc: 'View exam + test marks by subject, track progress vs class average, view teacher feedback.' },

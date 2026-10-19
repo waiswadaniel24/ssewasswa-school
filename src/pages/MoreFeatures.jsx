@@ -139,7 +139,16 @@ export default function MoreFeatures() {
           }}
             onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; }}
             onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; }}
-            onClick={() => navigate(`/more/${f.id}`)}
+            onClick={() => {
+              // 6 standalone portals have their own public routes (e.g., /business-portal)
+              // Other features live under /app/more/* (requires login)
+              const standalonePortals = ['business-portal', 'church-portal', 'org-portal', 'individual-portal', 'parent-portal', 'student-portal'];
+              if (standalonePortals.includes(f.id)) {
+                navigate(`/${f.id}`);
+              } else {
+                navigate(`/app/more/${f.id}`);
+              }
+            }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
               <div style={{ fontSize: 32 }}>{f.icon}</div>

@@ -33,6 +33,7 @@ if (typeof window !== 'undefined' && !window.electronAPI) {
   // Fix: explicitly return undefined for these methods. Pages that check
   // `typeof window.electronAPI.X === 'function'` will correctly see false → fall through.
   const ELECTRON_ONLY_METHODS = new Set([
+    '__isElectron',             // MUST be here — the real preload sets it to true; web shim returns undefined
     'authLogin',              // desktop local auth (Login.jsx checks this)
     'auth-add-user',          // desktop add user
     'auth-setup',              // desktop auth setup

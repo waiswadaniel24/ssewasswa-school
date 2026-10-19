@@ -31,6 +31,17 @@ function validateParams(params) {
 contextBridge.exposeInMainWorld('electronAPI', {
 
   // ═══════════════════════════════════════════════════════
+  // RELIABLE ELECTRON DETECTION MARKER
+  // ═══════════════════════════════════════════════════════
+  // The web-mode shim in src/main.jsx creates a fake window.electronAPI
+  // Proxy for browsers. This makes !!window.electronAPI return true even
+  // in a browser → RootRoute thinks it's Electron → redirects / to /app.
+  // Fix: this REAL preload sets __isElectron: true. The web shim returns
+  // undefined for __isElectron. Code should check window.electronAPI?.__isElectron
+  // instead of !!window.electronAPI for reliable Electron detection.
+  __isElectron: true,
+
+  // ═══════════════════════════════════════════════════════
   // SYSTEM & INITIALIZATION
   // ═══════════════════════════════════════════════════════
 

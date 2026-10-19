@@ -249,7 +249,7 @@ class RouteErrorBoundary extends React.Component {
 const RootRoute = () => {
     const { user, authReady } = useAuth();
     const isElectron = typeof window !== 'undefined' && (
-        !!window.electronAPI ||
+        window.electronAPI?.__isElectron === true ||
         (navigator.userAgent && navigator.userAgent.toLowerCase().includes('electron'))
     );
 
@@ -477,6 +477,35 @@ export default function AppRouter({ isInitialized, isLocked }) {
         {
             path: '/business-directory',
             element: <PublicRoute><BusinessDirectory /></PublicRoute>
+        },
+        // ─── 6 PUBLIC PORTAL ROUTES (accessible without login) ───
+        // These let guests click portal cards on the homepage and see the
+        // portal page directly. Without these, clicking a portal card
+        // navigated to /app/more/business-portal (protected route → guest
+        // sees ProductLanding instead of the actual portal page).
+        {
+            path: '/business-portal',
+            element: <PublicRoute><BusinessPortal /></PublicRoute>
+        },
+        {
+            path: '/church-portal',
+            element: <PublicRoute><ChurchPortal /></PublicRoute>
+        },
+        {
+            path: '/org-portal',
+            element: <PublicRoute><OrgPortal /></PublicRoute>
+        },
+        {
+            path: '/individual-portal',
+            element: <PublicRoute><IndividualPortal /></PublicRoute>
+        },
+        {
+            path: '/parent-portal',
+            element: <PublicRoute><ParentPortal /></PublicRoute>
+        },
+        {
+            path: '/student-portal',
+            element: <PublicRoute><StudentPortal /></PublicRoute>
         },
         // ─── HMIS App (protected + uses HMIS Layout, not School ERP) ───
         // CRITICAL FIX: Earlier this used <ProtectedLayout /> which renders the
