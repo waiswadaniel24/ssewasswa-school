@@ -101,8 +101,13 @@ const MENU = [
   { path: '/report-cards', name: 'Report Cards', icon: '📄', section: 'exams' },
   { path: '/id-cards', name: 'ID Cards', icon: '🪪', section: 'exams' },
 
-  // UNEB
+  // UNEB + ALL EXAM BOARDS (6 total)
   { path: '/uneb-exams', name: 'UNEB Reg.', icon: '🏛️', section: 'uneb', unebOnly: true },
+  { path: '/ubteb-exams', name: 'UBTEB Reg.', icon: '🏢', section: 'uneb' },
+  { path: '/nche-accreditation', name: 'NCHE Accred.', icon: '🎓', section: 'uneb' },
+  { path: '/nurses-council-exams', name: 'Nurses Council', icon: '🏥', section: 'uneb' },
+  { path: '/ahpc-exams', name: 'AHPC Exams', icon: '💊', section: 'uneb' },
+  { path: '/kyambogo-teacher-ed', name: 'Kyambogo T.Ed.', icon: '👨‍🏫', section: 'uneb' },
 
   // FINANCE
   { path: '/finance', name: 'Fees', icon: '💵', section: 'finance' },
