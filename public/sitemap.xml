@@ -7,12 +7,16 @@
     Cloudflare so Google treats Vercel as a duplicate, not a separate result).
 
     Public (crawlable) URLs:
-      /                  — SAAS Portal (product selector homepage)
-      /product-landing   — School ERP marketing page (plans, pricing, payment)
-      /hmis-landing      — HMIS marketing page
-      /school-signup     — new school self-signup form
-      /login             — login / "Setup School Details" entry
-      /welcome          — welcome / intro page
+      /                    — SAAS Portal (product selector homepage)
+      /product-landing    — School ERP marketing page (plans, pricing, payment)
+      /hmis-landing       — HMIS marketing page (facility types + pricing)
+      /sponsor           — Business advertising subscription page
+      /donors            — Donor connection request page
+      /news               — News updates subscription page
+      /business-directory — Listed businesses (paid advertising)
+      /school-signup     — New school self-signup form
+      /welcome           — Welcome / intro page
+      /login              — Login / "Setup School Details" entry
 
     Auth-protected ERP pages (/app/*, /hmis/*, /admin, /quick-license) are
     intentionally NOT listed here — Google should not index logged-in pages.
@@ -31,6 +35,26 @@
     <loc>https://ssewasswa-school.pages.dev/hmis-landing</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://ssewasswa-school.pages.dev/sponsor</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ssewasswa-school.pages.dev/donors</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://ssewasswa-school.pages.dev/news</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ssewasswa-school.pages.dev/business-directory</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://ssewasswa-school.pages.dev/school-signup</loc>

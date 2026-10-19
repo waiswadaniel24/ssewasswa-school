@@ -1,0 +1,76 @@
+name: Build HMIS Windows Installer (.exe)
+
+# Separate build for Ssewasswa Comforts HMIS — produces a branded installer
+# distinct from the School ERP. Both share the same codebase (this repo) but
+# the HMIS build sets VITE_BUILD_TARGET=hmis so the .exe launches straight
+# into the HMIS (no School ERP welcome page).
+#
+# Trigger: manual OR push to main on HMIS-affecting files.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'HMIS version tag (e.g. v1.0.0)'
+        required: false
+        default: 'v1.0.0'
+  push:
+    branches: [main]
+    paths:
+      - 'src/pages/hmis/**'
+      - 'src/config/healthFacilityTypes.js'
+      - '.github/workflows/build-hmis-exe.yml'
+      - 'package-hmis.json'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 📦 Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: 🔨 Build Vite frontend (HMIS mode)
+        run: npm run build
+        env:
+          NODE_ENV: production
+          VITE_BUILD_TARGET: hmis
+          VITE_PRODUCT_NAME: 'Ssewasswa Comforts HMIS'
+
+      - name: 🖥️ Package Electron app — HMIS branded
+        run: npx electron-builder --win --config.electron-builder-hmis.json
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          ELECTRON_BUILDER_OFFLINE: 'true'
+          VITE_BUILD_TARGET: hmis
+
+      - name: 📤 Upload HMIS installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ssewasswa-HMIS-Windows-Installer
+          path: |
+            release/
+            release/**/*
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: 📋 List HMIS build artifacts
+        if: always()
+        shell: pwsh
+        run: |
+          Write-Host "HMIS build artifacts in release/ folder:"
+          if (Test-Path release) {
+            Get-ChildItem -Path release -Recurse -File | ForEach-Object {
+              Write-Host "  $($_.FullName) — $($_.Length) bytes"
+            }
+          } else {
+            Write-Host "  (release/ folder does not exist — build might have failed)"
+          }

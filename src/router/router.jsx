@@ -25,6 +25,10 @@ import HMISPharmacy from '../pages/hmis/Pharmacy.jsx';
 import HMISBilling from '../pages/hmis/Billing.jsx';
 import SchoolSignup from '../pages/SchoolSignup.jsx';
 import ResetPassword from '../pages/ResetPassword.jsx';
+import Sponsor from '../pages/Sponsor.jsx';
+import Donors from '../pages/Donors.jsx';
+import News from '../pages/News.jsx';
+import BusinessDirectory from '../pages/BusinessDirectory.jsx';
 // ─── Loading fallback (defined FIRST so AuthCallback can use it) ──
 const LoadingFallback = () => (
     <div style={{
@@ -371,6 +375,24 @@ export default function AppRouter({ isInitialized, isLocked }) {
         {
             path: '/product-landing',
             element: <PublicRoute><ProductLanding /></PublicRoute>
+        },
+        // ─── Sponsor / Donor / News / Business Directory (public marketplace) ───
+        // Anyone can browse; subscribing to advertise/connect/receive news requires payment.
+        {
+            path: '/sponsor',
+            element: <PublicRoute><Sponsor /></PublicRoute>
+        },
+        {
+            path: '/donors',
+            element: <PublicRoute><Donors /></PublicRoute>
+        },
+        {
+            path: '/news',
+            element: <PublicRoute><News /></PublicRoute>
+        },
+        {
+            path: '/business-directory',
+            element: <PublicRoute><BusinessDirectory /></PublicRoute>
         },
         // ─── HMIS App (protected) ───
         {

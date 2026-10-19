@@ -71,3 +71,214 @@ CREATE POLICY "Service role can log IPN"
 --   SELECT * FROM licenses LIMIT 10;
 --   SELECT * FROM pesapal_ipn_log ORDER BY received_at DESC LIMIT 10;
 -- ═══════════════════════════════════════════════════════════════════
+
+
+-- ═══════════════════════════════════════════════════════════════════
+-- MARKETPLACE TABLES (added 2026-10-19)
+-- Business advertising, donor connections, news subscriptions.
+-- ═══════════════════════════════════════════════════════════════════
+
+-- ─── BUSINESS ADS (paid advertisers on the Business Directory) ────
+CREATE TABLE IF NOT EXISTS business_ads (
+  id BIGSERIAL PRIMARY KEY,
+  business_name TEXT NOT NULL,
+  contact_name TEXT,
+  email TEXT NOT NULL,
+  phone TEXT,
+  category TEXT NOT NULL,
+  description TEXT,
+  website TEXT,
+  logo_url TEXT,
+  tier TEXT NOT NULL CHECK (tier IN ('starter', 'growth', 'premium')),
+  amount_paid INTEGER DEFAULT 0,
+  payment_reference TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'expired', 'suspended')),
+  start_date TIMESTAMPTZ,
+  end_date TIMESTAMPTZ,                                   -- subscription expiry
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS business_ads_status_idx ON business_ads (status);
+CREATE INDEX IF NOT EXISTS business_ads_category_idx ON business_ads (category);
+CREATE INDEX IF NOT EXISTS business_ads_tier_idx ON business_ads (tier);
+
+ALTER TABLE business_ads ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can view active ads" ON business_ads;
+CREATE POLICY "Anyone can view active ads"
+  ON business_ads FOR SELECT
+  TO anon, authenticated
+  USING (status = 'active');
+
+DROP POLICY IF EXISTS "Service role can manage business_ads" ON business_ads;
+CREATE POLICY "Service role can manage business_ads"
+  ON business_ads FOR ALL
+  TO service_role
+  USING (true) WITH CHECK (true);
+
+
+-- ─── DONORS (verified philanthropists / NGOs / foundations) ───────
+CREATE TABLE IF NOT EXISTS donors (
+  id BIGSERIAL PRIMARY KEY,
+  donor_name TEXT NOT NULL,
+  organization TEXT,
+  email TEXT NOT NULL UNIQUE,
+  phone TEXT,
+  country TEXT DEFAULT 'Uganda',
+  interest_areas JSONB,                                    -- array of interest area strings
+  capacity TEXT,                                           -- e.g. "5,000,000 UGX/year"
+  verified BOOLEAN DEFAULT FALSE,                          -- admin must verify
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE donors ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can view verified donors" ON donors;
+CREATE POLICY "Anyone can view verified donors"
+  ON donors FOR SELECT
+  TO anon, authenticated
+  USING (true);  -- show all donors (verification flag is shown to user)
+
+DROP POLICY IF EXISTS "Service role can manage donors" ON donors;
+CREATE POLICY "Service role can manage donors"
+  ON donors FOR ALL
+  TO service_role
+  USING (true) WITH CHECK (true);
+
+
+-- ─── DONOR INSTITUTIONS (schools/hospitals seeking support) ──────
+CREATE TABLE IF NOT EXISTS donor_institutions (
+  id BIGSERIAL PRIMARY KEY,
+  institution_name TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('School', 'Hospital / Health Center', 'NGO / CBO')),
+  contact_name TEXT,
+  email TEXT NOT NULL,
+  phone TEXT,
+  location TEXT,                                           -- district
+  needs JSONB,                                             -- array of need strings
+  description TEXT,
+  tier TEXT NOT NULL DEFAULT 'standard' CHECK (tier IN ('standard', 'featured')),
+  amount_paid INTEGER DEFAULT 0,
+  payment_reference TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'expired', 'suspended')),
+  verified BOOLEAN DEFAULT FALSE,                          -- admin must verify legitimacy
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS donor_institutions_status_idx ON donor_institutions (status);
+
+ALTER TABLE donor_institutions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can view active institution listings" ON donor_institutions;
+CREATE POLICY "Anyone can view active institution listings"
+  ON donor_institutions FOR SELECT
+  TO anon, authenticated
+  USING (status = 'active');
+
+DROP POLICY IF EXISTS "Service role can manage donor_institutions" ON donor_institutions;
+CREATE POLICY "Service role can manage donor_institutions"
+  ON donor_institutions FOR ALL
+  TO service_role
+  USING (true) WITH CHECK (true);
+
+
+-- ─── NEWS ARTICLES (admin-published news for subscribers) ─────────
+CREATE TABLE IF NOT EXISTS news_articles (
+  id BIGSERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  summary TEXT,
+  content TEXT,
+  category TEXT NOT NULL CHECK (category IN ('education', 'health', 'sponsors', 'product', 'training', 'tenders')),
+  image_url TEXT,
+  published_at TIMESTAMPTZ DEFAULT NOW(),
+  author TEXT,
+  is_published BOOLEAN DEFAULT TRUE
+);
+
+CREATE INDEX IF NOT EXISTS news_articles_published_idx ON news_articles (published_at DESC);
+
+ALTER TABLE news_articles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can view published news" ON news_articles;
+CREATE POLICY "Anyone can view published news"
+  ON news_articles FOR SELECT
+  TO anon, authenticated
+  USING (is_published = true);
+
+DROP POLICY IF EXISTS "Service role can manage news" ON news_articles;
+CREATE POLICY "Service role can manage news"
+  ON news_articles FOR ALL
+  TO service_role
+  USING (true) WITH CHECK (true);
+
+
+-- ─── NEWS SUBSCRIBERS (newsletter recipients) ─────────────────────
+CREATE TABLE IF NOT EXISTS news_subscribers (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT NOT NULL UNIQUE,
+  name TEXT,
+  phone TEXT,
+  categories JSONB,                                        -- array of category ids
+  role TEXT,
+  institution_name TEXT,
+  tier TEXT NOT NULL DEFAULT 'email' CHECK (tier IN ('email', 'whatsapp', 'sms')),
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'unsubscribed', 'bounced')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE news_subscribers ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Service role can manage subscribers" ON news_subscribers;
+CREATE POLICY "Service role can manage subscribers"
+  ON news_subscribers FOR ALL
+  TO service_role
+  USING (true) WITH CHECK (true);
+
+
+-- ─── SUBSCRIPTIONS (unified table for all paid subscriptions) ─────
+-- Covers: school-erp (ORD/PREM), hmis (ORD/PREM), sponsor, donor, news
+-- Each row = one paid subscription with status + expiry.
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT NOT NULL,
+  customer_name TEXT,
+  phone TEXT,
+  product TEXT NOT NULL CHECK (product IN ('school-erp', 'hmis', 'sponsor', 'donor', 'news')),
+  tier TEXT NOT NULL,                                      -- e.g. 'ordinary', 'premium', 'starter', 'growth', 'featured', 'whatsapp', 'sms', 'email'
+  amount_paid INTEGER DEFAULT 0,
+  payment_reference TEXT,
+  payment_method TEXT,                                     -- 'pesapal', 'mtn_momo', 'airtel_money', 'sms_forwarder'
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'expired', 'cancelled', 'refunded')),
+  start_date TIMESTAMPTZ,
+  end_date TIMESTAMPTZ,
+  metadata JSONB,                                          -- flexible: business info, institution info, etc.
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS subscriptions_email_idx ON subscriptions (email);
+CREATE INDEX IF NOT EXISTS subscriptions_status_idx ON subscriptions (status);
+CREATE INDEX IF NOT EXISTS subscriptions_product_tier_idx ON subscriptions (product, tier);
+
+ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can read their own subscriptions" ON subscriptions;
+CREATE POLICY "Anyone can read their own subscriptions"
+  ON subscriptions FOR SELECT
+  TO anon, authenticated
+  USING (true);  -- allows the user to verify their own subscription status by email
+
+DROP POLICY IF EXISTS "Service role can manage subscriptions" ON subscriptions;
+CREATE POLICY "Service role can manage subscriptions"
+  ON subscriptions FOR ALL
+  TO service_role
+  USING (true) WITH CHECK (true);
+
+-- ═══════════════════════════════════════════════════════════════════
+-- AFTER RUNNING THIS FILE: run the following verification:
+--   SELECT * FROM business_ads LIMIT 5;
+--   SELECT * FROM donors LIMIT 5;
+--   SELECT * FROM donor_institutions LIMIT 5;
+--   SELECT * FROM news_articles LIMIT 5;
+--   SELECT * FROM news_subscribers LIMIT 5;
+--   SELECT * FROM subscriptions LIMIT 5;
+-- ═══════════════════════════════════════════════════════════════════

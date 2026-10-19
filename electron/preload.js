@@ -59,6 +59,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('update-show-dialog', () => callback());
   },
 
+  // ─── Hybrid cloud sync (Supabase) ───
+  // Triggered by user via "Sync now" button OR automatically every 5 min
+  syncNow: () => ipcRenderer.invoke('sync-now'),
+  getSyncStatus: () => ipcRenderer.invoke('sync-status'),
+  startAutoSync: () => ipcRenderer.invoke('sync-start-auto'),
+  stopAutoSync: () => ipcRenderer.invoke('sync-stop-auto'),
+
   /** Get the hardware ID for license binding */
   getHwid: () => ipcRenderer.invoke('getHwid'),
 

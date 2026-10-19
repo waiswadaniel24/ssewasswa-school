@@ -641,6 +641,27 @@ app.whenReady().then(async () => {
         paymentHandler = new UgandaPayments(db, saveDb);
         uploadHandler = new UploadHandler(db, saveDb);
         UNEBConnector.init(db, saveDb);
+
+        // ─── Hybrid cloud sync (Supabase) ──────────────────────
+        // Adds last_modified + is_deleted + school_id columns to all
+        // syncable tables, then starts the 5-min auto-sync timer.
+        try {
+            const { SyncManager, ensureSyncColumns } = require('./syncManager');
+            ensureSyncColumns(db);  // idempotent — adds columns if missing
+            const syncManager = new SyncManager({
+                db,
+                saveDb,
+                supabaseUrl: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
+                supabaseKey: process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY,
+                schoolId: 1,
+            });
+            syncManager.registerIpc();
+            syncManager.startAutoSync();
+            global.syncManager = syncManager;  // for main process access
+            console.log('[Main] Cloud sync manager initialized');
+        } catch (e) {
+            console.error('[Main] Sync manager init failed (sync disabled):', e.message);
+        }
     }
     createWindow();
 

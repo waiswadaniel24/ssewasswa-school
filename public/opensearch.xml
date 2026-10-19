@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/"
+                       xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+  <ShortName>Ssewasswa Comforts</ShortName>
+  <Description>Search the Ssewasswa Comforts Technologies platform (School ERP + HMIS + Sponsors + Donors).</Description>
+  <InputEncoding>UTF-8</InputEncoding>
+  <Image width="16" height="16" type="image/x-icon">https://ssewasswa-school.pages.dev/favicon.ico</Image>
+  <Url type="text/html" method="GET" template="https://ssewasswa-school.pages.dev/?q={searchTerms}"/>
+  <Url type="application/x-suggestions+json" rel="suggestions" template="https://ssewasswa-school.pages.dev/api/suggest?q={searchTerms}"/>
+  <moz:SearchForm>https://ssewasswa-school.pages.dev/</moz:SearchForm>
+</OpenSearchDescription>

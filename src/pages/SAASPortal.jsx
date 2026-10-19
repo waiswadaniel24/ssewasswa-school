@@ -144,6 +144,41 @@ export default function SAASPortal() {
           <p>MTN: +256 789 736 737 | Airtel: +256 752 971 118 | support@ssewasswacomfortstechnologies.com</p>
         </div>
       </section>
+
+      {/* Marketplace section — sponsor / donor / news / directory */}
+      <section style={{ background: '#0b1f33', padding: '60px 24px', borderTop: '1px solid #2c455a' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <div style={{ color: '#61d3a5', fontWeight: 700, letterSpacing: '.12em', fontSize: 13, textTransform: 'uppercase', marginBottom: 12 }}>
+              Beyond Software
+            </div>
+            <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', margin: '0 0 16px', color: '#fff' }}>
+              Marketplace. Connections. News.
+            </h2>
+            <p style={{ color: '#b5c9d7', fontSize: 17, maxWidth: 700, margin: '0 auto' }}>
+              Ssewasswa Comforts is more than ERP — we connect schools, hospitals, sponsors, donors, and suppliers across Uganda.
+            </p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
+            {[
+              { icon: '📣', title: 'Advertise Your Business', desc: 'Reach 15,000+ schools & hospitals. From UGX 50k/month.', route: '/sponsor', cta: 'List your business', color: '#1a73e8' },
+              { icon: '🤝', title: 'Donor Connections', desc: 'Schools/hospitals seeking support connect with verified donors.', route: '/donors', cta: 'Find a donor', color: '#0b8043' },
+              { icon: '📰', title: 'News & Updates', desc: 'Education + health sector news via email/WhatsApp/SMS.', route: '/news', cta: 'Subscribe to news', color: '#a142f4' },
+              { icon: '🏪', title: 'Business Directory', desc: 'Browse trusted suppliers for your school/hospital.', route: '/business-directory', cta: 'Browse directory', color: '#f9ab00' },
+            ].map((card) => (
+              <div key={card.route} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${card.color}40`, borderRadius: 12, padding: 24, cursor: 'pointer', transition: 'border-color 0.2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = card.color; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = card.color + '40'; }}
+                onClick={() => navigate(card.route)}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>{card.icon}</div>
+                <h3 style={{ margin: '0 0 8px', color: card.color, fontSize: 18 }}>{card.title}</h3>
+                <p style={{ color: '#b5c9d7', fontSize: 13, lineHeight: 1.5, marginBottom: 16 }}>{card.desc}</p>
+                <span style={{ color: card.color, fontWeight: 700, fontSize: 13 }}>{card.cta} →</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
       <AIChatbot />
     </main>
   );

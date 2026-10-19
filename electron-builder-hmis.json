@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/schema.json",
+  "appId": "com.ssewasswacomforts.hmis",
+  "productName": "Ssewasswa Comforts HMIS",
+  "copyright": "Copyright © 2026 Ssewasswa Comforts Technologies",
+  "directories": {
+    "output": "release",
+    "buildResources": "build"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "node_modules/**/*",
+    "package.json"
+  ],
+  "extraResources": [
+    {
+      "from": "node_modules/sql.js/dist/",
+      "to": "sql.js/",
+      "filter": ["**/*"]
+    }
+  ],
+  "asarUnpack": [
+    "node_modules/sql.js/**",
+    "node_modules/@neondatabase/neon-js/**"
+  ],
+  "win": {
+    "target": [
+      { "target": "nsis", "arch": ["x64"] }
+    ],
+    "icon": "public/ssewasswa-comforts-school-erp-mark.png",
+    "artifactName": "Ssewasswa-HMIS-${version}-Setup.exe"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": true,
+    "allowToChangeInstallationDirectory": true,
+    "installerIcon": "public/ssewasswa-comforts-school-erp-mark.png",
+    "uninstallerIcon": "public/ssewasswa-comforts-school-erp-mark.png",
+    "installerHeaderIcon": "public/ssewasswa-comforts-school-erp-mark.png",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Ssewasswa HMIS"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "waiswadaniel24",
+    "repo": "ssewasswa-school",
+    "releaseType": "release"
+  }
+}

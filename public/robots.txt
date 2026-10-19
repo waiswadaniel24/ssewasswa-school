@@ -1,15 +1,23 @@
-# robots.txt for Ssewasswa Comforts School ERP V10
+# robots.txt for Ssewasswa Comforts Technologies
 # Primary domain: https://ssewasswa-school.pages.dev (Cloudflare Pages)
-# Vercel mirror (not indexed — Google treats it as duplicate of Cloudflare):
-# https://ssewasswa-school.vercel.app
+# Mirror: https://ssewasswa-school.vercel.app (Vercel — canonical points to Cloudflare so
+# Google treats the Vercel mirror as a duplicate, not a separate result).
 
 User-agent: *
 Allow: /
 
 # Public pages that search engines can crawl:
-# / (homepage), /product-landing, /about, /manuals, /terms
-# Auth-protected routes (/dashboard, /students, /login, /staff, etc.) require authentication
-# and Google should not index them.
+# /                    — SAAS Portal (product selector homepage)
+# /product-landing     — School ERP marketing page (plans, pricing, payment)
+# /hmis-landing        — HMIS marketing page (facility types, pricing)
+# /sponsor            — Business advertising subscription page
+# /donors            — Donor connection request page
+# /news               — News updates subscription page
+# /business-directory — Listed businesses (paid advertising)
+# /school-signup     — New school self-signup form
+# /welcome           — Welcome / intro page
+# /login             — Login page
+# /about /manuals /terms — Public info pages
 
 # Block auth-protected URL patterns (these contain sensitive tokens):
 Disallow: /*?token=
@@ -21,5 +29,17 @@ Disallow: /*?type=
 # Block internal API routes from indexing:
 Disallow: /api/
 
-# Sitemap (must be on SAME domain as this robots.txt — Cloudflare Pages is primary)
+# Multi-SE Sitemap Submission:
+# Google → https://search.google.com/search-console → Sitemaps → submit
+#   URL to submit: https://ssewasswa-school.pages.dev/sitemap.xml
+# Bing / Microsoft → https://www.bing.com/webmasters → Submit sitemap
+#   URL: https://ssewasswa-school.pages.dev/sitemap.xml
+# Yandex → https://webmaster.yandex.com → Indexing options → Sitemap
+#   URL: https://ssewasswa-school.pages.dev/sitemap.xml
+# Baidu → https://ziyuan.baidu.com → Site verification → Sitemap
+#   URL: https://ssewasswa-school.pages.dev/sitemap.xml
+# DuckDuckGo → no manual submission; indexes via sitemap in robots.txt + backlinks
+
+# Sitemap MUST be on the SAME domain as this robots.txt.
+# Cloudflare Pages is primary; Vercel is canonical-duplicate.
 Sitemap: https://ssewasswa-school.pages.dev/sitemap.xml
