@@ -35,9 +35,6 @@
     "oneClick": false,
     "perMachine": true,
     "allowToChangeInstallationDirectory": true,
-    "installerIcon": "public/ssewasswa-comforts-school-erp-mark.png",
-    "uninstallerIcon": "public/ssewasswa-comforts-school-erp-mark.png",
-    "installerHeaderIcon": "public/ssewasswa-comforts-school-erp-mark.png",
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
     "shortcutName": "Ssewasswa HMIS"
