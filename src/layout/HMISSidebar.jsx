@@ -7,6 +7,26 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { HEALTH_FACILITY_TYPES } from '../config/healthFacilityTypes.js';
+import {
+  LuLayoutDashboard, LuUserPlus, LuStethoscope, LuFlaskConical,
+  LuPill, LuReceipt,
+} from 'react-icons/lu';
+
+// Icon map for HMIS menu items
+const HMIS_ICON_MAP = {
+  '📊': LuLayoutDashboard,
+  '🧑‍⚕️': LuUserPlus,
+  '🏥': LuStethoscope,
+  '🧪': LuFlaskConical,
+  '💊': LuPill,
+  '💵': LuReceipt,
+};
+
+function HMISMenuIcon({ icon, size = 16 }) {
+  const IconComp = HMIS_ICON_MAP[icon];
+  if (IconComp) return <IconComp size={size} style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} />;
+  return <span style={{ fontSize: size + 2 }}>{icon}</span>;
+}
 
 // ─── HMIS MENU (separate from School ERP menu) ──────────────
 // Each item maps to a /hmis/* route (defined in router.jsx).
@@ -141,7 +161,7 @@ export default function HMISSidebar({ isDark }) {
       <nav style={{ flex: 1, overflowY: 'auto', paddingBottom: '10px' }}>
         {/* Dashboard always visible */}
         <NavLink to="/hmis" end style={navLinkStyle}>
-          📊 Dashboard
+          <HMISMenuIcon icon="📊" size={16} /> Dashboard
         </NavLink>
 
         {/* Render grouped sections */}
@@ -180,7 +200,7 @@ export default function HMISSidebar({ isDark }) {
                   to={toHmisPath(item.path)}
                   style={navLinkStyle}
                 >
-                  {item.icon} {item.name}
+                  <HMISMenuIcon icon={item.icon} size={14} /> {item.name}
                 </NavLink>
               ))}
             </div>

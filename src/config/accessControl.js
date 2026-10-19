@@ -419,6 +419,17 @@ export function canAccess(userRole, schoolLevel, modulePath) {
     normalized = normalized.replace(/^\/(app|hmis)(?=\/|$)/, '');
     // Now `normalized` looks like '/students', '/', 'students', etc.
 
+    // ─── SPECIAL CASE: /more/* paths ────────────────────────────
+    // All routes under /app/more/* (Business, Church, Org, Individual,
+    // Parent, Student portals + 19 implemented features + 51 coming-soon
+    // features) should be accessible to ANY authenticated user.
+    // Without this, canAccess tries to match '/more/business-portal' against
+    // MENU_ITEMS — which only has '/more' (no child paths) → returns false
+    // → ProtectedRoute redirects to / → user can't access any portal/feature.
+    if (normalized === '/more' || normalized.startsWith('/more/')) {
+        return true;
+    }
+
     const menuItem = MENU_ITEMS.find(item => {
         const itemPath = item.path.replace(/:\w+$/, ':id');
         return itemPath === normalized || item.path === normalized;

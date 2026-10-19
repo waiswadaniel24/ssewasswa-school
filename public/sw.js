@@ -1,7 +1,7 @@
 // Ssewasswa School ERP — Service Worker
 // Cache-first for static assets, network-first for HTML (so updates are picked up)
 
-const CACHE_NAME = "ssewasswa-erp-v17";
+const CACHE_NAME = "ssewasswa-erp-v18";
 const STATIC_ASSETS = [
   "/",
   "/index.html",

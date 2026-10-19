@@ -5,6 +5,63 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import {
+  LuLayoutDashboard, LuGraduationCap, LuUsers, LuUser, LuWallet,
+  LuBookOpen, LuCalendarCheck, LuCalendarDays, LuFileText,
+  LuSettings, LuInfo, LuShoppingCart, LuTruck, LuPrinter,
+  LuActivity, LuClipboardList, LuBuilding, LuReceipt, LuCreditCard,
+  LuLibrary, LuBaby, LuAward, LuTrendingUp, LuTrendingDown,
+  LuMegaphone, LuShieldAlert, LuIdCard,
+} from 'react-icons/lu';
+
+// ═══════════════════════════════════════════════════════════
+// ICON MAP — maps emoji strings in MENU_ITEMS to professional Lucide icons
+// ═══════════════════════════════════════════════════════════
+const ICON_MAP = {
+  '📊': LuLayoutDashboard,
+  '🎓': LuGraduationCap,
+  '👤': LuUser,
+  '📋': LuClipboardList,
+  '⬆️': LuTrendingUp,
+  '📉': LuTrendingDown,
+  '🎖️': LuAward,
+  '👨‍🏫': LuUsers,
+  '💰': LuWallet,
+  '📚': LuBookOpen,
+  '✅': LuCalendarCheck,
+  '📅': LuCalendarDays,
+  '📆': LuCalendarDays,
+  '⚠️': LuShieldAlert,
+  '📝': LuFileText,
+  '📄': LuFileText,
+  '🪪': LuIdCard,
+  '🏛️': LuBuilding,
+  '💵': LuWallet,
+  '📱': LuReceipt,
+  '🏦': LuCreditCard,
+  '🏪': LuShoppingCart,
+  '📖': LuLibrary,
+  '🚌': LuTruck,
+  '📢': LuMegaphone,
+  '✍️': LuFileText,
+  '🖨️': LuPrinter,
+  '🧒': LuBaby,
+  '📈': LuActivity,
+  '⚙️': LuSettings,
+  '👥': LuUsers,
+  'ℹ️': LuInfo,
+  '🧰': LuSettings,
+};
+
+// Helper: render the right icon for a menu item
+function MenuIcon({ icon, size = 16 }) {
+  const IconComp = ICON_MAP[icon];
+  if (IconComp) {
+    return <IconComp size={size} style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} />;
+  }
+  // Fallback: render the emoji string as-is
+  return <span style={{ fontSize: size + 2 }}>{icon}</span>;
+}
 
 // ═══════════════════════════════════════════════════════════
 // MENU DEFINITIONS — all routes in the system
@@ -354,7 +411,7 @@ export default function Sidebar({ searchQuery = '', isDark }) {
 
         {/* Dashboard always visible */}
         <NavLink to="/app" end style={navLinkStyle}>
-          📊 Dashboard
+          <MenuIcon icon="📊" size={16} /> Dashboard
         </NavLink>
 
         {/* Render grouped sections */}
@@ -397,7 +454,7 @@ export default function Sidebar({ searchQuery = '', isDark }) {
                   to={toAppPath(item.path)}
                   style={navLinkStyle}
                 >
-                  {item.icon} {item.name}
+                  <MenuIcon icon={item.icon} size={14} /> {item.name}
                 </NavLink>
               ))}
             </div>
