@@ -26,7 +26,7 @@ export default function HMISDashboard() {
           { key: 'totalLab', sql: "SELECT COUNT(*) as count FROM hmis_lab_orders WHERE result_date IS NULL" },
           { key: 'totalRevenue', sql: "SELECT COALESCE(SUM(amount), 0) as total FROM hmis_billing_invoices WHERE status = 'Paid'" },
           { key: 'totalDebts', sql: "SELECT COALESCE(SUM(amount), 0) as total FROM hmis_billing_invoices WHERE status = 'Pending'" },
-          { key: 'totalBeds', sql: "SELECT COUNT(*) as count FROM beds" },
+          { key: 'totalBeds', sql: "SELECT COUNT(*) as count FROM hmis_beds" },
           { key: 'bedOccupancy', sql: "SELECT COUNT(*) as count FROM hmis_ipd_admissions WHERE discharge_date IS NULL" },
         ];
         const results = {};

@@ -23,7 +23,7 @@ export default function HMISSetup() {
   var navigate = useNavigate();
   var [formData, setFormData] = useState({
     facilityName: '',
-    facilityLevel: 'HC III',
+    facilityLevel: 'HC3',
     ownership: 'Government',
     district: '',
     hmisCode: '',
@@ -114,6 +114,21 @@ export default function HMISSetup() {
         try {
           localStorage.setItem('hmis_facility', JSON.stringify(payload));
           localStorage.setItem('hmis_is_initialized', 'true');
+          // ALSO save admin user to hmis_user so Login.jsx can find the credentials
+          var hmisUser = {
+            id: 'hmis-admin-' + Date.now(),
+            username: formData.adminUsername,
+            password: formData.adminPassword,
+            role: 'HMIO',
+            fullName: formData.adminFullName,
+            securityQuestion: formData.securityQuestion,
+            securityAnswer: formData.securityAnswer,
+            facilityId: payload.facilityName,
+            facilityName: payload.facilityName,
+            source: 'hmis',
+            createdAt: new Date().toISOString()
+          };
+          localStorage.setItem('hmis_user', JSON.stringify(hmisUser));
         } catch (e) {}
         setLoading(false);
         setSuccess('Facility setup complete! (Desktop mode — IPC hmis-setup pending.) Redirecting to HMIS login...');
@@ -125,6 +140,21 @@ export default function HMISSetup() {
       try {
         localStorage.setItem('hmis_facility', JSON.stringify(payload));
         localStorage.setItem('hmis_is_initialized', 'true');
+        // ALSO save admin user to hmis_user so Login.jsx can find the credentials
+        var hmisUserWeb = {
+          id: 'hmis-admin-' + Date.now(),
+          username: formData.adminUsername,
+          password: formData.adminPassword,
+          role: 'HMIO',
+          fullName: formData.adminFullName,
+          securityQuestion: formData.securityQuestion,
+          securityAnswer: formData.securityAnswer,
+          facilityId: payload.facilityName,
+          facilityName: payload.facilityName,
+          source: 'hmis',
+          createdAt: new Date().toISOString()
+        };
+        localStorage.setItem('hmis_user', JSON.stringify(hmisUserWeb));
       } catch (e) {}
       setLoading(false);
       setSuccess('Facility setup complete! Redirecting to HMIS login...');

@@ -29,7 +29,7 @@ export default function Patients() {
     if (!window.electronAPI || !window.electronAPI.queryDatabase) { setLoading(false); return; }
     try {
       const r = await window.electronAPI.queryDatabase(
-        "SELECT id, first_name, last_name, other_name, gender, date_of_birth, phone, nhis_number FROM patients ORDER BY id DESC LIMIT 100"
+        "SELECT id, first_name, last_name, other_name, gender, date_of_birth, phone, nhis_number FROM hmis_patients ORDER BY id DESC LIMIT 100"
       );
       if (mountedRef.current && r && r.success && Array.isArray(r.data)) setPatients(r.data);
     } catch (e) { console.error('Load error:', e.message); }
@@ -45,7 +45,7 @@ export default function Patients() {
     try {
       const opd_number = 'OPD-' + Date.now().toString().slice(-8);
       const r = await window.electronAPI.queryDatabase(
-        "INSERT INTO patients (first_name, last_name, other_name, gender, date_of_birth, phone, address, next_of_kin, next_of_kin_phone, blood_group, allergies, emergency_contact, nhis_number, opd_number, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? ,datetime('now'))",
+        "INSERT INTO hmis_patients (first_name, last_name, other_name, gender, date_of_birth, phone, address, next_of_kin, next_of_kin_phone, blood_group, allergies, emergency_contact, nhis_number, opd_number, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? ,datetime('now'))",
         [form.first_name, form.last_name, form.other_name || '', form.gender, form.date_of_birth, form.phone, form.address, form.next_of_kin, form.next_of_kin_phone, form.blood_group, form.allergies, form.emergency_contact, form.nhis_number, opd_number]
       );
       if (mountedRef.current) {

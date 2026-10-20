@@ -48,7 +48,7 @@ export default function HMISLogin() {
     // Desktop detection — window.electronAPI exists when running in Electron.
     // (We do NOT check for window.electronAPI.hmisLogin because that IPC handler
     // is intentionally not yet built — see header comment.)
-    var isDesktop = Boolean(typeof window !== 'undefined' && window.electronAPI);
+    var isDesktop = Boolean(typeof window !== 'undefined' && window.electronAPI && window.electronAPI.__isElectron === true);
 
     // ─── "?next=" redirect target after sign-in ─────────────────
     // HMIS login always lands inside /hmis (default). Supports ?next=/hmis/<x>

@@ -334,12 +334,8 @@ const ProtectedHMISLayout = () => {
         );
     }
     if (!user) {
-        // Unauthenticated visitor → show HMIS marketing landing page
-        return (
-            <Suspense fallback={<LoadingFallback />}>
-                <HMISLanding />
-            </Suspense>
-        );
+        // Unauthenticated visitor → redirect to HMIS login (NOT the marketing page)
+        return <Navigate to="/hmis/login" replace />;
     }
     // Authenticated user → render the HMIS Layout
     return (
